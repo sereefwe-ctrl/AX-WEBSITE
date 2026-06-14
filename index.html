@@ -60,26 +60,6 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.07);
     }
 
-    .floating-logo {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100px;
-      height: 100px;
-      opacity: 0.12;
-      pointer-events: none;
-      z-index: 0;
-      animation: floatAround 20s ease-in-out infinite;
-    }
-
-    @keyframes floatAround {
-      0%   { transform: translate(20px, 20px); }
-      20%  { transform: translate(520px, 20px); }
-      40%  { transform: translate(520px, 220px); }
-      60%  { transform: translate(260px, 300px); }
-      80%  { transform: translate(20px, 180px); }
-      100% { transform: translate(20px, 20px); }
-    }
 
     .content {
       position: relative;
@@ -117,9 +97,7 @@
   </nav>
 
   <div class="card">
-    <img class="floating-logo" src="images/DeepMind1.png" alt="" />
-
-    <div class="content">
+<div class="content">
       <p>Hello internet,</p>
 
       <p><b>We are an AI researchers &amp; founders fellowship</b> based in Seoul from academia and industry. We work on research, open-source projects, and real-world applications to build the next leading AI startups.</p>

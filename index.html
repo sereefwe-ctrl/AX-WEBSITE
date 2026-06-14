@@ -88,6 +88,22 @@
       color: #b0b0b0;
     }
 
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .portfolio-box {
+      border: 1.5px solid #dde0f0;
+      border-radius: 10px;
+      height: 90px;
+      background-color: #fafbff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 80px 16px 32px;
@@ -147,7 +163,19 @@
   </div>
 
   <div class="card" style="margin-top: 24px;">
-    <div class="content">
+    <div class="portfolio-grid">
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
+      <div class="portfolio-box"></div>
     </div>
   </div>
 </body>

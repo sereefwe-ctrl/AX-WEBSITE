@@ -198,12 +198,12 @@ body {
 
     @keyframes spinPause {
       0%   { transform: rotate(0deg); }
-      20%  { transform: rotate(720deg); }
+      40%  { transform: rotate(720deg); }
       100% { transform: rotate(720deg); }
     }
 
     .logo-spin {
-      animation: spinPause 5s ease-in-out infinite;
+      animation: spinPause 8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
 
     @media (max-width: 600px) {

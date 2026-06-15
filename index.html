@@ -196,6 +196,16 @@ body {
       justify-content: center;
     }
 
+    @keyframes spinPause {
+      0%   { transform: rotate(0deg); }
+      20%  { transform: rotate(720deg); }
+      100% { transform: rotate(720deg); }
+    }
+
+    .logo-spin {
+      animation: spinPause 5s ease-in-out infinite;
+    }
+
     @media (max-width: 600px) {
       body {
         padding: 70px 12px 40px;
@@ -277,7 +287,7 @@ body {
   </nav>
 
   <div class="card">
-    <img src="images/Logo1.png" alt="Logo" style="position: absolute; top: 20px; right: 24px; height: 80px; width: auto;" />
+    <img src="images/Logo1.png" alt="Logo" class="logo-spin" style="position: absolute; top: 20px; right: 24px; height: 80px; width: auto;" />
 <div class="content">
       <p>Hello Internet,</p>
 

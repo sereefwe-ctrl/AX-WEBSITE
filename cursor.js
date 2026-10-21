@@ -16,8 +16,8 @@
 
   var GRID = 10;
   var SIZE = 18;
-  var TAG_COLORS = ['#ffc857', '#9fb4e6', '#f4f1e8', '#e8a27c'];
-  var DOT_COLORS = ['#ffffff', '#ffc857', '#9fb4e6', '#f4f1e8'];
+  var TAG_COLORS = ['#d9d6ce', '#9fb4e6', '#f4f1e8', '#e8a27c'];
+  var DOT_COLORS = ['#ffffff', '#d9d6ce', '#9fb4e6', '#f4f1e8'];
 
   var css = [
     'html.bb-cursor, html.bb-cursor * { cursor: none !important; }',

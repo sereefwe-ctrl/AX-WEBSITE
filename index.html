@@ -74,7 +74,7 @@
       left: 35%;
       width: 45vmax;
       height: 45vmax;
-      background: radial-gradient(circle, rgba(255, 200, 87, 0.12), transparent 65%);
+      background: radial-gradient(circle, rgba(244, 241, 232, 0.06), transparent 65%);
       animation: drift-c 54s ease-in-out infinite alternate;
     }
 
@@ -252,12 +252,12 @@
       filter: none;
     }
 
-    /* Backer names: full-bright, with the gold marker stroke sweeping
+    /* Backer names: full-bright, with a soft light marker stroke sweeping
        under each one in turn once the subheading is in. */
     .hero-lede mark {
       white-space: nowrap;
       color: rgba(244, 241, 232, 0.97);
-      background: linear-gradient(transparent 58%, rgba(255, 200, 87, 0.34) 58%, rgba(255, 200, 87, 0.34) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      background: linear-gradient(transparent 58%, rgba(244, 241, 232, 0.16) 58%, rgba(244, 241, 232, 0.16) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
       transition: background-size 0.8s cubic-bezier(0.22, 1, 0.36, 1);
       transition-delay: calc(1.45s + var(--i) * 0.12s);
     }
@@ -320,7 +320,7 @@
       width: 7px;
       height: 7px;
       border-radius: 2px;
-      background: #ffc857;
+      background: rgba(244, 241, 232, 0.55);
     }
 
     .mf-lead {
@@ -373,7 +373,7 @@
       font-size: 0.42em;
       vertical-align: 0.95em;
       margin-left: 0.04em;
-      color: #ffc857;
+      color: rgba(244, 241, 232, 0.55);
     }
 
     .mf-body {
@@ -441,7 +441,7 @@
     }
 
     /* Launch track: a route from "Side project" to "Startup" with each
-       kind of support as a stop. A gold comet runs down the rail and lights
+       kind of support as a stop. A bright comet runs down the rail and lights
        the stops it passes; the AttentionX mark lands on "Startup", then a
        soft pulse keeps travelling the line. Rail geometry and progress
        (--rail-top, --rail-h, --p) are set by script. */
@@ -466,10 +466,10 @@
     }
 
     .track-fill {
-      background: linear-gradient(to bottom, #9fb4e6, #ffc857);
+      background: linear-gradient(to bottom, rgba(244, 241, 232, 0.35), #f4f1e8);
       transform-origin: top;
       transform: scaleY(var(--p, 0));
-      box-shadow: 0 0 10px rgba(255, 200, 87, 0.35);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.22);
     }
 
     .track-comet {
@@ -478,8 +478,8 @@
       top: calc(var(--rail-top, 0px) + var(--rail-h, 0px) * var(--p, 0));
       width: 9px;
       height: 9px;
-      background: #fff6dc;
-      box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.25), 0 0 18px 4px rgba(255, 200, 87, 0.55);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.16), 0 0 18px 4px rgba(255, 255, 255, 0.4);
       transform: translate(-50%, -50%) rotate(45deg);
       opacity: 0;
       transition: opacity 0.4s ease;
@@ -494,7 +494,7 @@
     .track-pulse {
       height: 46px;
       margin-top: -46px;
-      background: linear-gradient(to bottom, transparent, rgba(255, 246, 220, 0.95));
+      background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.9));
       opacity: 0;
     }
 
@@ -558,13 +558,13 @@
     }
 
     .track-row.is-lit .track-node {
-      background: #ffc857;
-      border-color: #ffc857;
-      box-shadow: 0 0 0 4px rgba(255, 200, 87, 0.14), 0 0 14px rgba(255, 200, 87, 0.45);
+      background: #f4f1e8;
+      border-color: #f4f1e8;
+      box-shadow: 0 0 0 4px rgba(244, 241, 232, 0.12), 0 0 14px rgba(244, 241, 232, 0.35);
     }
 
     .track-row.is-lit .track-num {
-      color: #ffc857;
+      color: rgba(244, 241, 232, 0.75);
     }
 
     .track-row.is-lit .track-name {
@@ -625,12 +625,12 @@
     }
 
     .track.is-done .track-finish .track-mark {
-      color: #ffc857;
-      filter: drop-shadow(0 0 8px rgba(255, 200, 87, 0.6));
+      color: #f4f1e8;
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
       transform: rotate(90deg);
     }
 
-    /* The finish is the payoff: "Startup" lands large, italic and gold. */
+    /* The finish is the payoff: "Startup" lands large and italic. */
     .track-finish {
       padding-top: 18px;
     }
@@ -648,8 +648,8 @@
     }
 
     .track.is-done .track-finish .track-name {
-      color: #ffc857;
-      text-shadow: 0 0 28px rgba(255, 200, 87, 0.35);
+      color: #f4f1e8;
+      text-shadow: 0 0 28px rgba(255, 255, 255, 0.22);
     }
 
     .track-finish:hover .d1 { transform: translate(-7px, -7px); }
@@ -721,11 +721,11 @@
       color: rgba(244, 241, 232, 0.5);
     }
 
-    /* Highlighted phrase: full-bright text with a gold marker stroke that
+    /* Highlighted phrase: full-bright text with a soft light marker stroke that
        sweeps in, line by line, when the tile scrolls into view. */
     .tile-title mark.hl {
       color: rgba(244, 241, 232, 0.98);
-      background: linear-gradient(transparent 56%, rgba(255, 200, 87, 0.36) 56%, rgba(255, 200, 87, 0.36) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      background: linear-gradient(transparent 56%, rgba(244, 241, 232, 0.16) 56%, rgba(244, 241, 232, 0.16) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
       transition: background-size 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
     }
 
@@ -1184,7 +1184,7 @@
       line-height: 0;
     }
 
-    /* Shine: letters rest a little dim, then a bright white-gold band sweeps
+    /* Shine: letters rest a little dim, then a bright white band sweeps
        through them (masked to the letter shapes) while a blurred flare of
        light travels across with it and the whole mark blooms. */
     .tile-mark-logo img {
@@ -1200,9 +1200,9 @@
       inset: 0;
       background: linear-gradient(100deg,
         transparent 30%,
-        rgba(255, 214, 140, 0.9) 42%,
+        rgba(255, 255, 255, 0.85) 42%,
         #fff 50%,
-        rgba(255, 214, 140, 0.9) 58%,
+        rgba(255, 255, 255, 0.85) 58%,
         transparent 70%);
       background-size: 250% 100%;
       background-repeat: no-repeat;
@@ -1218,7 +1218,7 @@
       bottom: -120%;
       left: 0;
       width: 34%;
-      background: radial-gradient(ellipse at center, rgba(255, 226, 170, 0.55), rgba(255, 200, 120, 0.18) 45%, transparent 70%);
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.12) 45%, transparent 70%);
       filter: blur(6px);
       mix-blend-mode: screen;
       opacity: 0;
@@ -1239,9 +1239,9 @@
     }
 
     @keyframes logo-glow {
-      0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 220, 160, 0)); opacity: 0.7; }
-      28%      { filter: drop-shadow(0 0 10px rgba(255, 220, 160, 0.7)) drop-shadow(0 0 28px rgba(255, 200, 120, 0.45)); opacity: 1; }
-      60%      { filter: drop-shadow(0 0 0 rgba(255, 220, 160, 0)); opacity: 0.7; }
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); opacity: 0.7; }
+      28%      { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 28px rgba(255, 255, 255, 0.35)); opacity: 1; }
+      60%      { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); opacity: 0.7; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -1611,14 +1611,14 @@
       width: 0.55em;
       height: 0.55em;
       border-radius: 50%;
-      background: #f4e3b8;
-      box-shadow: 0 0 0 0 rgba(244, 227, 184, 0.5);
+      background: #f4f1e8;
+      box-shadow: 0 0 0 0 rgba(244, 241, 232, 0.5);
       animation: news-pulse 2.4s ease-out infinite;
     }
 
     @keyframes news-pulse {
-      0% { box-shadow: 0 0 0 0 rgba(244, 227, 184, 0.45); }
-      70%, 100% { box-shadow: 0 0 0 0.9em rgba(244, 227, 184, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(244, 241, 232, 0.45); }
+      70%, 100% { box-shadow: 0 0 0 0.9em rgba(244, 241, 232, 0); }
     }
 
     .news-count {
@@ -2274,7 +2274,7 @@
       height: 1px;
       transform-origin: left;
       transform: scaleX(var(--progress, 0));
-      background: linear-gradient(90deg, #9fb4e6, #ffc857 55%, #e8a27c);
+      background: linear-gradient(90deg, rgba(244, 241, 232, 0.3), #f4f1e8);
       opacity: 0;
       transition: opacity 0.5s ease;
       pointer-events: none;
@@ -2313,7 +2313,7 @@
     }
 
     /* On hover the diamonds drift apart and the top-left one lights up. */
-    .nav-logo:hover .d1 { transform: translate(-9px, -9px); fill: #ffc857; }
+    .nav-logo:hover .d1 { transform: translate(-9px, -9px); }
     .nav-logo:hover .d2 { transform: translate(9px, -9px); }
     .nav-logo:hover .d3 { transform: translate(-9px, 9px); }
     .nav-logo:hover .d4 { transform: translate(9px, 9px); }
@@ -2395,7 +2395,7 @@
 
     .nav-link:hover .nav-num,
     .nav-link.is-active .nav-num {
-      color: #ffc857;
+      color: rgba(244, 241, 232, 0.85);
     }
 
     /* Letter roll: two copies of the word; letters swap upward one after
@@ -2463,7 +2463,7 @@
       width: 7px;
       height: 7px;
       border-radius: 2px;
-      background: #ffc857;
+      background: #f4f1e8;
     }
 
     .nav-dot::after {
@@ -2471,7 +2471,7 @@
       position: absolute;
       inset: -4px;
       border-radius: 4px;
-      border: 1px solid #ffc857;
+      border: 1px solid rgba(244, 241, 232, 0.8);
       opacity: 0;
       animation: nav-ping 2.4s ease-out infinite;
     }
@@ -2554,7 +2554,7 @@
       font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.04em;
-      color: #ffc857;
+      color: rgba(244, 241, 232, 0.5);
     }
 
     .nav-sheet.is-open a {

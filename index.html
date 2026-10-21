@@ -33,16 +33,23 @@
     .card {
       position: relative;
       z-index: 1;
-      width: min(400px, 100%);
+      width: min(580px, 100%);
       aspect-ratio: 0.68;
-      padding: 52px 44px;
+      padding: 68px 64px;
       border-radius: 16px;
       background-color: #f2efe8;
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
       font-family: 'Gowun Batang', Georgia, serif;
-      font-size: 15.5px;
-      line-height: 1.6;
+      font-size: 19px;
+      line-height: 1.65;
       color: #4a4641;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 44px 28px;
+        font-size: 17px;
+      }
     }
 
     .card p + p {

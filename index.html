@@ -238,16 +238,16 @@
       position: relative;
       font-family: 'Newsreader', 'Times New Roman', serif;
       font-weight: 400;
-      font-size: max(14px, 4.6cqw);
-      line-height: 1.22;
+      font-size: 7.4cqw;
+      line-height: 1.16;
       letter-spacing: -0.012em;
-      color: rgba(244, 241, 232, 0.92);
+      color: rgba(244, 241, 232, 0.94);
     }
 
     .scout-list {
       position: relative;
-      /* Centered in the space between the intro and the punchline. */
-      margin: auto 0;
+      /* Sits at the bottom of the tile, under the intro. */
+      margin: auto 0 0;
       list-style: none;
       counter-reset: scout;
     }
@@ -269,7 +269,7 @@
       position: relative;
       counter-increment: scout;
       display: grid;
-      grid-template-columns: 6cqw 26cqw 1fr;
+      grid-template-columns: 6cqw 36cqw 1fr;
       column-gap: 2cqw;
       /* Number, verb and detail share one baseline; extra top padding sets
          the verbs a little lower between the rules. */
@@ -803,7 +803,8 @@
         min-height: calc(var(--w) / 1.27);
       }
 
-      .tile-title {
+      .tile-title,
+      .scout-note {
         font-size: 8.4cqw;
       }
 
@@ -2159,13 +2160,12 @@
         </a>
       </section>
       <section class="tile tile-text tile-scout">
-        <p class="scout-note">We operate as a scout for larger funds, enterprises, and talent, leveraging our network to help our founders:</p>
+        <p class="scout-note">We are the Korea’s AI ecosystem.</p>
         <ol class="scout-list">
-          <li><span class="scout-num"></span><span class="scout-verb" data-decode>Raise</span><span class="scout-obj">from the best investors.</span></li>
-          <li><span class="scout-num"></span><span class="scout-verb" data-decode>Get</span><span class="scout-obj">the best enterprises.</span></li>
-          <li><span class="scout-num"></span><span class="scout-verb" data-decode>Hire</span><span class="scout-obj">the best talent.</span></li>
+          <li><span class="scout-num"></span><span class="scout-verb" data-decode>40+</span><span class="scout-obj">venture-backed startups.</span></li>
+          <li><span class="scout-num"></span><span class="scout-verb" data-decode>$120M+</span><span class="scout-obj">raised by our fellows.</span></li>
+          <li><span class="scout-num"></span><span class="scout-verb" data-decode>200+</span><span class="scout-obj">fellowship alumni.</span></li>
         </ol>
-        <p class="scout-punch"><span class="scout-punch-lead">These three are the most essential value-adds a cap table investor needs to provide,</span>and we’re damn good at them.</p>
       </section>
       <section class="tile tile-text tile-mark">
         <h2 class="tile-title">We are really, really, really good at finding exceptional builders earlier than anyone else, often while they are still in <em>stealth mode.</em></h2>

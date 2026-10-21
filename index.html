@@ -378,9 +378,10 @@
       margin: 20px 0 14px;
       font-family: 'Newsreader', 'Times New Roman', serif;
       font-style: italic;
-      font-size: clamp(64px, 8.4vw, 150px);
+      font-size: clamp(40px, 5.6vw, 104px);
       line-height: 0.95;
-      letter-spacing: -0.035em;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
       font-variant-numeric: tabular-nums;
       color: #f4f1e8;
     }
@@ -657,6 +658,10 @@
     @media (max-width: 820px) {
       .mf-grid {
         grid-template-columns: 1fr;
+      }
+
+      .mf-stat {
+        font-size: 12.5vw;
       }
 
       .mf-col:first-child {
@@ -2672,7 +2677,7 @@
       <div class="mf-grid">
         <div class="mf-col">
           <p class="mf-label">Raised by our fellows</p>
-          <div class="mf-stat" aria-label="Over $70M"><span data-count-to="70">$70M</span><sup>+</sup></div>
+          <div class="mf-stat" aria-label="$70,000,000"><span data-count-to="70000000">$70,000,000</span></div>
           <p class="mf-body">Our fellows have raised over $70M in funding from leading venture funds and institutional investors.</p>
           <ul class="mf-slots">
             <li><a data-cursor-label="a16z"><img src="assets/coinvestors/ax-a16z.png" alt="a16z" /></a></li>
@@ -3382,7 +3387,8 @@
       };
 
       var count = document.querySelector('[data-count-to]');
-      if (count && !reduced && 'IntersectionObserver' in window) count.textContent = '$0M';
+      var money = function (n) { return '$' + n.toLocaleString('en-US'); };
+      if (count && !reduced && 'IntersectionObserver' in window) count.textContent = money(0);
       once(count, function (instant) {
         var to = parseInt(count.dataset.countTo, 10);
         if (instant) return;
@@ -3390,7 +3396,7 @@
         (function step(now) {
           var t = Math.min(1, (now - start) / dur);
           var eased = 1 - Math.pow(1 - t, 3);
-          count.textContent = '$' + Math.round(to * eased) + 'M';
+          count.textContent = money(Math.round(to * eased));
           if (t < 1) requestAnimationFrame(step);
         })(start);
       });

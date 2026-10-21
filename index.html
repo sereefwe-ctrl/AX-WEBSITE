@@ -214,6 +214,18 @@
       color: rgba(244, 241, 232, 0.5);
     }
 
+    /* Highlighted phrase: full-bright text with a gold marker stroke that
+       sweeps in, line by line, when the tile scrolls into view. */
+    .tile-title mark.hl {
+      color: rgba(244, 241, 232, 0.98);
+      background: linear-gradient(transparent 56%, rgba(255, 200, 87, 0.36) 56%, rgba(255, 200, 87, 0.36) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      transition: background-size 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+    }
+
+    .tile-title mark.hl.is-in {
+      background-size: 100% 100%;
+    }
+
     /* Scout tile: small print framing three big italic verbs, then an
        italic punchline. Rows reveal and decode when scrolled into view. */
     .tile-scout {
@@ -2140,7 +2152,7 @@
 
     <div class="row row-3">
       <section class="tile tile-text" id="fellowship">
-        <h2 class="tile-title">We are an AI researchers &amp; founders fellowship based in Seoul from academia and industry. <em>We work on research, open-source projects, and real-world applications to build the next leading AI startups.</em></h2>
+        <h2 class="tile-title">We are an AI researchers &amp; founders fellowship based in Seoul from academia and industry. <em>We work on research, open-source projects, and real-world applications to <mark class="hl">build the next leading AI startups.</mark></em></h2>
         <a class="tile-button" href="#companies" data-cursor-label="companies">
           View all companies
           <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
@@ -2808,6 +2820,23 @@
         tile.style.setProperty('--my', (e.clientY - r.top) + 'px');
       });
     });
+
+    // Marker highlights sweep in once they are well inside the viewport.
+    (function () {
+      var marks = document.querySelectorAll('mark.hl');
+      if (!('IntersectionObserver' in window)) {
+        marks.forEach(function (m) { m.classList.add('is-in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-in');
+          io.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -20% 0px' });
+      marks.forEach(function (m) { io.observe(m); });
+    })();
 
     // Navigation: condense on scroll, sliding hover pill, letter-roll
     // labels, scroll-linked logo spin, Seoul clock and the mobile sheet.

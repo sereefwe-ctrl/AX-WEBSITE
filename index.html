@@ -166,8 +166,8 @@
       outline-offset: 3px;
     }
 
-    /* Hero wordmark: the footer treatment inside the top box. Flush with
-       the box's sides and bottom, dimmed and fading in from the top. */
+    /* Hero wordmark: the footer treatment inside the top box. Spans the
+       box at its bottom edge, dimmed and fading in from the top. */
     .hero {
       align-items: flex-end;
     }
@@ -176,6 +176,7 @@
       display: block;
       width: 100%;
       height: auto;
+      padding: 0 2.5% 2.5%;
       opacity: 0.16;
       -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%);
       mask-image: linear-gradient(to bottom, transparent, #000 70%);

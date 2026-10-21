@@ -400,14 +400,21 @@
     .mf-points li {
       display: flex;
       align-items: baseline;
-      gap: 0.6em;
+      gap: 12px;
+      font-size: clamp(22px, 2.05vw, 34px);
+      line-height: 1.25;
+      letter-spacing: -0.012em;
       color: #f4f1e8;
     }
 
+    .mf-points li + li {
+      margin-top: 0.2em;
+    }
+
     .mf-points .mf-n {
-      flex: 0 0 1.4em;
+      flex: 0 0 18px;
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 0.62em;
+      font-size: 12px;
       font-weight: 600;
       letter-spacing: 0.04em;
       color: rgba(244, 241, 232, 0.45);

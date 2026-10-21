@@ -425,8 +425,6 @@
       height: 100%;
     }
 
-    /* Logos rest in soft black-and-white, a little muted, and bloom into
-       full colour on hover or tap. */
     .mf-slots img {
       display: block;
       width: 74%;
@@ -434,16 +432,11 @@
       object-fit: cover;
       border-radius: 16%;
       box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
-      filter: grayscale(1);
-      opacity: 0.78;
-      transition: filter 0.5s ease, opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .mf-slots li:hover img,
-    .mf-slots li:active img,
-    .mf-slots li:focus-within img {
-      filter: none;
-      opacity: 1;
+    .mf-slots li:active img {
       transform: scale(1.06);
     }
 
@@ -2688,8 +2681,8 @@
             <li><a data-cursor-label="Arielle Zuckerberg"><img src="assets/coinvestors/ax-arielle-zuckerberg.webp" alt="Arielle Zuckerberg" /></a></li>
             <li><a data-cursor-label="Y Combinator"><img src="assets/coinvestors/ax-y-combinator.jpg" alt="Y Combinator" /></a></li>
             <li><a data-cursor-label="South Park Commons"><img src="assets/coinvestors/ax-south-park-commons.jpg" alt="South Park Commons" /></a></li>
-            <li><a data-cursor-label="SoftBank"><img src="assets/coinvestors/ax-softbank.png" alt="SoftBank" /></a></li>
             <li><a data-cursor-label="Samsung Ventures"><img src="assets/coinvestors/ax-samsung-ventures.png" alt="Samsung Ventures" /></a></li>
+            <li><a data-cursor-label="SoftBank"><img src="assets/coinvestors/ax-softbank.png" alt="SoftBank" /></a></li>
           </ul>
         </div>
         <div class="mf-col">

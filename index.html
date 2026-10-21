@@ -392,6 +392,24 @@
 
     /* Two-point line: lead-in, then each point on its own line in full
        brightness behind a small number. */
+    .mf-points > p {
+      font-size: clamp(21px, 1.95vw, 32px);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    /* "launchpad": bright, with a soft light marker stroke that sweeps in
+       when it scrolls into view (same as the hero's highlights). */
+    .mf-points mark.hl {
+      color: #fff;
+      background: linear-gradient(transparent 58%, rgba(244, 241, 232, 0.2) 58%, rgba(244, 241, 232, 0.2) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      transition: background-size 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.2s;
+    }
+
+    .mf-points mark.hl.is-in {
+      background-size: 100% 100%;
+    }
+
     .mf-points ol {
       margin-top: 0.35em;
       list-style: none;
@@ -2616,7 +2634,7 @@
         <div class="mf-col">
           <p class="mf-label">Milestones</p>
           <div class="mf-body mf-points">
-            <p>We’re the launchpad for</p>
+            <p>We’re the <mark class="hl">launchpad</mark> for</p>
             <ol>
               <li><span class="mf-n">1)</span>Korean founders going global.</li>
               <li><span class="mf-n">2)</span>Global AI companies entering Korea.</li>

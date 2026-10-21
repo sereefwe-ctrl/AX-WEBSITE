@@ -354,6 +354,21 @@
       border-left: 1px solid rgba(244, 241, 232, 0.12);
     }
 
+    /* The milestone list sits at the bottom of its column, so it ends
+       level with the divider beside it. */
+    .mf-col-ms {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mf-col-ms .mf-points {
+      margin-bottom: 26px;
+    }
+
+    .mf-col-ms .ms {
+      margin-top: auto;
+    }
+
     .mf-col:first-child {
       padding-right: clamp(26px, 3.4vw, 64px);
     }
@@ -2667,7 +2682,7 @@
             <li><a data-cursor-label="SoftBank"><img src="assets/coinvestors/ax-softbank.png" alt="SoftBank" /></a></li>
           </ul>
         </div>
-        <div class="mf-col">
+        <div class="mf-col mf-col-ms">
           <p class="mf-label">Milestones</p>
           <div class="mf-body mf-points" data-points>
             <p>We’re the <em>launchpad</em> for</p>

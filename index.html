@@ -391,11 +391,9 @@
     }
 
     /* Launchpad block: a quiet lead-in with "launchpad" in bright italic,
-       then the two directions, each led by the site's curved arrow. The
-       arrow for founders going global takes off (tilted up); the one for
-       companies entering Korea lands (tilted down). Lines rise in on first
-       view with the arrows gliding in along their direction; hovering a
-       line nudges its arrow further. */
+       then the two directions, each led by the site's curved arrow,
+       pointing straight ahead. Lines rise in on first view with the arrows
+       gliding in from the left; hovering a line nudges its arrow right. */
     .mf-points > p {
       font-size: clamp(20px, 1.85vw, 30px);
       line-height: 1.25;
@@ -435,7 +433,7 @@
     }
 
     .mf-arrow {
-      --rot: -36deg;
+      --rot: 0deg;
       display: block;
       margin-top: 0.27em;
       color: rgba(244, 241, 232, 0.5);
@@ -452,20 +450,9 @@
       height: auto;
     }
 
-    .mf-points .go-in .mf-arrow {
-      --rot: 36deg;
-    }
-
     /* Before the reveal, each arrow waits a little back along its path. */
-    .mf-points:not(.is-shown) .go-out .mf-arrow {
-      --dx: -0.3em;
-      --dy: 0.3em;
-      opacity: 0;
-    }
-
-    .mf-points:not(.is-shown) .go-in .mf-arrow {
-      --dx: -0.3em;
-      --dy: -0.3em;
+    .mf-points:not(.is-shown) .mf-arrow {
+      --dx: -0.4em;
       opacity: 0;
     }
 
@@ -475,15 +462,8 @@
       transition-delay: 0s;
     }
 
-    .mf-points .go-out:hover .mf-arrow {
-      --dx: 0.12em;
-      --dy: -0.12em;
-      color: #fff;
-    }
-
-    .mf-points .go-in:hover .mf-arrow {
-      --dx: 0.12em;
-      --dy: 0.12em;
+    .mf-points li:hover .mf-arrow {
+      --dx: 0.15em;
       color: #fff;
     }
 

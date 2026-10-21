@@ -425,9 +425,8 @@
       height: 100%;
     }
 
-    /* Logos rest in a dark monochrome and bloom into full colour on hover
-       or tap. Logos on white (data-tone="light") are inverted so they rest
-       as light marks on a dark tile instead of grey squares. */
+    /* Logos rest in soft black-and-white, a little muted, and bloom into
+       full colour on hover or tap. */
     .mf-slots img {
       display: block;
       width: 74%;
@@ -435,18 +434,16 @@
       object-fit: cover;
       border-radius: 16%;
       box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
-      filter: grayscale(1) brightness(0.42) contrast(1.1);
-      transition: filter 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .mf-slots li[data-tone="light"] img {
-      filter: grayscale(1) invert(1) brightness(0.82) contrast(1.15);
+      filter: grayscale(1);
+      opacity: 0.78;
+      transition: filter 0.5s ease, opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .mf-slots li:hover img,
     .mf-slots li:active img,
     .mf-slots li:focus-within img {
       filter: none;
+      opacity: 1;
       transform: scale(1.06);
     }
 
@@ -2690,9 +2687,9 @@
             <li><a data-cursor-label="a16z"><img src="assets/coinvestors/ax-a16z.png" alt="a16z" /></a></li>
             <li><a data-cursor-label="Arielle Zuckerberg"><img src="assets/coinvestors/ax-arielle-zuckerberg.webp" alt="Arielle Zuckerberg" /></a></li>
             <li><a data-cursor-label="Y Combinator"><img src="assets/coinvestors/ax-y-combinator.jpg" alt="Y Combinator" /></a></li>
-            <li data-tone="light"><a data-cursor-label="South Park Commons"><img src="assets/coinvestors/ax-south-park-commons.jpg" alt="South Park Commons" /></a></li>
-            <li data-tone="light"><a data-cursor-label="SoftBank"><img src="assets/coinvestors/ax-softbank.png" alt="SoftBank" /></a></li>
-            <li data-tone="light"><a data-cursor-label="Samsung Ventures"><img src="assets/coinvestors/ax-samsung-ventures.png" alt="Samsung Ventures" /></a></li>
+            <li><a data-cursor-label="South Park Commons"><img src="assets/coinvestors/ax-south-park-commons.jpg" alt="South Park Commons" /></a></li>
+            <li><a data-cursor-label="SoftBank"><img src="assets/coinvestors/ax-softbank.png" alt="SoftBank" /></a></li>
+            <li><a data-cursor-label="Samsung Ventures"><img src="assets/coinvestors/ax-samsung-ventures.png" alt="Samsung Ventures" /></a></li>
           </ul>
         </div>
         <div class="mf-col">

@@ -870,6 +870,11 @@
         min-height: calc(var(--w) / 1.27);
       }
 
+      /* Emptied row keeps one tile's worth of space when stacked. */
+      .row-empty {
+        min-height: calc(var(--w) / 1.27);
+      }
+
       .tile-title,
       .scout-note {
         font-size: 8.4cqw;
@@ -2217,35 +2222,9 @@
       <img class="hero-fade" src="images/attentionx-logo.png" alt="AttentionX" />
     </section>
 
-    <div class="row row-3">
-      <section class="tile tile-text" id="fellowship">
-        <h2 class="tile-title">We are an AI researchers &amp; founders fellowship based in Seoul from academia and industry. <em>We work on research, open-source projects, and real-world applications to <mark class="hl">build the next leading AI startups.</mark></em></h2>
-        <a class="tile-button" href="#companies" data-cursor-label="companies">
-          View all companies
-          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
-        </a>
-      </section>
-      <section class="tile tile-text tile-scout">
-        <p class="scout-note">We are Korea’s AI ecosystem. <em>Startups founded by our fellows are backed by A16Z, Y Combinator, Arielle Zuckerberg, Samsung Ventures, Hyundai, and LG Electronics.</em></p>
-        <ol class="scout-list">
-          <li><span class="scout-num"></span><span class="scout-verb" data-decode>40+</span><span class="scout-obj">venture-backed startups.</span></li>
-          <li><span class="scout-num"></span><span class="scout-verb" data-decode>$120M+</span><span class="scout-obj">raised by our fellows.</span></li>
-          <li><span class="scout-num"></span><span class="scout-verb" data-decode>200+</span><span class="scout-obj">fellowship alumni.</span></li>
-        </ol>
-      </section>
-      <section class="tile tile-text tile-mark">
-        <h2 class="tile-title">We are really, really, really good at finding exceptional builders earlier than anyone else, often while they are still in <em>stealth mode.</em></h2>
-        <span class="tile-mark-logo">
-          <img src="assets/arcadia-wordmark-white.png" alt="Arcadia" />
-          <span class="logo-shine" aria-hidden="true"></span>
-          <span class="logo-flare" aria-hidden="true"></span>
-        </span>
-        <a class="tile-button" href="#" data-cursor-label="strategy">
-          Read our strategy
-          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
-        </a>
-      </section>
-    </div>
+    <!-- Reserved space: the three intro boxes were removed; the row keeps
+         its height until new content goes here. -->
+    <div class="row row-3 row-empty" aria-hidden="true"></div>
 
     <div class="row row-2">
       <section class="tile tile-grid" id="companies">

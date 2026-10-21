@@ -1679,6 +1679,404 @@
       user-select: none;
     }
 
+    /* ---------- Navigation ----------
+       Sits open across the top of the hero, then condenses into a
+       floating glass pill once the page scrolls. A light pill slides
+       between links on hover and each label rolls letter by letter. */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    [id] {
+      scroll-margin-top: 110px;
+    }
+
+    .nav {
+      --nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
+      position: fixed;
+      top: calc(var(--gap) + 12px);
+      left: 50%;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      width: calc(100% - 2 * var(--gap) - 24px);
+      height: 64px;
+      padding: 0 12px 0 14px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      color: rgba(244, 241, 232, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      transform: translate(-50%, 0);
+      transition:
+        width 0.7s var(--nav-ease),
+        top 0.7s var(--nav-ease),
+        background-color 0.5s ease,
+        border-color 0.5s ease,
+        box-shadow 0.5s ease,
+        backdrop-filter 0.5s ease;
+      animation: nav-in 1s var(--nav-ease) both;
+    }
+
+    @keyframes nav-in {
+      from { opacity: 0; transform: translate(-50%, -24px); }
+    }
+
+    .nav.is-compact {
+      top: 14px;
+      width: min(780px, calc(100% - 28px));
+      background-color: rgba(22, 22, 21, 0.62);
+      border-color: rgba(255, 255, 255, 0.09);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 24px 50px -24px rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(22px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+    }
+
+    /* Thin scroll-progress line along the bottom edge of the pill. */
+    .nav-progress {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: -1px;
+      height: 1px;
+      transform-origin: left;
+      transform: scaleX(var(--progress, 0));
+      background: linear-gradient(90deg, #9fb4e6, #ffc857 55%, #e8a27c);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    .nav.is-compact .nav-progress {
+      opacity: 0.8;
+    }
+
+    /* Logo mark: four diamonds, redrawn as vector so each can move. */
+    .nav-logo {
+      justify-self: start;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      color: #f4f1e8;
+      transition: background-color 0.3s ease;
+    }
+
+    .nav-logo:hover {
+      background-color: rgba(244, 241, 232, 0.07);
+    }
+
+    .nav-mark {
+      width: 28px;
+      height: 28px;
+      overflow: visible;
+      transform: rotate(var(--spin, 0deg));
+    }
+
+    .nav-mark polygon {
+      fill: currentColor;
+      transition: transform 0.55s var(--nav-ease), fill 0.3s ease;
+    }
+
+    /* On hover the diamonds drift apart and the top-left one lights up. */
+    .nav-logo:hover .d1 { transform: translate(-9px, -9px); fill: #ffc857; }
+    .nav-logo:hover .d2 { transform: translate(9px, -9px); }
+    .nav-logo:hover .d3 { transform: translate(-9px, 9px); }
+    .nav-logo:hover .d4 { transform: translate(9px, 9px); }
+
+    .nav-links {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 4px;
+      border-radius: 999px;
+    }
+
+    /* Sliding hover pill, positioned by script. */
+    .nav-pill {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      width: var(--pill-w, 0px);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(244, 241, 232, 0.13), rgba(244, 241, 232, 0.06));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      transform: translateX(var(--pill-x, 0px));
+      opacity: 0;
+      transition:
+        transform 0.5s var(--nav-ease),
+        width 0.5s var(--nav-ease),
+        opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .nav-links.has-pill .nav-pill {
+      opacity: 1;
+    }
+
+    .nav-link {
+      position: relative;
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 5px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      color: rgba(244, 241, 232, 0.66);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      animation: nav-in-item 0.9s var(--nav-ease) both;
+      animation-delay: calc(0.25s + var(--n) * 0.07s);
+    }
+
+    @keyframes nav-in-item {
+      from { opacity: 0; transform: translateY(-10px); }
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible,
+    .nav-link.is-active {
+      color: #fff;
+    }
+
+    .nav-link:focus-visible {
+      outline: 2px solid rgba(244, 241, 232, 0.6);
+      outline-offset: 2px;
+    }
+
+    .nav-num {
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.38);
+      transform: translateY(-1px);
+      transition: color 0.3s ease;
+    }
+
+    .nav-link:hover .nav-num,
+    .nav-link.is-active .nav-num {
+      color: #ffc857;
+    }
+
+    /* Letter roll: two copies of the word; letters swap upward one after
+       another on hover. */
+    .nav-roll {
+      position: relative;
+      display: inline-block;
+      overflow: hidden;
+      height: 1.2em;
+    }
+
+    .nav-roll > span {
+      display: block;
+      white-space: pre;
+    }
+
+    .nav-roll > span + span {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .nav-roll i {
+      display: inline-block;
+      font-style: normal;
+      transition: transform 0.5s var(--nav-ease);
+      transition-delay: calc(var(--i) * 22ms);
+    }
+
+    .nav-roll > span + span i {
+      transform: translateY(110%);
+    }
+
+    .nav-link:hover .nav-roll > span:first-child i {
+      transform: translateY(-110%);
+    }
+
+    .nav-link:hover .nav-roll > span + span i {
+      transform: translateY(0);
+    }
+
+    /* Live Seoul clock on the right. */
+    .nav-clock {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding-right: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: rgba(244, 241, 232, 0.55);
+      white-space: nowrap;
+      animation: nav-in-item 0.9s var(--nav-ease) 0.6s both;
+    }
+
+    .nav-clock time {
+      color: rgba(244, 241, 232, 0.9);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav-dot {
+      position: relative;
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      background: #ffc857;
+    }
+
+    .nav-dot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 4px;
+      border: 1px solid #ffc857;
+      opacity: 0;
+      animation: nav-ping 2.4s ease-out infinite;
+    }
+
+    @keyframes nav-ping {
+      0% { opacity: 0.8; transform: scale(0.6); }
+      100% { opacity: 0; transform: scale(1.6); }
+    }
+
+    /* Menu button and full-screen sheet for small screens. */
+    .nav-toggle {
+      display: none;
+      justify-self: end;
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(244, 241, 232, 0.1);
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      height: 1.5px;
+      border-radius: 1px;
+      background: #f4f1e8;
+      transition: transform 0.45s var(--nav-ease), top 0.45s var(--nav-ease);
+    }
+
+    .nav-toggle span:first-child { top: 18px; }
+    .nav-toggle span:last-child { top: 25px; }
+
+    .nav.is-open .nav-toggle span:first-child { top: 21.5px; transform: rotate(45deg); }
+    .nav.is-open .nav-toggle span:last-child { top: 21.5px; transform: rotate(-45deg); }
+
+    .nav-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 120px 28px 40px;
+      background: rgba(14, 14, 13, 0.7);
+      backdrop-filter: blur(26px) saturate(140%);
+      -webkit-backdrop-filter: blur(26px) saturate(140%);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+    }
+
+    .nav-sheet.is-open {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease;
+    }
+
+    .nav-sheet a {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f4f1e8;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(40px, 12vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .nav-sheet a span {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #ffc857;
+    }
+
+    .nav-sheet.is-open a {
+      opacity: 1;
+      transform: none;
+      transition-delay: calc(0.08s + var(--n) * 0.06s);
+    }
+
+    .nav-sheet .nav-clock {
+      justify-self: auto;
+      margin-top: 28px;
+      animation: none;
+    }
+
+    @media (max-width: 820px) {
+      .nav {
+        grid-template-columns: 1fr auto;
+        height: 58px;
+        padding: 0 8px 0 10px;
+      }
+
+      .nav-links,
+      .nav > .nav-clock {
+        display: none;
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      .nav.is-compact {
+        width: calc(100% - 28px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .nav,
+      .nav-link,
+      .nav-clock {
+        animation: none;
+      }
+
+      .nav-roll i,
+      .nav-mark polygon,
+      .nav-pill {
+        transition: none;
+      }
+
+      .nav-dot::after {
+        display: none;
+      }
+    }
+
     /* Live film grain, redrawn by the script below. */
     .grain {
       position: fixed;
@@ -1693,6 +2091,39 @@
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+
+  <header class="nav">
+    <a class="nav-logo" href="#top" aria-label="AttentionX, back to top" data-cursor-off>
+      <svg class="nav-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <polygon class="d1" points="25,0 50,25 25,50 0,25" />
+        <polygon class="d2" points="75,0 100,25 75,50 50,25" />
+        <polygon class="d3" points="25,50 50,75 25,100 0,75" />
+        <polygon class="d4" points="75,50 100,75 75,100 50,75" />
+      </svg>
+    </a>
+
+    <nav class="nav-links" aria-label="Main">
+      <span class="nav-pill" aria-hidden="true"></span>
+      <a class="nav-link" href="#fellowship" style="--n: 0" data-cursor-off><span class="nav-num">01</span><span class="nav-roll">Fellowship</span></a>
+      <a class="nav-link" href="#companies" style="--n: 1" data-cursor-off><span class="nav-num">02</span><span class="nav-roll">Companies</span></a>
+      <a class="nav-link" href="#launchpad" style="--n: 2" data-cursor-off><span class="nav-num">03</span><span class="nav-roll">Launchpad</span></a>
+      <a class="nav-link" href="#events" style="--n: 3" data-cursor-off><span class="nav-num">04</span><span class="nav-roll">Events</span></a>
+    </nav>
+
+    <div class="nav-clock"><span class="nav-dot" aria-hidden="true"></span>Seoul <time>--:--:--</time></div>
+
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-sheet" data-cursor-off><span></span><span></span></button>
+
+    <span class="nav-progress" aria-hidden="true"></span>
+  </header>
+
+  <div class="nav-sheet" id="nav-sheet">
+    <a href="#fellowship" style="--n: 0"><span>01</span>Fellowship</a>
+    <a href="#companies" style="--n: 1"><span>02</span>Companies</a>
+    <a href="#launchpad" style="--n: 2"><span>03</span>Launchpad</a>
+    <a href="#events" style="--n: 3"><span>04</span>Events</a>
+    <div class="nav-clock"><span class="nav-dot" aria-hidden="true"></span>Seoul <time>--:--:--</time></div>
+  </div>
 
   <main class="bento">
     <section class="tile hero">
@@ -1733,7 +2164,7 @@
     </div>
 
     <div class="row row-2">
-      <section class="tile tile-grid">
+      <section class="tile tile-grid" id="companies">
         <div class="mini-grid">
           <div class="mini"><a href="https://parasma.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Parasma"><img src="assets/portfolio/logo-6.jpg" alt="Parasma" /></a></div>
           <div class="mini"><a href="https://implicitphysics.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Implicit Physics"><img src="assets/portfolio/logo-2.png" alt="Implicit Physics" /></a></div>
@@ -2371,6 +2802,126 @@
         tile.style.setProperty('--my', (e.clientY - r.top) + 'px');
       });
     });
+
+    // Navigation: condense on scroll, sliding hover pill, letter-roll
+    // labels, scroll-linked logo spin, Seoul clock and the mobile sheet.
+    (function () {
+      var nav = document.querySelector('.nav');
+      if (!nav) return;
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Split each label into two rows of letters for the roll effect.
+      nav.querySelectorAll('.nav-roll').forEach(function (roll) {
+        var text = roll.textContent;
+        var row = function (hidden) {
+          var s = document.createElement('span');
+          if (hidden) s.setAttribute('aria-hidden', 'true');
+          text.split('').forEach(function (ch, i) {
+            var l = document.createElement('i');
+            l.textContent = ch;
+            l.style.setProperty('--i', i);
+            s.appendChild(l);
+          });
+          return s;
+        };
+        roll.textContent = '';
+        roll.closest('a').setAttribute('aria-label', text);
+        roll.appendChild(row(true));
+        roll.appendChild(row(true));
+      });
+
+      // Hover pill glides to whichever link is under the pointer.
+      var list = nav.querySelector('.nav-links');
+      var pill = nav.querySelector('.nav-pill');
+      function movePill(link) {
+        pill.style.setProperty('--pill-x', link.offsetLeft + 'px');
+        pill.style.setProperty('--pill-w', link.offsetWidth + 'px');
+      }
+      list.querySelectorAll('.nav-link').forEach(function (link) {
+        link.addEventListener('mouseenter', function () {
+          if (!list.classList.contains('has-pill')) {
+            // First entry: place the pill without sliding in from the side.
+            pill.style.transition = 'none';
+            movePill(link);
+            pill.offsetWidth;
+            pill.style.transition = '';
+          }
+          movePill(link);
+          list.classList.add('has-pill');
+        });
+        link.addEventListener('focus', function () {
+          movePill(link);
+          list.classList.add('has-pill');
+        });
+      });
+      list.addEventListener('mouseleave', function () { list.classList.remove('has-pill'); });
+      list.addEventListener('focusout', function (e) {
+        if (!list.contains(e.relatedTarget)) list.classList.remove('has-pill');
+      });
+
+      // Logo returns to the top.
+      nav.querySelector('.nav-logo').addEventListener('click', function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+      });
+
+      // Condense into the glass pill after a little scroll, track progress,
+      // and spin the mark with scroll (eased, like the Stealth Fund star).
+      // Once scrolling stops it settles on the nearest quarter turn, so the
+      // mark always rests upright.
+      var mark = nav.querySelector('.nav-mark');
+      var spin = 0;
+      var lastScroll = 0;
+      function onScroll() {
+        var y = window.scrollY;
+        lastScroll = performance.now();
+        nav.classList.toggle('is-compact', y > 40);
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        nav.style.setProperty('--progress', max > 0 ? Math.min(y / max, 1) : 0);
+      }
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      if (!reduced) {
+        (function tick(now) {
+          var target = window.scrollY * 0.25;
+          if (now - lastScroll > 160) target = Math.round(target / 90) * 90;
+          spin += (target - spin) * 0.12;
+          mark.style.setProperty('--spin', spin.toFixed(2) + 'deg');
+          requestAnimationFrame(tick);
+        })(performance.now());
+      }
+
+      // Live Seoul time.
+      var clocks = document.querySelectorAll('.nav-clock time');
+      var fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      function tickClock() {
+        var t = fmt.format(new Date());
+        clocks.forEach(function (c) { c.textContent = t; });
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      // Mobile menu sheet.
+      var toggle = nav.querySelector('.nav-toggle');
+      var sheet = document.getElementById('nav-sheet');
+      function setOpen(open) {
+        nav.classList.toggle('is-open', open);
+        sheet.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        document.documentElement.style.overflow = open ? 'hidden' : '';
+      }
+      toggle.addEventListener('click', function () { setOpen(!sheet.classList.contains('is-open')); });
+      sheet.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { setOpen(false); });
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sheet.classList.contains('is-open')) setOpen(false);
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 820 && sheet.classList.contains('is-open')) setOpen(false);
+      });
+    })();
   </script>
   <script src="/cursor.js"></script>
 </body>

@@ -102,9 +102,11 @@
   });
   window.addEventListener('mouseup', function () { dot.classList.remove('is-down'); });
 
-  // Label tag over links.
+  // Label tag over links. Links marked data-cursor-off (the nav, which
+  // has its own hover pill) get no tag.
   var colorIndex = 0;
   function showTag(target) {
+    if (target.hasAttribute('data-cursor-off')) return;
     var label = target.getAttribute('data-cursor-label') || (target.textContent || '').trim();
     if (!label) return;
     label = label.length > 28 ? label.slice(0, 27) + '…' : label;

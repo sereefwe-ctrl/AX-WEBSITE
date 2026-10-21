@@ -166,17 +166,21 @@
       outline-offset: 3px;
     }
 
-    /* AttentionX wordmark, a touch smaller than the Stealth Fund hero logo. */
-    .hero-logo {
-      position: relative;
-      width: min(560px, 62%);
-      user-select: none;
+    /* Hero wordmark: the footer treatment inside the top box. Spans the
+       box at its bottom edge, dimmed and fading in from the top. */
+    .hero {
+      align-items: flex-end;
     }
 
-    .hero-logo img {
+    .hero-fade {
       display: block;
       width: 100%;
       height: auto;
+      padding: 0 2.5% 2.5%;
+      opacity: 0.16;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      user-select: none;
     }
 
     .row {
@@ -2150,9 +2154,7 @@
 
   <main class="bento">
     <section class="tile hero">
-      <div class="hero-logo" role="img" aria-label="AttentionX">
-        <img src="images/attentionx-logo.png" alt="" />
-      </div>
+      <img class="hero-fade" src="images/attentionx-logo.png" alt="AttentionX" />
     </section>
 
     <div class="row row-3">

@@ -12,400 +12,71 @@
       padding: 0;
     }
 
-body {
-      background-color: #2a2a28;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Courier New', Courier, monospace;
-      padding: 40px 20px;
-      position: relative;
-    }
-
-    .bg-video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
+    html, body {
       height: 100%;
-      object-fit: cover;
-      z-index: -1;
-      opacity: 0.45;
-      transform: none;
     }
 
+    body {
+      background-color: #0e0e0d;
+    }
+
+    /* Live film grain, redrawn by the script below. */
     .grain {
       position: fixed;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.08;
-      animation: grain 0.5s steps(1) infinite;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-      background-repeat: repeat;
-      background-size: 200px 200px;
-    }
-
-    @keyframes grain {
-      0%  { transform: translate(0, 0); }
-      10% { transform: translate(-2%, -3%); }
-      20% { transform: translate(3%, 2%); }
-      30% { transform: translate(-1%, 4%); }
-      40% { transform: translate(4%, -1%); }
-      50% { transform: translate(-3%, 3%); }
-      60% { transform: translate(2%, -4%); }
-      70% { transform: translate(-4%, 1%); }
-      80% { transform: translate(1%, -2%); }
-      90% { transform: translate(3%, 4%); }
-      100%{ transform: translate(-2%, -1%); }
-    }
-
-    .card {
-      position: relative;
-      z-index: 1;
-    }
-
-.nav {
-      position: fixed;
-      top: 20px;
-      right: 24px;
-      display: flex;
-      gap: 8px;
-      z-index: 10;
-    }
-
-    .nav a {
-      background: rgba(255, 255, 255, 0.25);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: #1c1c1c;
-      text-decoration: none;
-      font-family: 'Courier New', Courier, monospace;
-      font-size: 13px;
-      font-weight: 700;
-      padding: 7px 14px;
-      border-radius: 8px;
-      transition: background 0.15s;
-    }
-
-    .nav a:hover {
-      background: rgba(255, 255, 255, 0.45);
-    }
-
-    .card {
-      background-color: #f7f6f2;
-      border-radius: 14px;
-      padding: 52px 60px 52px 60px;
-      max-width: 760px;
+      inset: 0;
       width: 100%;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-    }
-
-
-    .content {
-      position: relative;
-      z-index: 1;
-      font-size: 15.5px;
-      line-height: 1.78;
-      color: #1c1c1c;
-    }
-
-    .content p {
-      margin-bottom: 1.5em;
-    }
-
-    .content p:last-of-type {
-      margin-bottom: 0;
-    }
-
-    .content b {
-      font-weight: 700;
-    }
-
-    .footer {
-      margin-top: 2.6em;
-      font-size: 13.5px;
-      color: #b0b0b0;
-    }
-
-    .portfolio-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-    }
-
-    .portfolio-grid-3 {
-      grid-template-columns: repeat(3, 1fr);
-    }
-
-    .portfolio-grid-sm .portfolio-box {
-      height: 90px;
-    }
-
-    .news-card {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .news-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background-color: #f0efeb;
-      border: 1.5px solid #e0dedd;
-      border-radius: 999px;
-      padding: 12px 20px;
-      font-size: 14px;
-      color: #1c1c1c;
-      text-decoration: none;
-      transition: background 0.15s;
-    }
-
-    .news-item:hover {
-      background-color: #e8e7e3;
-    }
-
-    .news-item span {
-      flex: 1;
-    }
-
-    .news-item .news-icon {
-      margin-left: 16px;
-      opacity: 0.4;
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .portfolio-box {
-      border: 1.5px solid #dde0f0;
-      border-radius: 10px;
-      height: 140px;
-      background-color: #eeecea;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #loading-screen {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      animation: fadeOutLoader 0.6s ease forwards 3s;
-    }
-
-    #loading-screen.hidden {
-      display: none;
-    }
-
-    @keyframes fadeOutLoader {
-      0%   { opacity: 1; pointer-events: all; }
-      100% { opacity: 0; pointer-events: none; }
-    }
-
-    @keyframes spinLoader {
-      0%   { transform: rotate(0deg); }
-      100% { transform: rotate(1080deg); }
-    }
-
-    .loader-logo {
-      width: 200px;
-      height: 200px;
-      object-fit: contain;
-      animation: spinLoader 3s cubic-bezier(0.4, 0, 0.6, 1) forwards;
-    }
-
-    @keyframes spinPause {
-      0%   { transform: rotate(0deg); }
-      68%  { transform: rotate(720deg); }
-      100% { transform: rotate(720deg); }
-    }
-
-    .logo-spin {
-      animation: spinPause 4.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 70px 12px 40px;
-        justify-content: flex-start;
-      }
-
-      .nav {
-        top: 12px;
-        right: 12px;
-        left: 12px;
-        gap: 5px;
-        justify-content: flex-end;
-        flex-wrap: wrap;
-      }
-
-      .nav a {
-        font-size: 10px;
-        padding: 5px 9px;
-        border-radius: 6px;
-      }
-
-      .card {
-        padding: 28px 20px;
-        border-radius: 10px;
-        margin-top: 16px !important;
-      }
-
-      .card > img[src*="Logo1"] {
-        height: 48px;
-        top: 16px;
-        right: 16px;
-      }
-
-      .card > .content {
-        padding-top: 56px;
-      }
-
-      .content {
-        font-size: 13.5px;
-        line-height: 1.72;
-      }
-
-      .footer {
-        font-size: 11.5px;
-      }
-
-      .portfolio-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-      }
-
-      .portfolio-grid-3 {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .portfolio-grid-sm .portfolio-box {
-        height: 70px;
-      }
-
-      .portfolio-box {
-        height: 80px;
-        border-radius: 8px;
-      }
-
-      .side-album {
-        display: none;
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .side-album {
-        display: none;
-      }
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.11;
     }
   </style>
 </head>
 <body>
-  <div id="loading-screen">
-    <img src="images/Logo1.png" class="loader-logo" alt="Loading" />
-  </div>
-
-  <div class="grain"></div>
-
-  <video class="bg-video" autoplay muted loop playsinline>
-    <source src="images/flora.mp4" type="video/mp4" />
-  </video>
-
-
-  <div class="side-album" style="position: fixed; left: calc((100vw - 760px) / 4); top: 50%; transform: translate(-50%, -50%); z-index: 10; filter: drop-shadow(2px 6px 12px rgba(0,0,0,0.35));">
-    <div style="position: relative; display: inline-block;">
-      <img src="images/Screenshot 2026-06-16 at 2.04.51 PM.png" alt="Photo album" style="height: 78vh; width: auto; border-radius: 4px;" />
-      <img src="images/b9e022759c75a478c1e4915bf0f47780.png" alt="Sticker clip top" style="position: absolute; top: -90px; left: 50%; transform: translateX(-50%); height: 180px; width: auto;" />
-      <img src="images/b9e022759c75a478c1e4915bf0f47780.png" alt="Sticker clip bottom" style="position: absolute; bottom: -85px; left: 50%; transform: translateX(-50%) rotate(180deg); height: 180px; width: auto;" />
-    </div>
-  </div>
-
-  <div class="side-album" style="position: fixed; right: calc((100vw - 760px) / 4); top: 50%; transform: translate(50%, -50%); z-index: 10; filter: drop-shadow(2px 6px 12px rgba(0,0,0,0.35));">
-    <div style="position: relative; display: inline-block;">
-      <img src="images/Screenshot 2026-06-16 at 2.25.18 PM.png" alt="Photo album right" style="height: 65vh; width: auto; border-radius: 4px;" />
-      <img src="images/0ddf8698e9abdb7ce2c83aa73bb9b966.png" alt="tape" style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%) rotate(10deg); height: 100px; width: auto;" />
-      <img src="images/0ddf8698e9abdb7ce2c83aa73bb9b966.png" alt="tape" style="position: absolute; top: 35%; left: 45%; transform: translateX(-50%) rotate(-8deg); height: 100px; width: auto;" />
-      <img src="images/0ddf8698e9abdb7ce2c83aa73bb9b966.png" alt="tape" style="position: absolute; top: 85%; left: 50%; transform: translateX(-50%) rotate(5deg); height: 100px; width: auto;" />
-    </div>
-  </div>
-
-  <nav class="nav">
-    <a href="#">Team</a>
-    <a href="#startups">Startups</a>
-    <a href="#events">Events</a>
-    <a href="https://www.bluebrown.vc/" target="_blank">Fund</a>
-  </nav>
-
-  <div class="card">
-    <img src="images/Logo1.png" alt="Logo" class="logo-spin" style="position: absolute; top: 20px; right: 24px; height: 80px; width: auto;" />
-<div class="content">
-      <p>Hello Internet,</p>
-
-      <p><b>We are an AI researchers &amp; founders fellowship</b> based in Seoul from academia and industry. We work on research, open-source projects, and real-world applications to build the next leading AI startups.</p>
-
-      <p><b>Our Fellows have raised over $70 million</b> in funding from investors like Sequoia, a16z, Y Combinator, South Park Commons, Samsung Ventures, Hyundai, and Kakao Ventures.</p>
-
-      <p><b>We help our Fellows turn side projects into startups</b> by providing support with fundraising, hiring, API credits, O-1 visas, and anything else they need along the way.</p>
-
-      <p>We occasionally invest in our Fellows' companies with checks ranging from $1 to $100K at the earliest stages of their journey.</p>
-
-      <p class="footer">contact &mdash; attentionx.ai@gmail.com</p>
-    </div>
-  </div>
-
-  <div id="events" class="card" style="margin-top: 24px;">
-    <p style="font-family: 'Courier New', Courier, monospace; font-size: 15.5px; font-weight: 400; color: #1c1c1c; margin-bottom: 12px;"><b>GTM partner for the world's best AI companies</b></p>
-    <p style="font-family: 'Courier New', Courier, monospace; font-size: 14px; color: #1c1c1c; margin-bottom: 36px;">We produce the best AI meetups and hackathons<br>for frontier AI companies expanding across APAC</p>
-    <div class="portfolio-grid portfolio-grid-3">
-      <div class="portfolio-box"><a href="https://www.linkedin.com/posts/my-name-is-sukone_openai-startup-meetup-seoul-we-brought-activity-7455917030446264320--aFH?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWq7eMBWK0j5S21KdulRiSjBwpQUT6g4YM" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/OpenAI_Logo.png" alt="OpenAI" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.linkedin.com/posts/cerebralvalley_the-third-stop-on-our-asia-tour-with-google-activity-7437673118904668160-mcrh?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWq7eMBWK0j5S21KdulRiSjBwpQUT6g4YM" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/DeepMind1.png" alt="DeepMind" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.linkedin.com/posts/yanolja_yanolja-x-attentionx-claude-code-meetup-activity-7455786826222596096-Y2wV?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWq7eMBWK0j5S21KdulRiSjBwpQUT6g4YM" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Anthropic.png" alt="Anthropic" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://cerebralvalley.ai/e/manus-meetup-seoul" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Manus_logo.png" alt="Manus" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.linkedin.com/posts/a-little-throwback-to-an-awesome-weekend-ugcPost-7464909654242930690-gOtR/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWq7eMBWK0j5S21KdulRiSjBwpQUT6g4YM" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/final-standard-light.svg" alt="Logo" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><img src="images/brand-yanolja-logo.svg" alt="Yanolja" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></div>
-    </div>
-  </div>
-
-  <div id="startups" class="card" style="margin-top: 24px;">
-    <p style="font-family: 'Courier New', Courier, monospace; font-size: 15.5px; font-weight: 400; color: #1c1c1c; margin-bottom: 36px;">Startups founded by our fellows</p>
-    <div class="portfolio-grid portfolio-grid-sm">
-      <div class="portfolio-box"><a href="https://www.ycombinator.com/companies/manaflow" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/CMUX.png" alt="CMUX" style="max-width: 85%; max-height: 75%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.aim-intelligence.com/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/AIM.svg" alt="AIM" style="max-width: 85%; max-height: 75%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.dentronic.ai/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Dentronic.avif" alt="Dentronic" style="max-width: 72%; max-height: 62%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.typa.ai/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Typa Logo.png" alt="Typa" style="width: 50%; height: auto; display: block; margin: auto; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://alephlab.ai/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Aleph.svg" alt="Aleph" style="max-width: 60%; max-height: 50%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.vibers-ai.dev/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/vibers.png" alt="Vibers" style="max-width: 100%; max-height: 90%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.gentooai.com/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Gentoo.png" alt="Gentoo" style="max-width: 70%; max-height: 60%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://anymorph.ai/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Anymorph.avif" alt="Anymorph" style="max-width: 85%; max-height: 75%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://aristo.so/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Aristo.png" alt="Aristo" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://www.stealcut.com/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Stealcut.webp" alt="Stealcut" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://dentalcall.kr/en/" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/Dentalcall2.png" alt="Dentalcall" style="max-width: 85%; max-height: 75%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box"><a href="https://vivadios.dev/?ref=thevc" target="_blank" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><img src="images/VivaDios.png" alt="VivaDios" style="max-width: 85%; max-height: 75%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></a></div>
-      <div class="portfolio-box" style="display: flex; align-items: center; justify-content: center;"><img src="images/tecteam.png" alt="Tecteam" style="max-width: 80%; max-height: 70%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></div>
-      <div class="portfolio-box" style="display: flex; align-items: center; justify-content: center;"><img src="images/harper-logo.svg" alt="Harper" style="max-width: 65%; max-height: 55%; object-fit: contain; filter: grayscale(100%) brightness(0) opacity(40%);" /></div>
-      <div class="portfolio-box" style="display: flex; align-items: center; justify-content: center; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #aaa; letter-spacing: 0.05em;">stealth</div>
-      <div class="portfolio-box" style="display: flex; align-items: center; justify-content: center; font-family: 'Courier New', Courier, monospace; font-size: 13px; color: #aaa; letter-spacing: 0.05em;">stealth</div>
-    </div>
-  </div>
+  <canvas class="grain" aria-hidden="true"></canvas>
 
   <script>
-    setTimeout(function() {
-      document.getElementById('loading-screen').classList.add('hidden');
-    }, 3600);
+    // Live film grain: a few pre-rendered noise tiles, shown at a random
+    // offset ~14 times a second so the grain flickers like film.
+    (function () {
+      var canvas = document.querySelector('.grain');
+      var ctx = canvas.getContext('2d');
+      var TILE = 180;
+      var tiles = [];
+
+      for (var t = 0; t < 6; t++) {
+        var c = document.createElement('canvas');
+        c.width = c.height = TILE;
+        var cx = c.getContext('2d');
+        var img = cx.createImageData(TILE, TILE);
+        for (var i = 0; i < img.data.length; i += 4) {
+          var v = (Math.random() * 255) | 0;
+          img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+          img.data[i + 3] = 255;
+        }
+        cx.putImageData(img, 0, 0);
+        tiles.push(ctx.createPattern(c, 'repeat'));
+      }
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        draw();
+      }
+
+      function draw() {
+        var p = tiles[(Math.random() * tiles.length) | 0];
+        var ox = (Math.random() * TILE) | 0, oy = (Math.random() * TILE) | 0;
+        ctx.setTransform(1, 0, 0, 1, -ox, -oy);
+        ctx.fillStyle = p;
+        ctx.fillRect(ox, oy, canvas.width, canvas.height);
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      setInterval(draw, 70);
+    })();
   </script>
 </body>
 </html>

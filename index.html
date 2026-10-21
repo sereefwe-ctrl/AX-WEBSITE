@@ -390,35 +390,222 @@
       color: #f4f1e8;
     }
 
-    /* Support items as pills that pop in one after another. */
-    .chip {
-      display: inline-block;
-      margin: 0.12em 0;
-      padding: 0.02em 0.6em 0.08em;
-      border: 1px solid rgba(244, 241, 232, 0.2);
-      border-radius: 999px;
-      background: rgba(244, 241, 232, 0.06);
-      color: #f4f1e8;
-      white-space: nowrap;
+    /* Launch track: a route from "Side project" to "Startup" with each
+       kind of support as a stop. A gold comet runs down the rail and lights
+       the stops it passes; the AttentionX mark lands on "Startup", then a
+       soft pulse keeps travelling the line. Rail geometry and progress
+       (--rail-top, --rail-h, --p) are set by script. */
+    .track {
+      position: relative;
+      margin-top: 26px;
+    }
+
+    .track-rail,
+    .track-fill,
+    .track-pulse {
+      position: absolute;
+      left: 9px;
+      top: var(--rail-top, 0px);
+      width: 1px;
+      height: var(--rail-h, 0px);
+      pointer-events: none;
+    }
+
+    .track-rail {
+      background: repeating-linear-gradient(to bottom, rgba(244, 241, 232, 0.22) 0 3px, transparent 3px 7px);
+    }
+
+    .track-fill {
+      background: linear-gradient(to bottom, #9fb4e6, #ffc857);
+      transform-origin: top;
+      transform: scaleY(var(--p, 0));
+      box-shadow: 0 0 10px rgba(255, 200, 87, 0.35);
+    }
+
+    .track-comet {
+      position: absolute;
+      left: 9.5px;
+      top: calc(var(--rail-top, 0px) + var(--rail-h, 0px) * var(--p, 0));
+      width: 9px;
+      height: 9px;
+      background: #fff6dc;
+      box-shadow: 0 0 0 3px rgba(255, 200, 87, 0.25), 0 0 18px 4px rgba(255, 200, 87, 0.55);
+      transform: translate(-50%, -50%) rotate(45deg);
       opacity: 0;
-      transform: translateY(0.35em) scale(0.6);
-      transition:
-        opacity 0.35s ease,
-        transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-        border-color 0.3s ease,
-        background-color 0.3s ease;
-      transition-delay: calc(0.15s + var(--i) * 0.09s), calc(0.15s + var(--i) * 0.09s), 0s, 0s;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
     }
 
-    .mf-col.is-in .chip {
+    .track.is-running .track-comet {
       opacity: 1;
-      transform: none;
     }
 
-    .chip:hover {
-      border-color: rgba(255, 200, 87, 0.75);
-      background-color: rgba(255, 200, 87, 0.12);
+    /* After landing, a small light keeps running down the rail. */
+    .track-pulse {
+      height: 46px;
+      margin-top: -46px;
+      background: linear-gradient(to bottom, transparent, rgba(255, 246, 220, 0.95));
+      opacity: 0;
     }
+
+    .track.is-done .track-pulse {
+      animation: track-pulse 3.4s cubic-bezier(0.45, 0, 0.25, 1) 0.8s infinite;
+    }
+
+    @keyframes track-pulse {
+      0% { transform: translateY(0); opacity: 0; }
+      12% { opacity: 1; }
+      80% { opacity: 1; }
+      100% { transform: translateY(var(--rail-h, 0px)); opacity: 0; }
+    }
+
+    .track-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 19px 30px 1fr;
+      align-items: center;
+      column-gap: 14px;
+      padding: 13px 0;
+      list-style: none;
+    }
+
+    .track-stops {
+      list-style: none;
+    }
+
+    .track-stops .track-row + .track-row,
+    .track-stops .track-row:first-child {
+      border-top: 1px solid rgba(244, 241, 232, 0.07);
+    }
+
+    .track-node {
+      justify-self: center;
+      width: 9px;
+      height: 9px;
+      background: #171716;
+      border: 1px solid rgba(244, 241, 232, 0.4);
+      transform: rotate(45deg);
+      transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .track-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.28);
+      transition: color 0.4s ease;
+    }
+
+    .track-name {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(22px, 2.15vw, 36px);
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      color: rgba(244, 241, 232, 0.28);
+      transition: color 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .track-row.is-lit .track-node {
+      background: #ffc857;
+      border-color: #ffc857;
+      box-shadow: 0 0 0 4px rgba(255, 200, 87, 0.14), 0 0 14px rgba(255, 200, 87, 0.45);
+    }
+
+    .track-row.is-lit .track-num {
+      color: #ffc857;
+    }
+
+    .track-row.is-lit .track-name {
+      color: #f4f1e8;
+    }
+
+    .track-stops .track-row:hover .track-name {
+      transform: translateX(8px);
+      color: #fff;
+    }
+
+    .track-stops .track-row:hover .track-node {
+      transform: rotate(45deg) scale(1.5);
+    }
+
+    /* "...and anything else" stop: quieter, italic, with a plus for a node. */
+    .track-row.is-extra .track-name {
+      font-style: italic;
+      font-size: clamp(18px, 1.55vw, 25px);
+    }
+
+    .track-row.is-extra .track-num {
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    /* Endpoints: small labels; the finish carries the AttentionX mark. */
+    .track-end .track-name {
+      grid-column: 2 / 4;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.4);
+    }
+
+    .track-start .track-node {
+      border-radius: 50%;
+      border-style: dashed;
+      transform: none;
+      width: 11px;
+      height: 11px;
+    }
+
+    .track-finish .track-mark {
+      justify-self: center;
+      width: 19px;
+      height: 19px;
+      color: rgba(244, 241, 232, 0.3);
+      overflow: visible;
+      transition: color 0.4s ease, filter 0.4s ease, transform 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .track-finish .track-mark polygon {
+      fill: currentColor;
+      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .track.is-done .track-finish .track-mark {
+      color: #ffc857;
+      filter: drop-shadow(0 0 8px rgba(255, 200, 87, 0.6));
+      transform: rotate(90deg);
+    }
+
+    /* The finish is the payoff: "Startup" lands large, italic and gold. */
+    .track-finish {
+      padding-top: 18px;
+    }
+
+    .track-finish .track-name {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: clamp(30px, 3vw, 50px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      text-transform: none;
+      color: rgba(244, 241, 232, 0.22);
+      transition: color 0.6s ease, text-shadow 0.6s ease;
+    }
+
+    .track.is-done .track-finish .track-name {
+      color: #ffc857;
+      text-shadow: 0 0 28px rgba(255, 200, 87, 0.35);
+    }
+
+    .track-finish:hover .d1 { transform: translate(-7px, -7px); }
+    .track-finish:hover .d2 { transform: translate(7px, -7px); }
+    .track-finish:hover .d3 { transform: translate(-7px, 7px); }
+    .track-finish:hover .d4 { transform: translate(7px, 7px); }
 
     @media (max-width: 820px) {
       .mf-grid {
@@ -443,10 +630,9 @@
         transition: none;
       }
 
-      .chip {
-        opacity: 1;
-        transform: none;
-        transition: none;
+      .track-pulse,
+      .track-comet {
+        display: none;
       }
     }
 
@@ -2441,9 +2627,34 @@
           <div class="mf-stat" aria-label="Over $70M"><span data-count-to="70">$70M</span><sup>+</sup></div>
           <p class="mf-body">Our Fellows have raised over $70M in funding from investors like <strong>a16z</strong>, <strong>Y Combinator</strong>, <strong>Arielle Zuckerberg</strong>, and <strong>Samsung Ventures</strong>.</p>
         </div>
-        <div class="mf-col" data-pop>
+        <div class="mf-col">
           <p class="mf-label">How we help</p>
-          <p class="mf-body">We help our Fellows turn side projects into startups by providing support with <span class="chip" style="--i: 0">CoFounder matching</span>, <span class="chip" style="--i: 1">fundraising</span>, <span class="chip" style="--i: 2">hiring</span>, <span class="chip" style="--i: 3">O-1 visas</span>, and <span class="chip" style="--i: 4">anything else they need</span> along the way.</p>
+          <p class="mf-body">We help our Fellows turn side projects into startups by providing support with</p>
+
+          <div class="track" data-track>
+            <span class="track-rail" aria-hidden="true"></span>
+            <span class="track-fill" aria-hidden="true"></span>
+            <span class="track-pulse" aria-hidden="true"></span>
+            <span class="track-comet" aria-hidden="true"></span>
+
+            <div class="track-row track-end track-start is-lit" aria-hidden="true"><span class="track-node"></span><span class="track-name">Side project</span></div>
+            <ol class="track-stops">
+              <li class="track-row"><span class="track-node"></span><span class="track-num">01</span><span class="track-name">CoFounder matching</span></li>
+              <li class="track-row"><span class="track-node"></span><span class="track-num">02</span><span class="track-name">Fundraising</span></li>
+              <li class="track-row"><span class="track-node"></span><span class="track-num">03</span><span class="track-name">Hiring</span></li>
+              <li class="track-row"><span class="track-node"></span><span class="track-num">04</span><span class="track-name">O-1 visas</span></li>
+              <li class="track-row is-extra"><span class="track-node"></span><span class="track-num">+</span><span class="track-name">and anything else they need along the way.</span></li>
+            </ol>
+            <div class="track-row track-end track-finish" aria-hidden="true">
+              <svg class="track-mark" viewBox="0 0 100 100">
+                <polygon class="d1" points="25,0 50,25 25,50 0,25" />
+                <polygon class="d2" points="75,0 100,25 75,50 50,25" />
+                <polygon class="d3" points="25,50 50,75 25,100 0,75" />
+                <polygon class="d4" points="75,50 100,75 75,100 50,75" />
+              </svg>
+              <span class="track-name">Startup</span>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -3081,7 +3292,7 @@
     });
 
     // Manifesto: light the lead's words in reading order as it scrolls
-    // through the screen, count the stat up, and pop the support pills.
+    // through the screen, count the stat up, and run the launch track.
     (function () {
       var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -3143,8 +3354,44 @@
         })(start);
       });
 
-      var pop = document.querySelector('[data-pop]');
-      once(pop, function () { pop.classList.add('is-in'); });
+      // Launch track: the rail runs from the centre of the first row to the
+      // centre of the last; the comet travels it and lights each stop.
+      var track = document.querySelector('[data-track]');
+      if (track) {
+        var rows = Array.prototype.slice.call(track.querySelectorAll('.track-row'));
+        var stops = [];
+        var layout = function () {
+          var t = track.getBoundingClientRect();
+          var centre = function (el) { var r = el.getBoundingClientRect(); return r.top + r.height / 2 - t.top; };
+          var top = centre(rows[0]);
+          var h = centre(rows[rows.length - 1]) - top;
+          track.style.setProperty('--rail-top', top + 'px');
+          track.style.setProperty('--rail-h', h + 'px');
+          stops = rows.map(function (row) { return { row: row, at: h ? (centre(row) - top) / h : 0 }; });
+        };
+        var setP = function (p) {
+          track.style.setProperty('--p', p.toFixed(4));
+          stops.forEach(function (s) { s.row.classList.toggle('is-lit', p >= s.at - 0.001); });
+        };
+        layout();
+        window.addEventListener('resize', function () { layout(); });
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+
+        once(track, function (instant) {
+          if (instant) { setP(1); track.classList.add('is-done'); return; }
+          layout();
+          track.classList.add('is-running');
+          var start = performance.now(), dur = 2400;
+          (function step(now) {
+            var x = Math.min(1, (now - start) / dur);
+            // Ease in and out so the comet sets off and lands gently.
+            setP(x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+            if (x < 1) { requestAnimationFrame(step); return; }
+            track.classList.remove('is-running');
+            track.classList.add('is-done');
+          })(start);
+        });
+      }
     })();
 
     // Rising headline: split into words and letters, then lift the letters

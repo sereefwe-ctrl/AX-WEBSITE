@@ -4,10 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AttentionX</title>
+  <meta name="description" content="AttentionX" />
+  <meta property="og:image" content="images/attentionx-logo.png" />
   <link rel="icon" href="/favicon.ico" sizes="48x48" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -18,7 +23,12 @@
     :root {
       --gap: clamp(14px, 2.2vw, 44px);
       --radius: clamp(14px, 1.4vw, 28px);
+      /* Content width; row heights below are fractions of it so the
+         grid keeps the proportions of the reference layout. */
+      --w: calc(100vw - 2 * var(--gap));
+      --third: calc((var(--w) - 2 * var(--gap)) / 3);
       --glass-edge: rgba(255, 255, 255, 0.09);
+      --glass-line: rgba(255, 255, 255, 0.07);
     }
 
     body {
@@ -72,10 +82,6 @@
     @keyframes drift-b { to { transform: translate(-35vw, -30vh) scale(0.9); } }
     @keyframes drift-c { to { transform: translate(-25vw, 20vh) scale(1.3); } }
 
-    @media (prefers-reduced-motion: reduce) {
-      .ambient span { animation: none; }
-    }
-
     .bento {
       position: relative;
       display: flex;
@@ -121,11 +127,1555 @@
       justify-content: center;
     }
 
-    /* A touch smaller than the Stealth Fund hero logo. */
-    .hero-logo {
-      display: block;
-      width: min(560px, 62%);
+    /* Back button, top left of the hero: a white rounded square holding
+       the site's curved-barb arrow turned to point left. Goes back a page
+       when there is one, otherwise to bluebrown.vc. */
+    .back-button {
+      position: absolute;
+      top: clamp(14px, 1.6vw, 28px);
+      left: clamp(14px, 1.6vw, 28px);
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: clamp(46px, 3.9vw, 68px);
+      aspect-ratio: 1;
+      border-radius: 28%;
+      background: #b9b6ae;
+      color: #0e0e0d;
+      box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+    }
+
+    .back-button svg {
+      width: 52%;
       height: auto;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .back-button:hover {
+      transform: scale(1.06);
+      background: #d2cfc7;
+    }
+
+    .back-button:hover svg {
+      transform: translateX(-12%);
+    }
+
+    .back-button:focus-visible {
+      outline: 2px solid rgba(244, 241, 232, 0.7);
+      outline-offset: 3px;
+    }
+
+    /* AttentionX wordmark, a touch smaller than the Stealth Fund hero logo. */
+    .hero-logo {
+      position: relative;
+      width: min(560px, 62%);
+      user-select: none;
+    }
+
+    .hero-logo img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .row {
+      display: grid;
+      gap: var(--gap);
+    }
+
+    /* Row 2: three equal tiles. */
+    .row-3 {
+      grid-template-columns: repeat(3, 1fr);
+      /* Reference proportion, but grows if a tile's text needs more room. */
+      min-height: calc(var(--w) * 0.252);
+    }
+
+    /* Text tiles size their type to the tile's own width. */
+    .tile-text {
+      container-type: inline-size;
+      padding: 7%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .tile-title {
+      position: relative;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: 7.4cqw;
+      line-height: 1.16;
+      letter-spacing: -0.012em;
+      color: rgba(244, 241, 232, 0.94);
+    }
+
+    .tile-title em {
+      color: rgba(244, 241, 232, 0.5);
+    }
+
+    /* Scout tile: small print framing three big italic verbs, then an
+       italic punchline. Rows reveal and decode when scrolled into view. */
+    .tile-scout {
+      align-items: stretch;
+      justify-content: space-between;
+      gap: clamp(10px, 1.1vw, 18px);
+    }
+
+    .scout-note {
+      position: relative;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: max(14px, 4.6cqw);
+      line-height: 1.22;
+      letter-spacing: -0.012em;
+      color: rgba(244, 241, 232, 0.92);
+    }
+
+    .scout-list {
+      position: relative;
+      /* Centered in the space between the intro and the punchline. */
+      margin: auto 0;
+      list-style: none;
+      counter-reset: scout;
+    }
+
+    .scout-list::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+    }
+
+    .scout-list li {
+      position: relative;
+      counter-increment: scout;
+      display: grid;
+      grid-template-columns: 6cqw 26cqw 1fr;
+      column-gap: 2cqw;
+      /* Number, verb and detail share one baseline; extra top padding sets
+         the verbs a little lower between the rules. */
+      align-items: baseline;
+      padding: 2.9cqw 0 1.1cqw;
+      opacity: 0;
+      transform: translateY(1.6cqw);
+      transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scout-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scout-list li:nth-child(2), .scout-list li:nth-child(2)::before { transition-delay: 0.14s; }
+    .scout-list li:nth-child(3), .scout-list li:nth-child(3)::before { transition-delay: 0.28s; }
+
+    .tile-scout.is-in .scout-list li { opacity: 1; transform: none; }
+    .tile-scout.is-in .scout-list li::before,
+    .tile-scout.is-in .scout-list::after { transform: scaleX(1); }
+
+    .scout-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 3.4cqw);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    .scout-num::before {
+      content: "0" counter(scout);
+    }
+
+    .scout-verb {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 8.4cqw;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: rgba(244, 241, 232, 0.96);
+      white-space: nowrap;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scout-obj {
+      justify-self: end;
+      text-align: right;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(13px, 3.9cqw);
+      line-height: 1.25;
+      color: rgba(244, 241, 232, 0.6);
+      transition: color 0.35s ease;
+    }
+
+    /* Hovering the list spotlights one row and quiets the others. */
+    .tile-scout.is-settled .scout-list li { transition-delay: 0s; transition-duration: 0.35s; }
+    .tile-scout.is-in .scout-list:hover li { opacity: 0.32; }
+    .tile-scout.is-in .scout-list li:hover { opacity: 1; }
+    .scout-list li:hover .scout-verb { transform: translateX(1.4cqw); }
+    .scout-list li:hover .scout-obj { color: rgba(244, 241, 232, 0.95); }
+
+    .scout-punch {
+      position: relative;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 6.2cqw;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      color: rgba(244, 241, 232, 0.96);
+    }
+
+    .scout-punch-lead {
+      display: block;
+      margin-bottom: 0.55em;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-style: normal;
+      font-size: max(13px, 3.8cqw);
+      line-height: 1.42;
+      letter-spacing: -0.005em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    /* Case-study tile: company header, then a full-width serif stat that
+       counts up on reveal. */
+    .tile-case {
+      padding: 6.5%;
+      justify-content: space-between;
+    }
+
+    .case-top {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .case-logo {
+      --h: max(32px, 6.2cqw);
+      display: flex;
+      align-items: flex-start;
+      gap: calc(var(--h) * 0.33);
+    }
+
+    .case-icon {
+      width: var(--h);
+      height: var(--h);
+      border-radius: 24%;
+      object-fit: cover;
+      /* Faint ring so dark icons (Parasma) still read on the dark glass. */
+      box-shadow: 0 0 0 1px rgba(244, 241, 232, 0.16);
+    }
+
+    .case-word {
+      height: calc(var(--h) * 0.775);
+      width: auto;
+      margin-top: calc(var(--h) * 0.1625);
+      opacity: 0.95;
+    }
+
+    .case-label {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 2.8cqw);
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.45);
+    }
+
+    /* Centered between the header and the link. */
+    .case-hero {
+      position: relative;
+      width: 100%;
+      margin: auto 0;
+    }
+
+    .tile-case .tile-button {
+      margin-top: 0;
+    }
+
+    .case-stat {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: 16.8cqw;
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+      white-space: nowrap;
+      font-variant-numeric: lining-nums tabular-nums;
+      color: rgba(244, 241, 232, 0.97);
+    }
+
+    .case-from,
+    .case-stat svg {
+      color: rgba(244, 241, 232, 0.36);
+    }
+
+    .case-stat svg {
+      display: inline-block;
+      width: 0.6em;
+      height: auto;
+      margin: 0 0.16em 0 0.12em;
+      vertical-align: 0.12em;
+    }
+
+    .case-sub {
+      margin-top: 2.6cqw;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 6.4cqw;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.8);
+    }
+
+    /* Convergent lockup: the wordmark's capital height (72% of its image)
+       spans 70% of the icon and is centered on it; the "g" descends below. */
+    .case-logo--center {
+      align-items: flex-start;
+    }
+
+    .case-logo--center .case-word {
+      height: calc(var(--h) * 0.972);
+      margin-top: calc(var(--h) * 0.1315);
+    }
+
+    /* All-caps wordmark (Parasma): letters at 42% of the icon, centered on it. */
+    .case-logo--caps .case-word {
+      height: calc(var(--h) * 0.42);
+      margin-top: calc(var(--h) * 0.29);
+    }
+
+    /* Bottom row of a case tile: Read more on the left, investors on the right. */
+    .case-bottom {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3cqw;
+      width: 100%;
+    }
+
+    .case-investors {
+      display: flex;
+      align-items: center;
+      gap: 3.6cqw;
+    }
+
+    .investor {
+      position: relative;
+      display: block;
+      line-height: 0;
+    }
+
+    .investor img {
+      display: block;
+      height: 100%;
+      width: auto;
+      transition: opacity 0.35s ease;
+    }
+
+    .investor-a16z {
+      height: max(44px, 9.6cqw);
+      opacity: 0.85;
+      transition: opacity 0.35s ease;
+    }
+
+    .investor-a16z:hover {
+      opacity: 1;
+    }
+
+    /* Chemistry shows in white, and its brand colors come through on hover. */
+    .investor-chem {
+      height: max(22px, 4.8cqw);
+    }
+
+    .investor-chem .is-white {
+      opacity: 0.82;
+    }
+
+    .investor-chem .is-color {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+    }
+
+    .investor-chem:hover .is-white {
+      opacity: 0;
+    }
+
+    .investor-chem:hover .is-color {
+      opacity: 1;
+    }
+
+    .case-investors i {
+      width: 1px;
+      height: max(30px, 6.6cqw);
+      background: rgba(244, 241, 232, 0.2);
+    }
+
+    /* Co-investors tile: title, then a 4 x 2 wall of glass name slots that
+       fills the rest of the tile. Type a name inside any <li>. */
+    .tile-coinvest {
+      padding: 6.5%;
+      align-items: stretch;
+    }
+
+    .coinvest-title {
+      font-size: 5.6cqw;
+      max-width: 92%;
+    }
+
+    .coinvest-grid {
+      position: relative;
+      flex: 1 1 0;
+      min-height: 0;
+      display: grid;
+      /* minmax(0, 1fr): slot sizes come from the tile, not the images. */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 1.8cqw;
+      margin-top: 4.5cqw;
+      list-style: none;
+    }
+
+    .coinvest-grid li {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1.4cqw;
+      min-height: 13cqw;
+      border-radius: calc(var(--radius) * 0.55);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012) 60%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: max(13px, 3.4cqw);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      text-align: center;
+      color: rgba(244, 241, 232, 0.9);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .coinvest-grid li:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    /* Co-investor marks, all rounded squares. Each links out (fund website or
+       the person's profile), and the cursor label shows the name on hover. */
+    .coinvest-grid a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .coinvest-grid img {
+      display: block;
+      height: 72%;
+      aspect-ratio: 1;
+      width: auto;
+      object-fit: cover;
+      border-radius: 18%;
+      box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.7);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .coinvest-grid li:hover img {
+      transform: scale(1.06);
+    }
+
+    /* Backers inside a case tile: portrait chips with name and role, each
+       linking out. Black and white until hovered. */
+    .case-backers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3cqw 6cqw;
+      margin-top: 3.6cqw;
+    }
+
+    .backer {
+      display: flex;
+      align-items: center;
+      gap: 2.4cqw;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .backer img {
+      width: max(40px, 8.6cqw);
+      height: max(40px, 8.6cqw);
+      border-radius: 24%;
+      object-fit: cover;
+      object-position: 50% 30%;
+      box-shadow: 0 0 0 1px rgba(244, 241, 232, 0.16);
+      filter: grayscale(1) contrast(1.05);
+      transition: filter 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .backer:hover img {
+      filter: none;
+      transform: scale(1.05);
+    }
+
+    .backer-name {
+      display: block;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: max(15px, 3.9cqw);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.96);
+    }
+
+    .backer-role {
+      display: block;
+      margin-top: 0.5cqw;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 2.3cqw);
+      letter-spacing: -0.005em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    /* Logo centered in the space between a tile's title and its link. */
+    .tile-mark .tile-mark-logo {
+      position: relative;
+      align-self: center;
+      width: 64%;
+      margin: auto 0;
+      line-height: 0;
+    }
+
+    /* Shine: letters rest a little dim, then a bright white-gold band sweeps
+       through them (masked to the letter shapes) while a blurred flare of
+       light travels across with it and the whole mark blooms. */
+    .tile-mark-logo img {
+      display: block;
+      width: 100%;
+      height: auto;
+      opacity: 0.7;
+      animation: logo-glow 3.6s ease-in-out infinite;
+    }
+
+    .logo-shine {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg,
+        transparent 30%,
+        rgba(255, 214, 140, 0.9) 42%,
+        #fff 50%,
+        rgba(255, 214, 140, 0.9) 58%,
+        transparent 70%);
+      background-size: 250% 100%;
+      background-repeat: no-repeat;
+      -webkit-mask: url("assets/arcadia-wordmark-white.png") center / 100% 100% no-repeat;
+      mask: url("assets/arcadia-wordmark-white.png") center / 100% 100% no-repeat;
+      animation: logo-sweep 3.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+      pointer-events: none;
+    }
+
+    .logo-flare {
+      position: absolute;
+      top: -120%;
+      bottom: -120%;
+      left: 0;
+      width: 34%;
+      background: radial-gradient(ellipse at center, rgba(255, 226, 170, 0.55), rgba(255, 200, 120, 0.18) 45%, transparent 70%);
+      filter: blur(6px);
+      mix-blend-mode: screen;
+      opacity: 0;
+      animation: logo-flare 3.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+      pointer-events: none;
+    }
+
+    @keyframes logo-sweep {
+      0%        { background-position: 130% 0; }
+      55%, 100% { background-position: -30% 0; }
+    }
+
+    @keyframes logo-flare {
+      0%        { transform: translateX(-60%); opacity: 0; }
+      8%        { opacity: 1; }
+      47%       { opacity: 1; }
+      55%, 100% { transform: translateX(300%); opacity: 0; }
+    }
+
+    @keyframes logo-glow {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 220, 160, 0)); opacity: 0.7; }
+      28%      { filter: drop-shadow(0 0 10px rgba(255, 220, 160, 0.7)) drop-shadow(0 0 28px rgba(255, 200, 120, 0.45)); opacity: 1; }
+      60%      { filter: drop-shadow(0 0 0 rgba(255, 220, 160, 0)); opacity: 0.7; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tile-mark-logo img,
+      .logo-shine,
+      .logo-flare {
+        animation: none;
+      }
+
+      .tile-mark-logo img {
+        opacity: 0.92;
+      }
+
+      .logo-shine,
+      .logo-flare {
+        display: none;
+      }
+    }
+
+    .tile-mark .tile-button {
+      margin-top: 0;
+    }
+
+    /* Same size as the links in the three-tile row. */
+    .tile-case .tile-button {
+      /* 4.4% of a three-row tile's content box (tile minus 7% padding each side and its border). */
+      font-size: max(14px, calc((var(--third) * 0.86 - 2px) * 0.044));
+    }
+
+    /* Plain text link pinned to the bottom of the tile; the arrow slides
+       forward on hover. */
+    .tile-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55em;
+      margin-top: auto;
+      color: rgba(244, 241, 232, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(14px, 4.4cqw);
+      font-weight: 500;
+      letter-spacing: -0.005em;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .tile-button svg {
+      width: 1.6em;
+      height: auto;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .tile-button:hover {
+      color: #fff;
+    }
+
+    .tile-button:hover svg {
+      transform: translateX(0.3em);
+    }
+
+    /* Phones and small tablets: the three tiles are too narrow for text, so
+       they stack. */
+    @media (max-width: 900px) {
+      .row-3 {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .row-3 > .tile {
+        min-height: calc(var(--w) / 1.27);
+      }
+
+      .tile-title {
+        font-size: 8.4cqw;
+      }
+
+      .scout-verb {
+        font-size: 9.2cqw;
+      }
+
+      :root {
+        --third: var(--w);
+      }
+
+      .row.row-2 {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .tile-grid {
+        height: calc(var(--w) * 0.7);
+      }
+
+      .tile-case {
+        min-height: calc(var(--w) * 0.8);
+      }
+
+      .row.row-palette {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .case-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .coinvest-title {
+        font-size: 7.4cqw;
+      }
+
+      .tile-case .case-hero {
+        margin: 7cqw 0;
+      }
+
+      .coinvest-grid {
+        flex: none;
+        grid-template-rows: repeat(2, auto);
+      }
+
+      .coinvest-grid li {
+        min-height: 0;
+        aspect-ratio: 1;
+      }
+    }
+
+    /* Row 3: two equal tiles. */
+    .row-2 {
+      grid-template-columns: 1fr 1fr;
+      height: calc(var(--w) * 0.323);
+    }
+
+    /* Six equal squares (3 x 2), sized to the largest square that fits the
+       tile with even padding, and centered. */
+    .tile-grid {
+      container-type: size;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mini-grid {
+      --pad: 7cqh;
+      --g: 4.5cqh;
+      --s: min(calc((100cqw - 2 * var(--pad) - 2 * var(--g)) / 3), calc((100cqh - 2 * var(--pad) - var(--g)) / 2));
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, var(--s));
+      grid-template-rows: repeat(2, var(--s));
+      gap: var(--g);
+    }
+
+    .mini {
+      position: relative;
+      overflow: hidden;
+      border-radius: calc(var(--radius) * 0.6);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015) 60%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Logo sits inset in its glass square, which frames it like a
+       rounded app-icon border. */
+    .mini {
+      display: grid;
+      place-items: center;
+    }
+
+    /* Each portfolio logo links to the company's site. */
+    .mini a {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mini img {
+      display: block;
+      width: 74%;
+      height: 74%;
+      object-fit: cover;
+      border-radius: 16%;
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mini:hover img {
+      transform: scale(1.05);
+    }
+
+    .mini:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    /* Row 4: Convergent raise, then an empty six-square grid (mirrors row 3). */
+    .row-palette {
+      grid-template-columns: 1fr 1fr;
+      height: calc(var(--w) * 0.323);
+    }
+
+    /* ---- Falling star -------------------------------------------------
+       After the AGI House story star: the star rides the center gutter,
+       held at the middle of the screen (sticky) so it travels down the
+       page. Once it is moving a soft line trails up behind it, small
+       stars twinkle at random over the rows, and it lands in a square
+       under the last row, which lights up. It spins clockwise scrolling
+       down and the other way scrolling up, and squares up when it lands
+       so it sits flush in the frame. Positioned by script; hidden where
+       the grid stacks (phones). */
+    .star-track {
+      --s: 48px;
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    /* The trail stops at the landing square's top edge (half the star
+       plus the square's 39px half-width above the track's end), so once
+       the star is in, the line runs into the frame instead of across it. */
+    .star-clip {
+      position: absolute;
+      inset: 0;
+      overflow: clip;
+      clip-path: inset(0 0 calc(var(--s) / 2 + 39px));
+    }
+
+    .star-line-row,
+    .star-row {
+      position: sticky;
+      top: calc(50vh - var(--s) / 2);
+      height: var(--s);
+    }
+
+    .star-line {
+      position: absolute;
+      bottom: 50%;
+      left: var(--x);
+      width: 4px;
+      height: 200vh;
+      border-radius: 999px;
+      background: linear-gradient(transparent, rgba(255, 255, 255, 0.41) 99%);
+      opacity: 0;
+      transform: translate(-50%);
+      transition: opacity 0.18s;
+    }
+
+    .star-track[data-trail-active="true"] .star-line {
+      opacity: 1;
+    }
+
+    .star-marker {
+      position: absolute;
+      left: calc(var(--x) - var(--s) / 2);
+      top: 0;
+      display: block;
+      width: var(--s);
+      height: var(--s);
+      filter: drop-shadow(rgba(255, 255, 255, 0.42) 0 0 12px);
+      transform-origin: center;
+      will-change: rotate;
+    }
+
+    .star-sparkles {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+    }
+
+    .star-sparkle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      animation: star-sparkle 2s linear;
+    }
+
+    @keyframes star-sparkle {
+      0%   { transform: scale(0.25) rotate(0deg); }
+      50%  { transform: scale(1.25) rotate(180deg); }
+      100% { transform: scale(0.25) rotate(360deg); }
+    }
+
+    /* Landing square under the last row: dark gray until the star
+       arrives, then white with a glow (the AGI House stand). Sized so
+       the 48px star sits in it with an even 9px margin all round. */
+    .star-dock {
+      display: grid;
+      /* News | landing square | (open): the square stays centered on the
+         gutter the star rides down. */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      column-gap: var(--gap);
+      align-items: start;
+      padding-top: calc(var(--gap) * 1.5);
+    }
+
+    .star-dock-square {
+      grid-column: 2;
+    }
+
+    .star-dock-square {
+      --frame: 6px;
+      width: calc(48px + 2 * 9px + 2 * var(--frame));
+      aspect-ratio: 1;
+      border: var(--frame) solid currentColor;
+      border-radius: 16px;
+      color: #343539;
+      transition: color 0.5s, filter 0.5s;
+    }
+
+    .star-dock-square.is-lit {
+      color: #fff;
+      filter: drop-shadow(rgba(255, 255, 255, 0.38) 0 0 12px);
+    }
+
+    @media (max-width: 900px) {
+      .star-track,
+      .star-dock-square {
+        display: none;
+      }
+
+      .star-dock {
+        grid-template-columns: minmax(0, 1fr);
+        padding-top: var(--gap);
+      }
+    }
+
+    /* News: an editorial feed left of the landing square. Each item is one
+       link: date, a serif line with the names picked out, and an arrow.
+       Rows draw in on reveal; hovering one lifts it and quiets the rest. */
+    .news {
+      grid-column: 1;
+      grid-row: 1;
+      /* Shifted right (not narrowed) a little in from the tiles' edge. */
+      --inset: calc((var(--w) - var(--gap)) * 0.02);
+      margin-left: var(--inset);
+      margin-right: calc(var(--inset) * -1);
+      padding-right: clamp(8px, 2vw, 40px);
+    }
+
+    .news-head {
+      display: flex;
+      align-items: center;
+      gap: 0.9em;
+      padding-bottom: clamp(12px, 1.1vw, 20px);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 0.8vw);
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    /* A small live light before the label. */
+    .news-head::before {
+      content: "";
+      width: 0.55em;
+      height: 0.55em;
+      border-radius: 50%;
+      background: #f4e3b8;
+      box-shadow: 0 0 0 0 rgba(244, 227, 184, 0.5);
+      animation: news-pulse 2.4s ease-out infinite;
+    }
+
+    @keyframes news-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(244, 227, 184, 0.45); }
+      70%, 100% { box-shadow: 0 0 0 0.9em rgba(244, 227, 184, 0); }
+    }
+
+    .news-count {
+      margin-left: auto;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    .news-list {
+      position: relative;
+      list-style: none;
+    }
+
+    .news-list::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1) 0.85s;
+    }
+
+    .news-item {
+      position: relative;
+      transition: opacity 0.35s ease;
+    }
+
+    .news-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s ease;
+    }
+
+    .news-item::before { transition-delay: calc(var(--d, 0s) - 0.2s), 0s; }
+    .news.is-in .news-item::before,
+    .news.is-in .news-list::after { transform: scaleX(1); }
+
+    .news-link {
+      display: grid;
+      grid-template-columns: clamp(78px, 7.4vw, 140px) minmax(0, 1fr) auto;
+      column-gap: clamp(14px, 1.6vw, 32px);
+      align-items: baseline;
+      padding: clamp(16px, 1.5vw, 28px) 0;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .news-date {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 0.76vw);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.42);
+      transition: color 0.35s ease;
+    }
+
+    .news-text {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(16px, 1.42vw, 26px);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.7);
+      transition: color 0.35s ease;
+    }
+
+    .news-text strong {
+      font-weight: 400;
+      color: rgba(244, 241, 232, 0.98);
+    }
+
+    .news-text em {
+      color: rgba(244, 241, 232, 0.92);
+    }
+
+    .news-aside {
+      color: rgba(244, 241, 232, 0.42);
+    }
+
+    .news-go {
+      display: inline-flex;
+      align-self: center;
+      width: clamp(22px, 1.6vw, 30px);
+      color: rgba(244, 241, 232, 0.4);
+      opacity: 0;
+      translate: -0.8em 0;
+      transition:
+        color 0.35s ease,
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1) var(--ad, 0s),
+        translate 0.9s cubic-bezier(0.23, 1, 0.32, 1) var(--ad, 0s);
+    }
+
+    .news.is-in .news-go {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    /* Split-text rise, after stanfordai.club: each word sits in a clipped
+       slot and slides up into place as it fades in (0.65s, 22ms apart); the
+       label's letters rise tilted and swing upright from their bottom-left
+       corner (0.75s, 55ms apart). Both on a strong ease-out. Script splits
+       the text and sets --d (when a block starts) and --i (its order). */
+    .news .sw {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: top;
+      padding: 0 0.08em 0.16em;
+      margin: 0 -0.08em -0.16em;
+    }
+
+    .news .sw > span {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(110%);
+      transition:
+        transform 0.65s cubic-bezier(0.23, 1, 0.32, 1),
+        opacity 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+      transition-delay: calc(var(--d, 0s) + var(--i, 0) * 22ms);
+    }
+
+    .news .sl > span {
+      opacity: 1;
+      transform: translateY(120%) rotate(-16deg);
+      transform-origin: 0% 100%;
+      transition: transform 0.75s cubic-bezier(0.23, 1, 0.32, 1);
+      transition-delay: calc(var(--d, 0s) + var(--i, 0) * 55ms);
+    }
+
+    .news.is-in .sw > span {
+      opacity: 1;
+      transform: none;
+    }
+
+    .news-head::before {
+      opacity: 0;
+      scale: 0.3;
+      transition: opacity 0.6s ease 0.1s, scale 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.1s;
+    }
+
+    .news.is-in .news-head::before {
+      opacity: 1;
+      scale: 1;
+    }
+
+    .news-go svg {
+      width: 100%;
+      height: auto;
+    }
+
+    .news.is-settled .news-item { transition-delay: 0s; transition-duration: 0.35s; }
+    .news.is-in .news-list:hover .news-item { opacity: 0.38; }
+    .news.is-in .news-list .news-item:hover { opacity: 1; }
+    .news-item:hover::before { background-color: rgba(244, 241, 232, 0.42); }
+    .news-item:hover .news-date { color: rgba(244, 241, 232, 0.75); }
+    .news-item:hover .news-text { color: rgba(244, 241, 232, 0.9); }
+    .news-item:hover .news-go { color: rgba(244, 241, 232, 0.95); transform: translateX(0.35em); }
+    /* Stamp right of the landing square, mirroring the news: same inset
+       from the outer edge, top on the news label and bottom on the last
+       rule (height set by script). Dimmed and cooled to sit in the dark
+       palette, set at a slight tilt like a pasted stamp; hover lifts it. */
+    .dock-stamp {
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
+      margin-right: calc((var(--w) - var(--gap)) * 0.02);
+      height: 18vw;
+      aspect-ratio: 1420 / 1108;
+      /* Nudged a little left and down from that alignment. */
+      translate: -1.6vw 1.4vw;
+    }
+
+    .dock-stamp img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      rotate: -3deg;
+      filter: brightness(0.62) saturate(0.55) contrast(1.08) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55));
+      transition: rotate 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease, scale 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .dock-stamp:hover img {
+      rotate: 0deg;
+      scale: 1.02;
+      filter: brightness(0.85) saturate(0.8) contrast(1.05) drop-shadow(0 22px 36px rgba(0, 0, 0, 0.6));
+    }
+
+    @media (max-width: 900px) {
+      .dock-stamp {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: start;
+        margin: var(--gap) 0 0;
+        height: auto;
+        width: 70%;
+        translate: none;
+      }
+    }
+
+    /* Fine print under the feed, on the same left edge. */
+    .news-legal {
+      margin-top: clamp(28px, 2.8vw, 52px);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 0.96vw);
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.4);
+    }
+
+    .news-link:focus-visible { outline: 1px solid rgba(244, 241, 232, 0.5); outline-offset: 4px; }
+
+    @media (max-width: 900px) {
+      .news {
+        margin-left: 0;
+        margin-right: 0;
+        padding-right: 0;
+      }
+
+      .news-head {
+        font-size: 11px;
+      }
+
+      .news-link {
+        grid-template-columns: minmax(0, 1fr) auto;
+        row-gap: 8px;
+      }
+
+      .news-date {
+        grid-column: 1 / -1;
+        font-size: 11px;
+      }
+
+      .news-text {
+        font-size: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .news-head::before {
+        animation: none;
+      }
+
+      .news-item,
+      .news-item::before,
+      .news-list::after,
+      .news-go,
+      .news-head::before,
+      .news .sw > span {
+        transition: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .star-sparkle {
+        animation: none;
+      }
+
+      .star-line {
+        transition: none;
+      }
+    }
+
+    /* Team tile (left of Parasma): a roster centered in the tile. Rows draw in and decode when
+       scrolled into view; hovering a row spotlights it, swaps
+       its number for a spinning Stealth star and sets the dotted leader
+       running toward the role. Sized in cqw so it scales with the tile. */
+    .tile-team {
+      padding: 6.5%;
+      align-items: stretch;
+      justify-content: space-between;
+    }
+
+    /* Hovering a name floats that person's photo beside the pointer: a
+       rounded card that eases after the cursor and tilts with its motion.
+       Rows with a bio add a text card cut to the photo's height. */
+    .team-peek {
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: 3;
+      display: flex;
+      align-items: stretch;
+      gap: 1.2cqw;
+      pointer-events: none;
+      opacity: 0;
+      scale: 0.6;
+      transform-origin: 8.5cqw 50%;
+      transition: opacity 0.3s ease, scale 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      will-change: transform;
+    }
+
+    .team-peek.is-on {
+      opacity: 1;
+      scale: 1;
+    }
+
+    .team-peek-photo,
+    .team-peek-bio {
+      border-radius: calc(var(--radius) * 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.75);
+    }
+
+    .team-peek-photo {
+      flex: none;
+      width: 17cqw;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+
+    .team-peek-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* First and last lines sit on the photo's top and bottom insets. */
+    .team-peek-bio {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 1.6cqw 2cqw;
+      background: rgba(18, 18, 20, 0.64);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: max(11px, 2.45cqw);
+      line-height: 1.15;
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.94);
+    }
+
+    .team-peek.has-bio .team-peek-bio {
+      display: flex;
+    }
+
+    .team-peek-bio em {
+      font-style: normal;
+      color: rgba(244, 241, 232, 0.5);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    /* One grid for all rows (rows are subgrids), so numbers, names,
+       leaders and roles each line up in a shared column. */
+    .team-list {
+      position: relative;
+      display: grid;
+      grid-template-columns: 7cqw auto minmax(0, 1fr);
+      column-gap: 2.4cqw;
+      margin: auto 0;
+      list-style: none;
+      counter-reset: team;
+    }
+
+    .team-list::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.6s;
+    }
+
+    .team-row {
+      position: relative;
+      counter-increment: team;
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      grid-template-areas: "num name end";
+      align-items: baseline;
+      padding: 3cqw 0 2.2cqw;
+      opacity: 0;
+      transform: translateY(1.6cqw);
+      transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .team-row::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s ease;
+    }
+
+    .team-row:nth-child(2), .team-row:nth-child(2)::before { transition-delay: 0.12s; }
+    .team-row:nth-child(3), .team-row:nth-child(3)::before { transition-delay: 0.24s; }
+    .team-row:nth-child(4), .team-row:nth-child(4)::before { transition-delay: 0.36s; }
+
+    .tile-team.is-in .team-row { opacity: 1; transform: none; }
+    .tile-team.is-in .team-row::before,
+    .tile-team.is-in .team-list::after { transform: scaleX(1); }
+
+    .team-num {
+      grid-area: num;
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 2.4cqw);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    .team-num::before {
+      content: "0" counter(team);
+      transition: opacity 0.3s ease;
+    }
+
+    .team-star {
+      position: absolute;
+      left: 0;
+      bottom: -0.1em;
+      width: 4.2cqw;
+      height: auto;
+      opacity: 0;
+      scale: 0.3;
+      filter: drop-shadow(rgba(255, 255, 255, 0.42) 0 0 10px);
+      transition: opacity 0.35s ease, scale 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .team-name {
+      grid-area: name;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: 7cqw;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.96);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    /* Leader and role share the last column: the dots run up to each
+       role, which sits flush right. */
+    .team-end {
+      grid-area: end;
+      display: flex;
+      align-items: baseline;
+      gap: 2.4cqw;
+      min-width: 0;
+    }
+
+    .team-dots {
+      flex: 1 1 2.4cqw;
+      align-self: baseline;
+      height: 2px;
+      transform: translateY(-0.2em);
+      background-image: radial-gradient(circle at 1px 1px, rgba(244, 241, 232, 0.3) 0.9px, transparent 1.3px);
+      background-size: 8px 2px;
+      background-repeat: repeat-x;
+    }
+
+    .team-role {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(10px, 2.1cqw);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.55);
+      transition: color 0.35s ease;
+    }
+
+    /* Dimmed aside inside a role, like "(stealth)" in the first title. */
+    .team-role-soft {
+      color: rgba(244, 241, 232, 0.28);
+      transition: color 0.35s ease;
+    }
+
+    .team-row:hover .team-role-soft { color: rgba(244, 241, 232, 0.5); }
+
+    /* Hover: spotlight one row and quiet the others. */
+    .tile-team.is-settled .team-row { transition-delay: 0s; transition-duration: 0.35s; }
+    .tile-team.is-in .team-list:hover .team-row { opacity: 0.32; }
+    .tile-team.is-in .team-list .team-row:hover { opacity: 1; }
+    .team-row:hover::before { background-color: rgba(244, 241, 232, 0.4); }
+    .team-row:hover .team-num::before { opacity: 0; }
+    .team-row:hover .team-star { opacity: 1; scale: 1; animation: team-spin 4s linear infinite; }
+    .team-row:hover .team-name { transform: translateX(0.16em); }
+    .team-row:hover .team-dots {
+      background-image: radial-gradient(circle at 1px 1px, rgba(244, 241, 232, 0.75) 0.9px, transparent 1.3px);
+      animation: team-march 0.9s linear infinite;
+    }
+    .team-row:hover .team-role { color: rgba(244, 241, 232, 0.95); }
+
+    @keyframes team-spin { to { rotate: 360deg; } }
+    @keyframes team-march { to { background-position: 8px 0; } }
+
+    @media (max-width: 900px) {
+      .tile-team {
+        min-height: calc(var(--w) * 0.9);
+      }
+
+      .team-list {
+        display: block;
+      }
+
+      .team-row {
+        grid-column: auto;
+        column-gap: 2.4cqw;
+        grid-template-columns: 9cqw minmax(0, 1fr);
+        grid-template-areas:
+          "num name"
+          ".   end";
+        row-gap: 2.4cqw;
+        padding: 3.6cqw 0 3.2cqw;
+      }
+
+      .team-name {
+        font-size: 9cqw;
+      }
+
+      .team-dots {
+        display: none;
+      }
+
+      .team-role {
+        font-size: max(10px, 3cqw);
+      }
+
+      .team-star {
+        width: 5.4cqw;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .team-peek,
+      .team-row,
+      .team-row::before,
+      .team-list::after {
+        transition: none;
+      }
+
+      .team-row:hover .team-star,
+      .team-row:hover .team-dots {
+        animation: none;
+      }
+    }
+
+    /* Closing wordmark: edge to edge at the very bottom, dimmed and fading
+       in from the top so it reads as part of the background. */
+    .outro {
+      /* Breathing room between the news and the wordmark. */
+      padding-top: clamp(48px, 7vw, 140px);
+      line-height: 0;
+    }
+
+    .outro img {
+      display: block;
+      width: 100%;
+      height: auto;
+      opacity: 0.16;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      mask-image: linear-gradient(to bottom, transparent, #000 70%);
       user-select: none;
     }
 
@@ -146,9 +1696,227 @@
 
   <main class="bento">
     <section class="tile hero">
-      <img class="hero-logo" src="images/attentionx-logo.png" alt="AttentionX" />
+      <div class="hero-logo" role="img" aria-label="AttentionX">
+        <img src="images/attentionx-logo.png" alt="" />
+      </div>
     </section>
+
+    <div class="row row-3">
+      <section class="tile tile-text">
+        <h2 class="tile-title">We are a <em>(stealth)</em> venture fund that finds and backs unusually talented technical founders before they become obvious winners.</h2>
+        <a class="tile-button" href="#" data-cursor-label="companies">
+          View all companies
+          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+        </a>
+      </section>
+      <section class="tile tile-text tile-scout">
+        <p class="scout-note">We operate as a scout for larger funds, enterprises, and talent, leveraging our network to help our founders:</p>
+        <ol class="scout-list">
+          <li><span class="scout-num"></span><span class="scout-verb" data-decode>Raise</span><span class="scout-obj">from the best investors.</span></li>
+          <li><span class="scout-num"></span><span class="scout-verb" data-decode>Get</span><span class="scout-obj">the best enterprises.</span></li>
+          <li><span class="scout-num"></span><span class="scout-verb" data-decode>Hire</span><span class="scout-obj">the best talent.</span></li>
+        </ol>
+        <p class="scout-punch"><span class="scout-punch-lead">These three are the most essential value-adds a cap table investor needs to provide,</span>and we’re damn good at them.</p>
+      </section>
+      <section class="tile tile-text tile-mark">
+        <h2 class="tile-title">We are really, really, really good at finding exceptional builders earlier than anyone else, often while they are still in <em>stealth mode.</em></h2>
+        <span class="tile-mark-logo">
+          <img src="assets/arcadia-wordmark-white.png" alt="Arcadia" />
+          <span class="logo-shine" aria-hidden="true"></span>
+          <span class="logo-flare" aria-hidden="true"></span>
+        </span>
+        <a class="tile-button" href="#" data-cursor-label="strategy">
+          Read our strategy
+          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+        </a>
+      </section>
+    </div>
+
+    <div class="row row-2">
+      <section class="tile tile-grid">
+        <div class="mini-grid">
+          <div class="mini"><a href="https://parasma.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Parasma"><img src="assets/portfolio/logo-6.jpg" alt="Parasma" /></a></div>
+          <div class="mini"><a href="https://implicitphysics.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Implicit Physics"><img src="assets/portfolio/logo-2.png" alt="Implicit Physics" /></a></div>
+          <div class="mini"><a href="https://www.convergent.dev/" target="_blank" rel="noopener noreferrer" data-cursor-label="Convergent"><img src="assets/portfolio/logo-1.png" alt="Convergent" /></a></div>
+          <div class="mini"><a href="https://www.launchpointhq.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Launchpoint"><img src="assets/portfolio/logo-4.jpg" alt="Launchpoint" /></a></div>
+          <div class="mini"><a href="https://morphic.io/" target="_blank" rel="noopener noreferrer" data-cursor-label="Morphic"><img src="assets/portfolio/logo-5.jpg" alt="Morphic" /></a></div>
+          <div class="mini"><a href="https://www.withfahrenheit.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Fahrenheit"><img src="assets/portfolio/logo-3.png" alt="Fahrenheit" /></a></div>
+        </div>
+      </section>
+      <section class="tile tile-text tile-case">
+        <div class="case-top">
+          <div class="case-logo">
+            <img class="case-icon" src="assets/portfolio/logo-4.jpg" alt="" />
+            <img class="case-word" src="assets/launchpoint-wordmark-white.png" alt="Launchpoint" />
+          </div>
+          <span class="case-label">33× growth</span>
+        </div>
+        <div class="case-hero">
+          <h2 class="case-stat"><span class="case-from">$1M</span><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg><span class="case-count" data-to="33">$33M</span></h2>
+          <p class="case-sub">ARR in 4 months</p>
+        </div>
+        <a class="tile-button" href="https://www.launchpointhq.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="launchpoint">
+          Read more
+          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+        </a>
+      </section>
+    </div>
+
+    <div class="row row-palette">
+      <section class="tile tile-text tile-case">
+        <div class="case-top">
+          <div class="case-logo case-logo--center">
+            <img class="case-icon" src="assets/portfolio/logo-1.png" alt="" />
+            <img class="case-word" src="assets/convergent-wordmark-white.png" alt="Convergent" />
+          </div>
+          <span class="case-label">New raise</span>
+        </div>
+        <div class="case-hero">
+          <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="15">$15M</span></h2>
+          <p class="case-sub">Seed led by a16z</p>
+        </div>
+        <div class="case-bottom">
+          <a class="tile-button" href="https://www.convergent.dev/" target="_blank" rel="noopener noreferrer" data-cursor-label="convergent">
+            Read more
+            <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+          </a>
+          <div class="case-investors">
+            <span class="investor investor-a16z"><img src="assets/investors/a16z-white.png" alt="a16z" /></span>
+            <i aria-hidden="true"></i>
+            <span class="investor investor-chem">
+              <img class="is-white" src="assets/investors/chemistry-white.png" alt="Chemistry" />
+              <img class="is-color" src="assets/investors/chemistry.png" alt="" />
+            </span>
+          </div>
+        </div>
+      </section>
+      <section class="tile tile-text tile-coinvest">
+        <h2 class="tile-title coinvest-title">Co-investing alongside the world’s best venture funds and angel investors.</h2>
+        <ul class="coinvest-grid">
+          <li><a href="https://a16z.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="a16z"><img src="assets/coinvestors/a16z.jpg" alt="a16z" /></a></li>
+          <li><a href="https://x.com/paulg" target="_blank" rel="noopener noreferrer" data-cursor-label="Paul Graham"><img src="assets/coinvestors/pg.jpg" alt="Paul Graham" /></a></li>
+          <li><a href="https://www.gv.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="GV"><img src="assets/coinvestors/gv.jpg" alt="GV" /></a></li>
+          <li><a href="https://www.chemistry.vc/" target="_blank" rel="noopener noreferrer" data-cursor-label="Chemistry"><img src="assets/coinvestors/chemistry.jpg" alt="Chemistry" /></a></li>
+          <li><a href="https://www.lererhippeau.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Lerer Hippeau"><img src="assets/coinvestors/lh.jpg" alt="Lerer Hippeau" /></a></li>
+          <li><a href="https://x.com/ariellezuck" target="_blank" rel="noopener noreferrer" data-cursor-label="Arielle Zuckerberg"><img src="assets/coinvestors/arielle-zuckerberg.jpg" alt="Arielle Zuckerberg" /></a></li>
+          <li><a href="https://www.longjourney.vc/" target="_blank" rel="noopener noreferrer" data-cursor-label="Long Journey Ventures"><img src="assets/coinvestors/long-journey.jpg" alt="Long Journey Ventures" /></a></li>
+          <li><a href="https://somacap.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="Soma Capital"><img src="assets/coinvestors/soma.jpg" alt="Soma Capital" /></a></li>
+        </ul>
+      </section>
+    </div>
+
+    <!-- Row 5: Parasma raise under the co-investors box. -->
+    <div class="row row-palette">
+      <section class="tile tile-text tile-team" aria-labelledby="team-title">
+        <h2 class="visually-hidden" id="team-title">Team</h2>
+        <ol class="team-list">
+          <li class="team-row" data-photo="assets/team/sukone-hong.jpg">
+            <template class="team-bio"><span>High school &amp; college dropout,</span><span>Founded Paradox Computer</span><span><em>(acq. by Yeo Holdings).</em></span></template>
+            <span class="team-num"><img class="team-star" src="assets/stealth-star.png" alt="" /></span>
+            <span class="team-name"><span data-decode>Sukone Hong</span></span>
+            <span class="team-end">
+              <span class="team-dots" aria-hidden="true"></span>
+              <span class="team-role">General Partner</span>
+            </span>
+          </li>
+          <li class="team-row" data-photo="assets/team/julia-lee.jpg">
+            <span class="team-num"><img class="team-star" src="assets/stealth-star.png" alt="" /></span>
+            <span class="team-name">Dr. <span data-decode>Julia Lee</span></span>
+            <span class="team-end">
+              <span class="team-dots" aria-hidden="true"></span>
+              <span class="team-role">General Partner</span>
+            </span>
+          </li>
+          <li class="team-row" data-photo="assets/team/daniel-chang.jpg">
+            <span class="team-num"><img class="team-star" src="assets/stealth-star.png" alt="" /></span>
+            <span class="team-name"><span data-decode>Daniel Chang</span></span>
+            <span class="team-end">
+              <span class="team-dots" aria-hidden="true"></span>
+              <span class="team-role">Stealth <span class="team-role-soft">(Venture)</span> Partner</span>
+            </span>
+          </li>
+          <li class="team-row" data-photo="assets/team/kunhak-lee.jpg">
+            <span class="team-num"><img class="team-star" src="assets/stealth-star.png" alt="" /></span>
+            <span class="team-name"><span data-decode>Kunhak Lee</span></span>
+            <span class="team-end">
+              <span class="team-dots" aria-hidden="true"></span>
+              <span class="team-role">Operating Partner</span>
+            </span>
+          </li>
+        </ol>
+        <div class="team-peek" aria-hidden="true"><div class="team-peek-photo"><img alt="" /></div><div class="team-peek-bio"></div></div>
+      </section>
+      <section class="tile tile-text tile-case">
+        <div class="case-top">
+          <div class="case-logo case-logo--caps">
+            <img class="case-icon" src="assets/portfolio/logo-6.jpg" alt="" />
+            <img class="case-word" src="assets/parasma-wordmark-white.png" alt="Parasma" />
+          </div>
+          <span class="case-label">New raise</span>
+        </div>
+        <div class="case-hero">
+          <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="7">$7M</span></h2>
+          <p class="case-sub">Seed round, backed by</p>
+          <div class="case-backers">
+            <a class="backer" href="https://x.com/paulg" target="_blank" rel="noopener noreferrer" data-cursor-label="Paul Graham">
+              <img src="assets/coinvestors/pg.jpg" alt="" />
+              <span><span class="backer-name">Paul Graham</span><span class="backer-role">Founder @ Y Combinator</span></span>
+            </a>
+            <a class="backer" href="https://x.com/kevinhartz" target="_blank" rel="noopener noreferrer" data-cursor-label="Kevin Hartz">
+              <img src="assets/coinvestors/kevin-hartz-2.jpg" alt="" />
+              <span><span class="backer-name">Kevin Hartz</span><span class="backer-role">Co-Founder @ A*</span></span>
+            </a>
+          </div>
+        </div>
+        <a class="tile-button" href="https://www.thetimes.com/uk/science/article/lab-grown-brain-adhd-science-672n5xk0f" target="_blank" rel="noopener noreferrer" data-cursor-label="parasma">
+          Read more
+          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+        </a>
+      </section>
+    </div>
+
+    <div class="star-dock">
+      <section class="news" aria-labelledby="news-title">
+        <h2 class="news-head" id="news-title" aria-label="News (03)"><span class="news-label">News</span> <span class="news-count">(03)</span></h2>
+        <ol class="news-list">
+          <li class="news-item">
+            <a class="news-link" href="https://frontierlist.com/sf-event-hosts" target="_blank" rel="noopener noreferrer" data-cursor-label="frontier list">
+              <time class="news-date" datetime="2026-10-08">Oct 8, 2026</time>
+              <p class="news-text"><strong>Sukone Hong</strong>, featured in Frontier List’s <em>“Great SF event hosts”</em>, alongside Dave Fontenot <span class="news-aside">(HF0)</span>, Ben Lang <span class="news-aside">(Cursor)</span>, and Vivian Shen <span class="news-aside">(Y Combinator)</span>.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+          <li class="news-item">
+            <a class="news-link" href="https://frontierlist.com/data-people" target="_blank" rel="noopener noreferrer" data-cursor-label="frontier list">
+              <time class="news-date" datetime="2026-10-05">Oct 5, 2026</time>
+              <p class="news-text"><strong>Daniel Chang</strong>, featured in Frontier List’s <em>“Insightful people in AI data and post-training”</em> alongside founders of Flapping Airplanes, Ricursive, and Applied Compute.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+          <li class="news-item">
+            <a class="news-link" href="https://www.economist.com/science-and-technology/2026/03/30/why-a-startup-is-teaching-human-brain-cells-to-play-doom" target="_blank" rel="noopener noreferrer" data-cursor-label="economist">
+              <time class="news-date" datetime="2026-03-30">Mar 30, 2026</time>
+              <p class="news-text"><span class="news-aside">Portfolio News:</span> <strong>Parasma</strong>, featured in <em>Nature</em>, <em>The Times</em>, and <em>The Economist</em>.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+        </ol>
+        <p class="news-legal">© 2026 BlueBrown Partners LLC. All rights reserved.<br />Stealth Fund™ is a trademark of its respective owner.</p>
+      </section>
+      <div class="star-dock-square" aria-hidden="true"></div>
+      <figure class="dock-stamp"><img src="assets/stamp-stealth-2.webp" alt="Stealth Fund 2026 stamp of a Viking ship in a storm" /></figure>
+    </div>
+
+    <div class="star-track" aria-hidden="true">
+      <div class="star-clip"><div class="star-line-row"><span class="star-line"></span></div></div>
+      <div class="star-row"><img class="star-marker" src="assets/stealth-star.png" alt="" /></div>
+      <div class="star-sparkles"></div>
+    </div>
   </main>
+
+  <footer class="outro">
+    <img src="assets/wordmark-footer.png" alt="Stealth Fund" />
+  </footer>
 
   <canvas class="grain" aria-hidden="true"></canvas>
 
@@ -196,6 +1964,406 @@
       setInterval(draw, 70);
     })();
 
+    // Star mark spins with scroll: clockwise going down, back the other way
+    // going up. Eased so it carries a little momentum.
+    (function () {
+      var star = document.querySelector('.logo-star');
+      if (!star) return;
+      var DEG_PER_PX = 0.35;
+      var angle = window.scrollY * DEG_PER_PX;
+      (function tick() {
+        var target = window.scrollY * DEG_PER_PX;
+        angle += (target - angle) * 0.12;
+        star.style.transform = 'rotate(' + angle.toFixed(2) + 'deg)';
+        requestAnimationFrame(tick);
+      })();
+    })();
+
+    // Case tiles: on reveal, count the headline figure up (e.g. $1M -> $33M).
+    document.querySelectorAll('.tile-case').forEach(function (tile) {
+      var count = tile.querySelector('.case-count');
+      if (!count) return;
+      var from = parseInt(count.dataset.from || '1', 10);
+      var to = parseInt(count.dataset.to, 10);
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        tile.classList.add('is-in');
+        return;
+      }
+      count.textContent = '$' + from + 'M';
+
+      function run() {
+        var start = null, duration = 2400;
+        requestAnimationFrame(function step(now) {
+          if (start === null) start = now;
+          var t = Math.min((now - start) / duration, 1);
+          var eased = 1 - Math.pow(1 - t, 3);
+          count.textContent = '$' + Math.round(from + (to - from) * eased) + 'M';
+          if (t < 1) requestAnimationFrame(step);
+        });
+      }
+
+      function reveal() {
+        if (tile.classList.contains('is-in')) return;
+        var r = tile.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.8 || r.bottom < window.innerHeight * 0.2) return;
+        tile.classList.add('is-in');
+        setTimeout(run, 250);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.35 }).observe(tile);
+      }
+      reveal();
+    });
+
+    // Scramble an element's text and settle it letter by letter.
+    var GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#%&*+=/<>';
+
+    function decode(el, delay, duration) {
+      var final = el.dataset.text || (el.dataset.text = el.textContent);
+      clearTimeout(el._decodeTimer);
+      el._decodeTimer = setTimeout(function () {
+        var start = null;
+        var run = (el._decodeRun || 0) + 1;
+        el._decodeRun = run;
+        requestAnimationFrame(function step(now) {
+          if (el._decodeRun !== run) return;
+          if (start === null) start = now;
+          var t = Math.min((now - start) / duration, 1);
+          var shown = Math.floor(t * final.length);
+          var out = '';
+          for (var i = 0; i < final.length; i++) {
+            out += i < shown ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+          }
+          el.textContent = out;
+          if (t < 1) requestAnimationFrame(step);
+          else el.textContent = final;
+        });
+      }, delay);
+    }
+
+    // Scout tile: reveal rows when scrolled into view and decode each verb
+    // from scrambled glyphs; hovering a row decodes its verb again.
+    (function () {
+      var tile = document.querySelector('.tile-scout');
+      if (!tile) return;
+      var verbs = tile.querySelectorAll('[data-decode]');
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        tile.classList.add('is-in', 'is-settled');
+        return;
+      }
+
+      function reveal() {
+        if (tile.classList.contains('is-in')) return;
+        var r = tile.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.8 || r.bottom < window.innerHeight * 0.2) return;
+        tile.classList.add('is-in');
+        verbs.forEach(function (v, i) { decode(v, 200 + i * 160, 850); });
+        setTimeout(function () { tile.classList.add('is-settled'); }, 1700);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.35 }).observe(tile);
+      }
+      reveal();
+
+      verbs.forEach(function (v) {
+        v.closest('li').addEventListener('mouseenter', function () { decode(v, 0, 420); });
+      });
+    })();
+
+    // Stamp: as tall as the news, from its label to its last rule.
+    (function () {
+      var stamp = document.querySelector('.dock-stamp');
+      var head = document.querySelector('.news-head');
+      var list = document.querySelector('.news-list');
+      if (!stamp || !head || !list) return;
+      function fit() {
+        if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.height = ''; return; }
+        stamp.style.height = (list.getBoundingClientRect().bottom - head.getBoundingClientRect().top) + 'px';
+      }
+      window.addEventListener('resize', fit);
+      window.addEventListener('load', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+      fit();
+    })();
+
+    // News: split the label into letters and the dates, headlines and
+    // fine print into words (see "Split-text rise"), stagger each block,
+    // then reveal the feed when it scrolls into view.
+    (function () {
+      var news = document.querySelector('.news');
+      if (!news) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        news.classList.add('is-in', 'is-settled');
+        return;
+      }
+
+      // Wrap each word (or letter) of el's text in a clipped slot, keeping
+      // inline markup such as <strong> and <em>; returns the next index.
+      function split(el, i, letters) {
+        (function walk(node) {
+          Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+            if (child.nodeType === 3) {
+              var frag = document.createDocumentFragment();
+              child.textContent.split(/(\s+)/).forEach(function (part) {
+                if (!part) return;
+                if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+                (letters ? part.split('') : [part]).forEach(function (bit) {
+                  var slot = document.createElement('span');
+                  slot.className = letters ? 'sw sl' : 'sw';
+                  if (letters) slot.setAttribute('aria-hidden', 'true');
+                  var inner = document.createElement('span');
+                  inner.textContent = bit;
+                  inner.style.setProperty('--i', i++);
+                  slot.appendChild(inner);
+                  frag.appendChild(slot);
+                });
+              });
+              node.replaceChild(frag, child);
+            } else if (child.nodeType === 1 && child.tagName !== 'BR') {
+              walk(child);
+            }
+          });
+        })(el);
+        return i;
+      }
+
+      var head = news.querySelector('.news-head');
+      head.style.setProperty('--d', '0.1s');
+      split(head, 0, true);
+      var items = news.querySelectorAll('.news-item');
+      items.forEach(function (item, k) {
+        var d = 0.25 + k * 0.22;
+        item.style.setProperty('--d', d + 's');
+        var n = split(item.querySelector('.news-date'), 0, false);
+        n = split(item.querySelector('.news-text'), n, false);
+        item.style.setProperty('--ad', (d + n * 0.022) + 's');
+      });
+      var legal = news.querySelector('.news-legal');
+      if (legal) {
+        legal.style.setProperty('--d', (0.25 + items.length * 0.22 + 0.15) + 's');
+        split(legal, 0, false);
+      }
+
+      function reveal() {
+        if (news.classList.contains('is-in')) return;
+        var r = news.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.85 || r.bottom < 0) return;
+        news.classList.add('is-in');
+        setTimeout(function () { news.classList.add('is-settled'); }, 2500);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.2 }).observe(news);
+      }
+      reveal();
+    })();
+
+    // Team: reveal the roster when it scrolls into view, decoding each name
+    // from scrambled glyphs; hovering a row decodes its name again.
+    (function () {
+      var team = document.querySelector('.tile-team');
+      if (!team) return;
+      var names = team.querySelectorAll('[data-decode]');
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        team.classList.add('is-in', 'is-settled');
+        return;
+      }
+
+      function reveal() {
+        if (team.classList.contains('is-in')) return;
+        var r = team.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.8 || r.bottom < window.innerHeight * 0.2) return;
+        team.classList.add('is-in');
+        names.forEach(function (n, i) { decode(n, 250 + i * 140, 900); });
+        setTimeout(function () { team.classList.add('is-settled'); }, 1800);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.3 }).observe(team);
+      }
+      reveal();
+
+      names.forEach(function (n) {
+        n.closest('li').addEventListener('mouseenter', function () { decode(n, 0, 480); });
+      });
+    })();
+
+    // Team photos: hovering a name floats that person's photo next to the
+    // pointer. It eases after the cursor and tilts a little with its speed.
+    (function () {
+      var tile = document.querySelector('.tile-team');
+      var peek = tile && tile.querySelector('.team-peek');
+      if (!peek) return;
+      var img = peek.querySelector('img');
+      var bio = peek.querySelector('.team-peek-bio');
+      var x = 0, y = 0, tx = 0, ty = 0, tilt = 0, running = false;
+      tile.querySelectorAll('.team-row').forEach(function (row) {
+        new Image().src = row.dataset.photo;
+        row.addEventListener('mouseenter', function (e) {
+          img.src = row.dataset.photo;
+          img.style.objectPosition = row.dataset.photoPos || '';
+          var tpl = row.querySelector('template.team-bio');
+          bio.innerHTML = tpl ? tpl.innerHTML : '';
+          peek.classList.toggle('has-bio', !!tpl);
+          aim(e);
+          if (!peek.classList.contains('is-on')) { x = tx; y = ty; }
+          peek.classList.add('is-on');
+          if (!running) { running = true; requestAnimationFrame(tick); }
+        });
+        row.addEventListener('mouseleave', function () { peek.classList.remove('is-on'); });
+      });
+      tile.addEventListener('mousemove', aim);
+
+      // Right of the pointer, or left of it when the card would run past
+      // the tile's edge; kept inside the tile either way.
+      function aim(e) {
+        var r = tile.getBoundingClientRect();
+        var w = peek.offsetWidth, h = peek.offsetHeight, px = e.clientX - r.left;
+        tx = px + 28 + w > tile.clientWidth - 12 ? px - 28 - w : px + 28;
+        tx = Math.max(12, Math.min(tx, tile.clientWidth - w - 12));
+        ty = Math.max(12, Math.min(e.clientY - r.top - h / 2, tile.clientHeight - h - 12));
+      }
+
+      function tick() {
+        var dx = tx - x;
+        x += dx * 0.18;
+        y += (ty - y) * 0.18;
+        tilt += (Math.max(-12, Math.min(12, dx * 0.12)) - tilt) * 0.2;
+        peek.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) rotate(' + tilt.toFixed(2) + 'deg)';
+        if (peek.classList.contains('is-on') || Math.abs(dx) > 0.5) requestAnimationFrame(tick);
+        else running = false;
+      }
+    })();
+
+    // Falling star (after the AGI House story star): lay the track from
+    // the gap under the three-tile row down to the landing square. The
+    // star spins the whole time, one turn every 4s, clockwise while
+    // scrolling down and the other way scrolling up. The line shows once
+    // the star is moving, a small star twinkles somewhere on the track
+    // every 600ms, and when the star lands the square lights and the
+    // star eases square to sit flush in it.
+    (function () {
+      var track = document.querySelector('.star-track');
+      var dock = document.querySelector('.star-dock-square');
+      var bento = document.querySelector('.bento');
+      if (!track || !dock || !bento) return;
+      var marker = track.querySelector('.star-marker');
+      var row = track.querySelector('.star-row');
+      var sparkles = track.querySelector('.star-sparkles');
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var SPIN = 90; // degrees per second
+      var active = false, docked = false, dir = 1, lastY = window.scrollY;
+      var angle = 0, vel = 0, target = 0;
+
+      function layout() {
+        active = getComputedStyle(track).display !== 'none';
+        if (!active) return;
+        var b = bento.getBoundingClientRect();
+        var row3 = document.querySelector('.row-3').getBoundingClientRect();
+        var row2 = document.querySelector('.row-2').getBoundingClientRect();
+        var d = dock.getBoundingClientRect();
+        var size = marker.offsetWidth || 48;
+        var start = (row3.bottom + row2.top) / 2;
+        var end = d.top + d.height / 2;
+        track.style.setProperty('--x', (d.left + d.width / 2 - b.left) + 'px');
+        track.style.top = (start - size / 2 - b.top) + 'px';
+        track.style.height = (end - start + size) + 'px';
+        update();
+      }
+
+      // Next upright angle ahead of the spin, far enough that the spring
+      // eases into it without overshooting.
+      function settleAngle() {
+        if (Math.abs(vel) < 1) return Math.round(angle / 90) * 90;
+        return vel > 0 ? Math.ceil((angle + 14) / 90) * 90 : Math.floor((angle - 14) / 90) * 90;
+      }
+
+      function update() {
+        if (!active) return;
+        var y = window.scrollY;
+        if (y !== lastY) { dir = y > lastY ? 1 : -1; lastY = y; }
+        var mid = window.innerHeight / 2;
+        var line = mid - marker.offsetHeight / 2;
+        var r = row.getBoundingClientRect();
+        var t = track.getBoundingClientRect();
+        track.dataset.trailActive = String(r.top <= line + 1 && t.bottom > line);
+        var d = dock.getBoundingClientRect();
+        var landed = d.top + d.height / 2 <= mid + 0.5;
+        dock.classList.toggle('is-lit', landed);
+        if (landed && !docked) target = settleAngle();
+        docked = landed;
+      }
+
+      function sparkle() {
+        if (!active || reduced || document.hidden) return;
+        var t = track.getBoundingClientRect();
+        if (t.bottom < 0 || t.top > window.innerHeight) return;
+        var img = document.createElement('img');
+        img.className = 'star-sparkle';
+        img.src = marker.src;
+        img.alt = '';
+        img.style.left = (Math.random() * 100) + '%';
+        img.style.top = (Math.random() * 100) + '%';
+        sparkles.appendChild(img);
+        setTimeout(function () { img.remove(); }, 2000);
+      }
+
+      var last = performance.now();
+      function tick(now) {
+        var dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        if (active && !reduced) {
+          if (docked) {
+            // Critically damped spring into the upright angle.
+            var w = 7;
+            vel += (w * w * (target - angle) - 2 * w * vel) * dt;
+          } else {
+            vel += (dir * SPIN - vel) * Math.min(1, dt * 5);
+          }
+          angle += vel * dt;
+          marker.style.rotate = angle.toFixed(2) + 'deg';
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+      setInterval(sparkle, 600);
+
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', layout);
+      window.addEventListener('load', layout);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+      layout();
+    })();
+
+    // Back button: return to the previous page when there is one.
+    (function () {
+      var back = document.querySelector('.back-button');
+      if (!back) return;
+      back.addEventListener('click', function (e) {
+        if (document.referrer && window.history.length > 1) {
+          e.preventDefault();
+          window.history.back();
+        }
+      });
+    })();
+
+    // Pointer-following highlight on each glass tile.
     document.querySelectorAll('.tile').forEach(function (tile) {
       tile.addEventListener('mousemove', function (e) {
         var r = tile.getBoundingClientRect();

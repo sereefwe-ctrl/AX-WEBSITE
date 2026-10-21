@@ -795,6 +795,12 @@
         font-size: 8.4cqw;
       }
 
+      /* Stacked tiles grow with their text, so keep clear space above
+         the link at the bottom. */
+      .tile-text > .tile-title {
+        margin-bottom: 32px;
+      }
+
       .scout-verb {
         font-size: 9.2cqw;
       }
@@ -2133,9 +2139,9 @@
     </section>
 
     <div class="row row-3">
-      <section class="tile tile-text">
-        <h2 class="tile-title">We are a <em>(stealth)</em> venture fund that finds and backs unusually talented technical founders before they become obvious winners.</h2>
-        <a class="tile-button" href="#" data-cursor-label="companies">
+      <section class="tile tile-text" id="fellowship">
+        <h2 class="tile-title">We are an AI researchers &amp; founders fellowship based in Seoul from academia and industry. <em>We work on research, open-source projects, and real-world applications to build the next leading AI startups.</em></h2>
+        <a class="tile-button" href="#companies" data-cursor-label="companies">
           View all companies
           <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
         </a>

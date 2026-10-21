@@ -5,9 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AttentionX</title>
   <link rel="icon" type="image/png" href="images/Logo1.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -15,83 +12,139 @@
       padding: 0;
     }
 
-    html {
-      height: 100%;
+    :root {
+      --gap: clamp(14px, 2.2vw, 44px);
+      --radius: clamp(14px, 1.4vw, 28px);
+      --glass-edge: rgba(255, 255, 255, 0.09);
     }
 
     body {
-      min-height: 100%;
       background-color: #0e0e0d;
+      overflow-x: hidden;
+    }
+
+    /* Slow-moving light behind the glass so the tiles have something to blur. */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .ambient span {
+      position: absolute;
+      width: 70vmax;
+      height: 70vmax;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.55;
+      will-change: transform;
+    }
+
+    .ambient .a {
+      top: -25vmax;
+      left: -20vmax;
+      background: radial-gradient(circle, rgba(159, 180, 230, 0.32), transparent 65%);
+      animation: drift-a 38s ease-in-out infinite alternate;
+    }
+
+    .ambient .b {
+      bottom: -30vmax;
+      right: -25vmax;
+      background: radial-gradient(circle, rgba(232, 162, 124, 0.26), transparent 65%);
+      animation: drift-b 46s ease-in-out infinite alternate;
+    }
+
+    .ambient .c {
+      top: 30%;
+      left: 35%;
+      width: 45vmax;
+      height: 45vmax;
+      background: radial-gradient(circle, rgba(255, 200, 87, 0.12), transparent 65%);
+      animation: drift-c 54s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift-a { to { transform: translate(30vw, 25vh) scale(1.15); } }
+    @keyframes drift-b { to { transform: translate(-35vw, -30vh) scale(0.9); } }
+    @keyframes drift-c { to { transform: translate(-25vw, 20vh) scale(1.3); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ambient span { animation: none; }
+    }
+
+    .bento {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      padding: var(--gap);
+    }
+
+    /* Frosted-glass tile with a soft highlight that follows the pointer. */
+    .tile {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 55%, rgba(255, 255, 255, 0.03));
+      border: 1px solid var(--glass-edge);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 30px 60px -40px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(28px) saturate(140%);
+      -webkit-backdrop-filter: blur(28px) saturate(140%);
+    }
+
+    .tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.08), transparent 60%);
+    }
+
+    .tile:hover::before {
+      opacity: 1;
+    }
+
+    /* Row 1: hero panel, fills the first screen. */
+    .hero {
+      height: calc(100vh - 2 * var(--gap));
+      height: calc(100svh - 2 * var(--gap));
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 48px 16px;
     }
 
-    /* Tall paper card in the middle of the page. Keeps its tall shape,
-       but grows taller if the text needs more room. */
-    .card {
-      position: relative;
-      z-index: 1;
-      width: min(580px, 100%);
-      aspect-ratio: 0.68;
-      padding: 68px 64px;
-      border-radius: 16px;
-      background-color: #f2efe8;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
-      font-family: 'Gowun Batang', Georgia, serif;
-      font-size: 19px;
-      line-height: 1.65;
-      color: #4a4641;
+    /* Same footprint as the Stealth Fund hero logo. */
+    .hero-logo {
+      display: block;
+      width: min(640px, 70%);
+      height: auto;
+      user-select: none;
     }
-
-    @media (max-width: 600px) {
-      .card {
-        padding: 44px 28px;
-        font-size: 17px;
-      }
-    }
-
-    .card p + p {
-      margin-top: 1.3em;
-    }
-
-    /* Colored phrases, each led by a small emoji. */
-    .hl { white-space: nowrap; }
-    .e { font-size: 0.9em; margin-right: 0.3em; }
-    .blue   { color: #5a7fd4; }
-    .green  { color: #4f9a45; }
-    .amber  { color: #d0922a; }
-    .red    { color: #c23b3b; }
-    .purple { color: #8a52c9; }
-
-    /* Last paragraph fades out like the tail of a letter. */
-    .card .fade {
-      color: #b2ada4;
-    }
-    .card .fade .hl { opacity: 0.6; }
 
     /* Live film grain, redrawn by the script below. */
     .grain {
       position: fixed;
       inset: 0;
-      z-index: 2;
       width: 100%;
       height: 100%;
+      z-index: 2;
       pointer-events: none;
       opacity: 0.11;
     }
   </style>
 </head>
 <body>
-  <main class="card">
-    <p>We are an <span class="hl blue"><span class="e">🔬</span>AI researchers &amp; founders</span> fellowship based in <span class="hl green"><span class="e">📍</span>Seoul</span> from academia and industry. We work on research, open-source projects, and real-world applications to build the next leading AI startups.</p>
+  <div class="ambient" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
 
-    <p>Our Fellows have raised <span class="hl amber"><span class="e">💰</span>over $70 million</span> in funding from investors like Sequoia, a16z, Y Combinator, South Park Commons, Samsung Ventures, Hyundai, and Kakao Ventures.</p>
-
-    <p>We help our Fellows <span class="red"><span class="e">❤️</span>turn side projects into startups</span> by providing support with fundraising, hiring, API credits, O-1 visas, and anything else they need along the way.</p>
-
-    <p class="fade">We occasionally invest in our Fellows' companies with checks ranging from <span class="hl purple"><span class="e">🌱</span>$1 to $100K</span> at the earliest stages of their journey.</p>
+  <main class="bento">
+    <section class="tile hero">
+      <img class="hero-logo" src="images/attentionx-logo.png" alt="AttentionX" />
+    </section>
   </main>
 
   <canvas class="grain" aria-hidden="true"></canvas>
@@ -139,6 +192,14 @@
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       setInterval(draw, 70);
     })();
+
+    document.querySelectorAll('.tile').forEach(function (tile) {
+      tile.addEventListener('mousemove', function (e) {
+        var r = tile.getBoundingClientRect();
+        tile.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        tile.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
   </script>
 </body>
 </html>

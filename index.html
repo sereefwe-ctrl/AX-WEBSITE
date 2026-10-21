@@ -390,6 +390,29 @@
       color: #f4f1e8;
     }
 
+    /* Two-point line: lead-in, then each point on its own line in full
+       brightness behind a small number. */
+    .mf-points ol {
+      margin-top: 0.35em;
+      list-style: none;
+    }
+
+    .mf-points li {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6em;
+      color: #f4f1e8;
+    }
+
+    .mf-points .mf-n {
+      flex: 0 0 1.4em;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 0.62em;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: rgba(244, 241, 232, 0.45);
+    }
+
     /* Six glass slots under the funding line, ready for logos: drop an
        <img> (optionally wrapped in a link) into any <li>. Same frame as the
        portfolio grid. */
@@ -2687,7 +2710,13 @@
         </div>
         <div class="mf-col">
           <p class="mf-label">Milestones</p>
-          <p class="mf-body">We’re the launchpad for Korean founders going global + global AI companies entering Korea.</p>
+          <div class="mf-body mf-points">
+            <p>We’re the launchpad for</p>
+            <ol>
+              <li><span class="mf-n">1)</span>Korean founders going global.</li>
+              <li><span class="mf-n">2)</span>global AI companies entering Korea.</li>
+            </ol>
+          </div>
 
           <div class="track" data-track>
             <span class="track-rail" aria-hidden="true"></span>

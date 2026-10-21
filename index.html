@@ -463,11 +463,15 @@
       transform: scale(1.06);
     }
 
-    /* Milestones: a numbered index with a category tag on each row. Rows
-       slide in one by one when scrolled into view. Hovering a row lifts it,
-       quiets the others, fills its tag, and a thin bar glides along the
-       left edge to meet it (positioned by script). */
+    /* Milestones: a list with a line down its left side. As the page
+       scrolls, a bright line with a glowing tip draws downward, lighting
+       each milestone's dot (and title) as it reaches it. Rows also slide
+       in on first view; hovering a row lifts it and fills its tag. Rail
+       geometry and progress (--rail-top, --rail-h, --fill) come from
+       script. */
     .ms {
+      --ms-fs: clamp(17px, 1.4vw, 23px);
+      --dot-x: 29px;
       position: relative;
       margin-top: 26px;
     }
@@ -481,7 +485,7 @@
       position: relative;
       display: grid;
       grid-template-columns: 30px 1fr auto;
-      align-items: baseline;
+      align-items: start;
       column-gap: 14px;
       padding: 15px 10px 15px 14px;
       border-bottom: 1px solid rgba(244, 241, 232, 0.1);
@@ -512,29 +516,88 @@
       background-color: rgba(244, 241, 232, 0.035);
     }
 
-    .ms-num {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      font-variant-numeric: tabular-nums;
-      color: rgba(244, 241, 232, 0.4);
-      transition: color 0.3s ease;
+    .ms-rail,
+    .ms-fill {
+      position: absolute;
+      left: var(--dot-x);
+      top: var(--rail-top, 0px);
+      width: 1px;
+      height: var(--rail-h, 0px);
+      pointer-events: none;
+    }
+
+    .ms-rail {
+      background: rgba(244, 241, 232, 0.12);
+    }
+
+    .ms-fill {
+      background: linear-gradient(to bottom, rgba(244, 241, 232, 0.25), #f4f1e8);
+      transform-origin: top;
+      transform: scaleY(var(--fill, 0));
+    }
+
+    .ms-head {
+      position: absolute;
+      left: var(--dot-x);
+      top: calc(var(--rail-top, 0px) + var(--rail-h, 0px) * var(--fill, 0));
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.45);
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .ms.is-drawing .ms-head {
+      opacity: 1;
+    }
+
+    /* Dot sits on the rail, level with the first line of the title. */
+    .ms-dot {
+      position: relative;
+      z-index: 1;
+      justify-self: center;
+      width: 9px;
+      height: 9px;
+      margin-top: calc(var(--ms-fs) * 0.65 - 4.5px);
+      border-radius: 50%;
+      background: #171716;
+      border: 1px solid rgba(244, 241, 232, 0.35);
+      transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .ms-item.is-lit .ms-dot {
+      background: #f4f1e8;
+      border-color: #f4f1e8;
+      box-shadow: 0 0 0 4px rgba(244, 241, 232, 0.08), 0 0 12px rgba(255, 255, 255, 0.3);
+    }
+
+    .ms-item:hover .ms-dot {
+      transform: scale(1.35);
     }
 
     .ms-title {
       font-family: 'Newsreader', 'Times New Roman', serif;
-      font-size: clamp(17px, 1.4vw, 23px);
+      font-size: var(--ms-fs);
       line-height: 1.3;
       letter-spacing: -0.008em;
-      color: rgba(244, 241, 232, 0.88);
-      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+      color: rgba(244, 241, 232, 0.45);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.4s ease;
+    }
+
+    .ms-item.is-lit .ms-title {
+      color: rgba(244, 241, 232, 0.92);
     }
 
     .ms-tag {
+      margin-top: calc(var(--ms-fs) * 0.65 - 11px);
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
       font-size: 10px;
       font-weight: 600;
+      line-height: 1.2;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       white-space: nowrap;
@@ -543,10 +606,6 @@
       border-radius: 999px;
       color: rgba(244, 241, 232, 0.55);
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-    }
-
-    .ms-item:hover .ms-num {
-      color: #f4f1e8;
     }
 
     .ms-item:hover .ms-title {
@@ -560,27 +619,11 @@
       color: #0e0e0d;
     }
 
-    .ms-bar {
-      position: absolute;
-      left: 0;
-      top: var(--bar-y, 0px);
-      width: 2px;
-      height: var(--bar-h, 0px);
-      border-radius: 2px;
-      background: #f4f1e8;
-      opacity: 0;
-      transition:
-        top 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 0.3s ease;
-      pointer-events: none;
-    }
-
-    .ms.has-bar .ms-bar {
-      opacity: 1;
-    }
-
     @media (max-width: 820px) {
+      .ms {
+        --dot-x: 27px;
+      }
+
       .ms-item {
         grid-template-columns: 26px 1fr;
       }
@@ -2632,14 +2675,16 @@
           </div>
 
           <div class="ms" data-ms>
-            <span class="ms-bar" aria-hidden="true"></span>
+            <span class="ms-rail" aria-hidden="true"></span>
+            <span class="ms-fill" aria-hidden="true"></span>
+            <span class="ms-head" aria-hidden="true"></span>
             <ol class="ms-list">
-              <li class="ms-item" style="--i: 0"><span class="ms-num">01</span><span class="ms-title">Dentronic secures $1M, joins SPC fellowship to scale dental AI robots</span><span class="ms-tag">Funding</span></li>
-              <li class="ms-item" style="--i: 1"><span class="ms-num">02</span><span class="ms-title">Google DeepMind Gemini 3 Hackathon Seoul</span><span class="ms-tag">Hackathon</span></li>
-              <li class="ms-item" style="--i: 2"><span class="ms-num">03</span><span class="ms-title">Samsung Ventures leads AIM Intelligence’s Series‑A to scale AI security in Korea</span><span class="ms-tag">Funding</span></li>
-              <li class="ms-item" style="--i: 3"><span class="ms-num">04</span><span class="ms-title">OpenAI Startup Meetup Seoul</span><span class="ms-tag">Meetup</span></li>
-              <li class="ms-item" style="--i: 4"><span class="ms-num">05</span><span class="ms-title">Korea Launch for Manus AI, Genspark, and Replit</span><span class="ms-tag">Launch</span></li>
-              <li class="ms-item" style="--i: 5"><span class="ms-num">06</span><span class="ms-title">Google DeepMind Gemini 4 Hackathon Seoul</span><span class="ms-tag">Hackathon</span></li>
+              <li class="ms-item" style="--i: 0"><span class="ms-dot" aria-hidden="true"></span><span class="ms-title">Dentronic secures $1M, joins SPC fellowship to scale dental AI robots</span><span class="ms-tag">Funding</span></li>
+              <li class="ms-item" style="--i: 1"><span class="ms-dot" aria-hidden="true"></span><span class="ms-title">Google DeepMind Gemini 3 Hackathon Seoul</span><span class="ms-tag">Hackathon</span></li>
+              <li class="ms-item" style="--i: 2"><span class="ms-dot" aria-hidden="true"></span><span class="ms-title">Samsung Ventures leads AIM Intelligence’s Series‑A to scale AI security in Korea</span><span class="ms-tag">Funding</span></li>
+              <li class="ms-item" style="--i: 3"><span class="ms-dot" aria-hidden="true"></span><span class="ms-title">OpenAI Startup Meetup Seoul</span><span class="ms-tag">Meetup</span></li>
+              <li class="ms-item" style="--i: 4"><span class="ms-dot" aria-hidden="true"></span><span class="ms-title">Korea Launch for Manus AI, Genspark, and Replit</span><span class="ms-tag">Launch</span></li>
+              <li class="ms-item" style="--i: 5"><span class="ms-dot" aria-hidden="true"></span><span class="ms-title">Google DeepMind Gemini 4 Hackathon Seoul</span><span class="ms-tag">Hackathon</span></li>
             </ol>
           </div>
         </div>
@@ -3332,22 +3377,47 @@
         })(start);
       });
 
-      // Milestones: reveal the rows, then let a bar follow the hovered row.
+      // Milestones: reveal the rows, then draw the line with the scroll. It
+      // is full once the last dot passes ~60% down the screen, and each dot
+      // lights as the line reaches it.
       var ms = document.querySelector('[data-ms]');
       if (ms) {
-        var list = ms.querySelector('.ms-list');
+        var rows = Array.prototype.slice.call(ms.querySelectorAll('.ms-item'));
+        var dots = rows.map(function (r) { return r.querySelector('.ms-dot'); });
+        var railTop = 0, railH = 0, at = [];
         once(ms, function (instant) {
           ms.classList.add('is-in');
-          setTimeout(function () { ms.classList.add('is-settled'); }, instant ? 0 : 1300);
+          // Rows start a little low for the slide-in; measure again once
+          // they have landed.
+          setTimeout(function () { ms.classList.add('is-settled'); layout(); draw(); }, instant ? 0 : 1300);
         });
-        ms.querySelectorAll('.ms-item').forEach(function (item) {
-          item.addEventListener('mouseenter', function () {
-            ms.style.setProperty('--bar-y', item.offsetTop + 'px');
-            ms.style.setProperty('--bar-h', item.offsetHeight + 'px');
-            ms.classList.add('has-bar');
-          });
-        });
-        list.addEventListener('mouseleave', function () { ms.classList.remove('has-bar'); });
+        var layout = function () {
+          var m = ms.getBoundingClientRect();
+          var centres = dots.map(function (d) { var r = d.getBoundingClientRect(); return r.top + r.height / 2 - m.top; });
+          railTop = centres[0];
+          railH = centres[centres.length - 1] - railTop;
+          at = centres.map(function (c) { return c - railTop; });
+          ms.style.setProperty('--rail-top', railTop + 'px');
+          ms.style.setProperty('--rail-h', railH + 'px');
+        };
+        var ticking = false;
+        var draw = function () {
+          ticking = false;
+          var top = ms.getBoundingClientRect().top + railTop;
+          var p = railH ? (window.innerHeight * 0.6 - top) / railH : 0;
+          p = Math.max(0, Math.min(1, p));
+          ms.style.setProperty('--fill', p.toFixed(4));
+          ms.classList.toggle('is-drawing', p > 0 && p < 1);
+          rows.forEach(function (row, i) { row.classList.toggle('is-lit', at[i] <= p * railH + 1); });
+        };
+        var onScroll = function () {
+          if (!ticking) { ticking = true; requestAnimationFrame(draw); }
+        };
+        layout();
+        draw();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', function () { layout(); draw(); });
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { layout(); draw(); });
       }
     })();
 

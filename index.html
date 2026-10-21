@@ -183,6 +183,65 @@
       user-select: none;
     }
 
+    /* Site subtitle, top left of the hero. Letters rise into place one
+       after another from behind their baseline, tipped 10° and settling
+       upright (after motostudios.co). */
+    .hero-sub {
+      position: absolute;
+      top: max(132px, 20%);
+      left: 5%;
+      right: 5%;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: clamp(40px, 6vw, 104px);
+      line-height: 1.04;
+      letter-spacing: -0.025em;
+      color: rgba(244, 241, 232, 0.96);
+    }
+
+    .rise-word {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .rise-letter {
+      display: inline-block;
+    }
+
+    /* While rising, each letter is clipped just under its baseline so it
+       appears to come up out of a line. */
+    .hero-sub.is-rising .rise-letter {
+      clip-path: inset(-0.6em -0.4em -0.06em -0.4em);
+    }
+
+    .rise-glyph {
+      display: inline-block;
+      transform-origin: 0% 100%;
+      transform: translateY(115%) rotate(10deg);
+      transition: transform 1.05s cubic-bezier(0.215, 0.61, 0.355, 1);
+      transition-delay: var(--d, 0s);
+    }
+
+    .hero-sub.is-up .rise-glyph {
+      transform: none;
+    }
+
+    @media (max-width: 820px) {
+      .hero-sub {
+        top: 120px;
+        left: 7%;
+        right: 7%;
+        font-size: clamp(38px, 11.5vw, 64px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .rise-glyph {
+        transform: none;
+        transition: none;
+      }
+    }
+
     .row {
       display: grid;
       gap: var(--gap);
@@ -2154,6 +2213,7 @@
 
   <main class="bento">
     <section class="tile hero">
+      <h1 class="hero-sub" data-rise>We are Korea’s AI ecosystem.</h1>
       <img class="hero-fade" src="images/attentionx-logo.png" alt="AttentionX" />
     </section>
 
@@ -2826,6 +2886,48 @@
         tile.style.setProperty('--my', (e.clientY - r.top) + 'px');
       });
     });
+
+    // Rising headline: split into words and letters, then lift the letters
+    // in with a stagger. The whole line takes about 0.45–1.9s to start
+    // every letter, depending on its length.
+    (function () {
+      document.querySelectorAll('[data-rise]').forEach(function (el) {
+        var text = el.textContent.trim();
+        el.setAttribute('aria-label', text);
+        el.textContent = '';
+        var count = text.replace(/\s/g, '').length;
+        var step = Math.min(1.9, Math.max(0.45, count * 0.045)) / count;
+        var n = 0;
+        text.split(' ').forEach(function (w, wi) {
+          if (wi) el.appendChild(document.createTextNode(' '));
+          var word = document.createElement('span');
+          word.className = 'rise-word';
+          word.setAttribute('aria-hidden', 'true');
+          w.split('').forEach(function (ch) {
+            var letter = document.createElement('span');
+            letter.className = 'rise-letter';
+            var glyph = document.createElement('span');
+            glyph.className = 'rise-glyph';
+            glyph.textContent = ch;
+            glyph.style.setProperty('--d', (0.35 + n++ * step).toFixed(3) + 's');
+            letter.appendChild(glyph);
+            word.appendChild(letter);
+          });
+          el.appendChild(word);
+        });
+
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        el.classList.add('is-rising');
+        // Two frames so the start pose is painted before rising.
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { el.classList.add('is-up'); });
+        });
+        // Drop the clip once the last letter has landed.
+        var last = el.querySelectorAll('.rise-glyph');
+        last = last[last.length - 1];
+        last.addEventListener('transitionend', function () { el.classList.remove('is-rising'); }, { once: true });
+      });
+    })();
 
     // Marker highlights sweep in once they are well inside the viewport.
     (function () {

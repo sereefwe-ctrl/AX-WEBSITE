@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AttentionX</title>
   <link rel="icon" type="image/png" href="images/Logo1.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -12,11 +15,12 @@
       padding: 0;
     }
 
-    html, body {
+    html {
       height: 100%;
     }
 
     body {
+      min-height: 100%;
       background-color: #0e0e0d;
       display: flex;
       align-items: center;
@@ -24,17 +28,41 @@
       padding: 48px 16px;
     }
 
-    /* Tall paper card in the middle of the page. Width is capped so the
-       whole card still fits in short viewports. */
+    /* Tall paper card in the middle of the page. Keeps its tall shape,
+       but grows taller if the text needs more room. */
     .card {
       position: relative;
       z-index: 1;
-      width: min(380px, 100%, calc((100vh - 96px) * 0.68));
+      width: min(400px, 100%);
       aspect-ratio: 0.68;
+      padding: 52px 44px;
       border-radius: 16px;
       background-color: #f2efe8;
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+      font-family: 'Gowun Batang', Georgia, serif;
+      font-size: 15.5px;
+      line-height: 1.6;
+      color: #4a4641;
     }
+
+    .card p + p {
+      margin-top: 1.3em;
+    }
+
+    /* Colored phrases, each led by a small emoji. */
+    .hl { white-space: nowrap; }
+    .e { font-size: 0.9em; margin-right: 0.3em; }
+    .blue   { color: #5a7fd4; }
+    .green  { color: #4f9a45; }
+    .amber  { color: #d0922a; }
+    .red    { color: #c23b3b; }
+    .purple { color: #8a52c9; }
+
+    /* Last paragraph fades out like the tail of a letter. */
+    .card .fade {
+      color: #b2ada4;
+    }
+    .card .fade .hl { opacity: 0.6; }
 
     /* Live film grain, redrawn by the script below. */
     .grain {
@@ -49,7 +77,15 @@
   </style>
 </head>
 <body>
-  <main class="card"></main>
+  <main class="card">
+    <p>We are an <span class="hl blue"><span class="e">🔬</span>AI researchers &amp; founders</span> fellowship based in <span class="hl green"><span class="e">📍</span>Seoul</span> from academia and industry. We work on research, open-source projects, and real-world applications to build the next leading AI startups.</p>
+
+    <p>Our Fellows have raised <span class="hl amber"><span class="e">💰</span>over $70 million</span> in funding from investors like Sequoia, a16z, Y Combinator, South Park Commons, Samsung Ventures, Hyundai, and Kakao Ventures.</p>
+
+    <p>We help our Fellows <span class="red"><span class="e">❤️</span>turn side projects into startups</span> by providing support with fundraising, hiring, API credits, O-1 visas, and anything else they need along the way.</p>
+
+    <p class="fade">We occasionally invest in our Fellows' companies with checks ranging from <span class="hl purple"><span class="e">🌱</span>$1 to $100K</span> at the earliest stages of their journey.</p>
+  </main>
 
   <canvas class="grain" aria-hidden="true"></canvas>
 

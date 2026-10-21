@@ -390,6 +390,50 @@
       color: #f4f1e8;
     }
 
+    /* Six glass slots under the funding line, ready for logos: drop an
+       <img> (optionally wrapped in a link) into any <li>. Same frame as the
+       portfolio grid. */
+    .mf-slots {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(10px, 1.2vw, 18px);
+      max-width: 560px;
+      margin-top: clamp(24px, 2.6vw, 40px);
+      list-style: none;
+    }
+
+    .mf-slots li {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border-radius: calc(var(--radius) * 0.6);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015) 60%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .mf-slots li:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .mf-slots a {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mf-slots img {
+      display: block;
+      width: 74%;
+      height: 74%;
+      object-fit: cover;
+      border-radius: 16%;
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
+    }
+
     /* Launch track: a route from "Side project" to "Startup" with each
        kind of support as a stop. A gold comet runs down the rail and lights
        the stops it passes; the AttentionX mark lands on "Startup", then a
@@ -2626,6 +2670,15 @@
           <p class="mf-label">Raised by our fellows</p>
           <div class="mf-stat" aria-label="Over $70M"><span data-count-to="70">$70M</span><sup>+</sup></div>
           <p class="mf-body">Our fellows have raised over $70M in funding from leading venture funds and institutional investors.</p>
+          <!-- Empty slots, ready for logos. -->
+          <ul class="mf-slots">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+          </ul>
         </div>
         <div class="mf-col">
           <p class="mf-label">How we help</p>

@@ -1077,11 +1077,11 @@
       margin-top: calc(var(--h) * 0.29);
     }
 
-    /* Sans wordmark (Dentronic): capitals span 70% of the icon, centered on it.
-       The image runs from the "i" dot (10% above the caps) to the baseline. */
-    .case-logo--sans .case-word {
-      height: calc(var(--h) * 0.8);
-      margin-top: calc(var(--h) * 0.067);
+    /* Full logo lockup (mark + wordmark in one file, Dentronic). */
+    .case-lockup {
+      height: calc(var(--h) * 1.25);
+      width: auto;
+      margin: calc(var(--h) * -0.125) 0;
     }
 
     /* AIM: the icon carries the "+", so only the capitals sit beside it,
@@ -3034,9 +3034,8 @@
       </section>
       <section class="tile tile-text tile-case">
         <div class="case-top">
-          <div class="case-logo case-logo--sans">
-            <img class="case-icon" src="assets/portfolio/dentronic.jpg" alt="" />
-            <img class="case-word" src="assets/dentronic-wordmark-white.svg" alt="Dentronic" />
+          <div class="case-logo">
+            <img class="case-lockup" src="assets/dentronic-logo-dark.svg" alt="Dentronic" />
           </div>
           <span class="case-label">New raise</span>
         </div>

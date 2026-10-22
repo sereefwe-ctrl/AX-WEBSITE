@@ -1205,7 +1205,9 @@
     .investor-ljv,
     .investor-spc,
     .investor-ssv,
-    .investor-mirae {
+    .investor-mirae,
+    .investor-sr,
+    .investor-residency {
       opacity: 0.85;
       transition: opacity 0.35s ease;
     }
@@ -1213,8 +1215,23 @@
     .investor-ljv:hover,
     .investor-spc:hover,
     .investor-ssv:hover,
-    .investor-mirae:hover {
+    .investor-mirae:hover,
+    .investor-sr:hover,
+    .investor-residency:hover {
       opacity: 1;
+    }
+
+    /* SR007 is a dark cube on dark glass: larger and at full strength. */
+    .investor-sr {
+      height: max(52px, 11.4cqw);
+    }
+
+    .investor.investor-sr {
+      opacity: 1;
+    }
+
+    .investor-residency {
+      height: max(24px, 5.2cqw);
     }
 
     .investor-ssv {
@@ -3168,6 +3185,11 @@
             Read more
             <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
           </a>
+          <div class="case-investors">
+            <span class="investor investor-sr"><img src="assets/investors/speedrun-sr007.png" alt="a16z speedrun SR007" /></span>
+            <i aria-hidden="true"></i>
+            <span class="investor investor-residency"><img src="assets/investors/the-residency-white.png" alt="The Residency" /></span>
+          </div>
         </div>
       </section>
     </div>

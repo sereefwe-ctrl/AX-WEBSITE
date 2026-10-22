@@ -676,42 +676,44 @@
       transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
     }
 
-    /* Company name with its logo, in a light box (like a tool chip). */
+    /* Company name with its logo, in a light box (like a tool chip).
+       The chip is plain inline text, so its name sits on exactly the same
+       baseline as the sentence around it; the box comes from the inline
+       background, the same height for every chip. Newsreader's capitals
+       are 0.715em tall, so logos (0.86em) are centred on the middle of the
+       capitals, and a wordmark is sized to the capital height and stands
+       on the baseline. */
     .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.28em;
-      padding: 0.02em 0.34em 0.04em 0.24em;
+      padding: 0.04em 0.3em 0.06em 0.22em;
       border-radius: 0.18em;
       background: rgba(244, 241, 232, 0.09);
       color: #f4f1e8;
-      line-height: 1.12;
       white-space: nowrap;
-      vertical-align: baseline;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
     }
 
     .brand img {
-      display: block;
-      width: 0.95em;
-      height: 0.95em;
+      display: inline-block;
+      width: 0.86em;
+      height: 0.86em;
+      margin-right: 0.26em;
+      vertical-align: -0.07em;
       object-fit: contain;
     }
 
     /* Logos that come on their own tile keep it, as a small rounded icon. */
     .brand img.brand-tile {
       object-fit: cover;
-      border-radius: 0.2em;
+      border-radius: 0.18em;
     }
 
-    /* A wordmark stands in for the name: sized to the text's cap height. */
-    .brand-wordmark {
-      padding-top: 0.2em;
-      padding-bottom: 0.22em;
-    }
-
+    /* A wordmark stands in for the name. */
     .brand-wordmark img {
       width: auto;
-      height: 0.68em;
+      height: 0.715em;
+      margin-right: 0;
+      vertical-align: baseline;
     }
 
     .ms-tag {

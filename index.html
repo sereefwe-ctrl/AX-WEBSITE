@@ -6,10 +6,18 @@
   <title>AttentionX</title>
   <meta name="description" content="AttentionX" />
   <meta property="og:image" content="images/attentionx-logo.png" />
-  <link rel="icon" href="/favicon.ico" sizes="48x48" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta name="robots" content="noindex, nofollow" />
+  <script>
+    // Relative paths need a trailing slash when served from a folder
+    // (attentionx.org/2027 -> /2027/).
+    if (!/\/$|\.html$/.test(location.pathname)) {
+      location.replace(location.pathname + '/' + location.search + location.hash);
+    }
+  </script>
+  <link rel="icon" href="favicon.ico" sizes="48x48" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <script>
     // Loader gate: show the globe loader unless the visitor
     // prefers reduced motion. window.axReady resolves when the loader
@@ -4472,6 +4480,6 @@
       });
     })();
   </script>
-  <script src="/cursor.js"></script>
+  <script src="cursor.js"></script>
 </body>
 </html>

@@ -386,6 +386,37 @@
       color: #f4f1e8;
     }
 
+    /* Underline that draws left to right while the figure counts up. */
+    .mf-stat span {
+      position: relative;
+      display: inline-block;
+      padding-bottom: 0.1em;
+    }
+
+    .mf-stat span::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0.04em;
+      bottom: 0;
+      height: max(2px, 0.03em);
+      border-radius: 2px;
+      background: rgba(244, 241, 232, 0.75);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mf-stat span.is-drawn::after {
+      transform: scaleX(1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mf-stat span::after {
+        transition: none;
+      }
+    }
+
     .mf-stat sup {
       font-size: 0.42em;
       vertical-align: 0.95em;
@@ -3391,6 +3422,7 @@
       if (count && !reduced && 'IntersectionObserver' in window) count.textContent = money(0);
       once(count, function (instant) {
         var to = parseInt(count.dataset.countTo, 10);
+        count.classList.add('is-drawn');
         if (instant) return;
         var start = performance.now(), dur = 1600;
         (function step(now) {

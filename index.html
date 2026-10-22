@@ -412,22 +412,24 @@
       color: #f4f1e8;
     }
 
-    /* Underline that draws left to right while the figure counts up. */
+    /* Marker highlight behind the lower half of the figure (same soft band
+       as the hero's name highlights), sweeping left to right while the
+       figure counts up. */
     .mf-stat span {
       position: relative;
       display: inline-block;
-      padding-bottom: 0.1em;
+      isolation: isolate;
     }
 
     .mf-stat span::after {
       content: "";
       position: absolute;
-      left: 0;
-      right: 0.04em;
-      bottom: 0;
-      height: max(2px, 0.03em);
-      border-radius: 2px;
-      background: rgba(244, 241, 232, 0.75);
+      z-index: -1;
+      left: -0.04em;
+      right: -0.02em;
+      bottom: 0.06em;
+      height: 0.38em;
+      background: rgba(244, 241, 232, 0.16);
       transform: scaleX(0);
       transform-origin: left;
       transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);

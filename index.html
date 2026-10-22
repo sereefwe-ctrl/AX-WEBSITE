@@ -371,29 +371,27 @@
     }
 
     /* Same for the logo grid on the left: it sits at the bottom of its
-       column, and the stat with its line drops into the free space under
-       the label (level with the launchpad lines opposite). Flex stops the
-       stat and text margins collapsing, so the text keeps its old spacing
-       with a small top margin. */
+       column. The stat sits the same distance under its label as the
+       launchpad lines opposite, so both columns start level; any spare
+       height collects above the logos. Flex stops the stat and text
+       margins collapsing, so the text keeps its old spacing with a small
+       top margin. */
     .mf-col-raised {
       display: flex;
       flex-direction: column;
     }
 
-    .mf-col-raised .mf-label {
-      margin-bottom: 20px;
-    }
-
     .mf-col-raised .mf-stat {
-      margin-top: auto;
+      margin-top: clamp(30px, 3.2vw, 52px);
     }
 
     .mf-col-raised .mf-body {
       margin-top: 4px;
+      margin-bottom: 24px;
     }
 
     .mf-col-raised .mf-slots {
-      margin-top: 24px;
+      margin-top: auto;
     }
 
     .mf-col:first-child {
@@ -676,6 +674,26 @@
       letter-spacing: -0.008em;
       color: rgba(244, 241, 232, 0.88);
       transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+    }
+
+    /* Company name with its logo, in a light box (like a tool chip). */
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28em;
+      padding: 0.04em 0.34em 0.06em 0.24em;
+      border-radius: 0.18em;
+      background: rgba(244, 241, 232, 0.09);
+      color: #f4f1e8;
+      white-space: nowrap;
+      vertical-align: baseline;
+    }
+
+    .brand img {
+      display: block;
+      width: 0.95em;
+      height: 0.95em;
+      object-fit: contain;
     }
 
     .ms-tag {
@@ -2761,7 +2779,7 @@
             <span class="ms-rail" aria-hidden="true"></span>
             <span class="ms-fill" aria-hidden="true"></span>
             <ol class="ms-list">
-              <li class="ms-item" style="--i: 0"><span class="ms-title">Dentronic secures $1M, joins SPC fellowship to scale dental AI robots</span><span class="ms-tag">Funding</span></li>
+              <li class="ms-item" style="--i: 0"><span class="ms-title"><span class="brand"><img src="assets/portfolio/dentronic-mark.png" alt="" />Dentronic</span> secures $1M, joins SPC fellowship to scale dental AI robots</span><span class="ms-tag">Funding</span></li>
               <li class="ms-item" style="--i: 1"><span class="ms-title">Google DeepMind Gemini 3 Hackathon Seoul</span><span class="ms-tag">Hackathon</span></li>
               <li class="ms-item" style="--i: 2"><span class="ms-title">Samsung Ventures leads AIM Intelligence’s Series‑A to scale AI security in Korea</span><span class="ms-tag">Funding</span></li>
               <li class="ms-item" style="--i: 3"><span class="ms-title">OpenAI Startup Meetup Seoul</span><span class="ms-tag">Meetup</span></li>

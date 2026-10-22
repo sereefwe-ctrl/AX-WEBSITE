@@ -1084,6 +1084,13 @@
       margin-top: calc(var(--h) * 0.067);
     }
 
+    /* AIM: the icon carries the "+", so only the capitals sit beside it,
+       at 70% of the icon and centered on it. */
+    .case-logo--aim .case-word {
+      height: calc(var(--h) * 0.7);
+      margin-top: calc(var(--h) * 0.15);
+    }
+
     /* Bottom row of a case tile: Read more on the left, investors on the right. */
     .case-bottom {
       position: relative;
@@ -1148,14 +1155,26 @@
     }
 
     .investor-ljv,
-    .investor-spc {
+    .investor-spc,
+    .investor-ssv,
+    .investor-mirae {
       opacity: 0.85;
       transition: opacity 0.35s ease;
     }
 
     .investor-ljv:hover,
-    .investor-spc:hover {
+    .investor-spc:hover,
+    .investor-ssv:hover,
+    .investor-mirae:hover {
       opacity: 1;
+    }
+
+    .investor-ssv {
+      height: max(40px, 9cqw);
+    }
+
+    .investor-mirae {
+      height: max(46px, 10.4cqw);
     }
 
     .investor-ljv {
@@ -3000,28 +3019,25 @@
     <div class="row row-palette">
       <section class="tile tile-text tile-case">
         <div class="case-top">
-          <div class="case-logo case-logo--center">
-            <img class="case-icon" src="assets/portfolio/logo-1.png" alt="" />
-            <img class="case-word" src="assets/convergent-wordmark-white.png" alt="Convergent" />
+          <div class="case-logo case-logo--aim">
+            <img class="case-icon" src="assets/portfolio/aim-intelligence.jpg" alt="" />
+            <img class="case-word" src="assets/aim-wordmark-white.svg" alt="AIM Intelligence" />
           </div>
           <span class="case-label">New raise</span>
         </div>
         <div class="case-hero">
-          <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="15">$15M</span></h2>
-          <p class="case-sub">Seed led by a16z</p>
+          <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="10" data-prefix="₩" data-suffix="B">₩10B</span></h2>
+          <p class="case-sub">Series&#8209;A led by Samsung Ventures</p>
         </div>
         <div class="case-bottom">
-          <a class="tile-button" href="https://www.convergent.dev/" target="_blank" rel="noopener noreferrer" data-cursor-label="convergent">
+          <a class="tile-button" href="https://www.aim-intelligence.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="aim intelligence">
             Read more
             <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
           </a>
           <div class="case-investors">
-            <span class="investor investor-a16z"><img src="assets/investors/a16z-white.png" alt="a16z" /></span>
+            <span class="investor investor-ssv"><img src="assets/investors/samsung-ventures-white.png" alt="Samsung Ventures" /></span>
             <i aria-hidden="true"></i>
-            <span class="investor investor-chem">
-              <img class="is-white" src="assets/investors/chemistry-white.png" alt="Chemistry" />
-              <img class="is-color" src="assets/investors/chemistry.png" alt="" />
-            </span>
+            <span class="investor investor-mirae"><img src="assets/investors/mirae-asset-white.png" alt="Mirae Asset" /></span>
           </div>
         </div>
       </section>
@@ -3223,11 +3239,13 @@
       if (!count) return;
       var from = parseInt(count.dataset.from || '1', 10);
       var to = parseInt(count.dataset.to, 10);
+      var pre = count.dataset.prefix || '$';
+      var unit = count.dataset.suffix || 'M';
       if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         tile.classList.add('is-in');
         return;
       }
-      count.textContent = '$' + from + 'M';
+      count.textContent = pre + from + unit;
 
       function run() {
         var start = null, duration = 2400;
@@ -3235,7 +3253,7 @@
           if (start === null) start = now;
           var t = Math.min((now - start) / duration, 1);
           var eased = 1 - Math.pow(1 - t, 3);
-          count.textContent = '$' + Math.round(from + (to - from) * eased) + 'M';
+          count.textContent = pre + Math.round(from + (to - from) * eased) + unit;
           if (t < 1) requestAnimationFrame(step);
         });
       }

@@ -2871,7 +2871,7 @@
 
     /* ---------- Loader ----------
        A globe drawn in the letters of ATTENTIONX. It opens on the Korean
-       peninsula, glowing green, zooms out to the whole planet, and arcs
+       peninsula, glowing purple, zooms out to the whole planet, and arcs
        of light leave Seoul for the world's tech hubs. Drag spins the
        globe, the pointer scrambles the letters under it, a click sends a
        ripple. When the page is ready the letters blink out and the curtain
@@ -2937,7 +2937,7 @@
     .ax-loader-glow.is-warm {
       width: 50vmin;
       height: 50vmin;
-      background: radial-gradient(circle, rgba(96, 230, 165, 0.1), transparent 64%);
+      background: radial-gradient(circle, rgba(160, 124, 255, 0.12), transparent 64%);
     }
 
     .ax-loader-globe {
@@ -3027,9 +3027,9 @@
         return false;
       }
 
-      // Every land is drawn in the letters of ATTENTIONX; Korea glows green.
+      // Every land is drawn in the letters of ATTENTIONX; Korea glows purple.
       var LETTERS = ['A', 'T', 'E', 'N', 'I', 'O', 'X'], NL = LETTERS.length;
-      var CREAM = '#f4f1e8', GREEN = '#7ef0b8';
+      var CREAM = '#f4f1e8', PURPLE = '#b79cff';
       var atlas = document.createElement('canvas'), actx = atlas.getContext('2d');
 
       var W, H, dpr, CELL, cols, rows, n, glyph, nextFlip, born, gone;
@@ -3047,15 +3047,15 @@
           born[k] = 80 + Math.random() * 520;
           gone[k] = Math.random() * 620;
         }
-        // Glyph atlas: a cream row, and a green row with its glow baked in.
+        // Glyph atlas: a cream row, and a purple row with its glow baked in.
         var A = Math.ceil(CELL * dpr);
         atlas.width = A * NL; atlas.height = A * 2;
         actx.clearRect(0, 0, atlas.width, atlas.height);
         actx.textAlign = 'center'; actx.textBaseline = 'middle';
         actx.font = '600 ' + Math.round(A * 0.82) + 'px "SF Mono", ui-monospace, Menlo, Consolas, monospace';
-        [CREAM, GREEN].forEach(function (col, row) {
+        [CREAM, PURPLE].forEach(function (col, row) {
           actx.fillStyle = col;
-          actx.shadowColor = row ? 'rgba(96, 230, 165, 0.95)' : 'transparent';
+          actx.shadowColor = row ? 'rgba(160, 124, 255, 0.95)' : 'transparent';
           actx.shadowBlur = row ? A * 0.35 : 0;
           LETTERS.forEach(function (g, i) {
             actx.fillText(g, i * A + A / 2, row * A + A / 2 + A * 0.04);
@@ -3239,13 +3239,13 @@
           ctx.beginPath(); ctx.arc(W / 2, H / 2, R * 1.22, 0, Math.PI * 2); ctx.fill();
         }
 
-        // A soft green glow under Korea, so it still reads when it is small.
+        // A soft purple glow under Korea, so it still reads when it is small.
         project(koreaV, 1, R, pt);
         if (pt[2] > 0) {
           var kr = Math.max(40, R * 0.16);
           var kg = ctx.createRadialGradient(pt[0], pt[1], 0, pt[0], pt[1], kr);
-          kg.addColorStop(0, 'rgba(96, 230, 165, ' + (0.14 + 0.16 * z) * pt[2] + ')');
-          kg.addColorStop(1, 'rgba(96, 230, 165, 0)');
+          kg.addColorStop(0, 'rgba(160, 124, 255, ' + (0.14 + 0.16 * z) * pt[2] + ')');
+          kg.addColorStop(1, 'rgba(160, 124, 255, 0)');
           ctx.fillStyle = kg;
           ctx.beginPath(); ctx.arc(pt[0], pt[1], kr, 0, Math.PI * 2); ctx.fill();
         }
@@ -3292,7 +3292,7 @@
               ctx.drawImage(atlas, glyph[k] * A, korea ? A : 0, A, A, i * CELL, j * CELL, CELL, CELL);
             } else {
               ctx.globalAlpha = Math.min(1, 0.07 * shade + boost * 0.35);
-              ctx.fillStyle = boost > 0.2 ? GREEN : CREAM;
+              ctx.fillStyle = boost > 0.2 ? PURPLE : CREAM;
               var d = boost > 0.2 ? 3 : 2;
               ctx.fillRect(i * CELL + (CELL - d) / 2, j * CELL + (CELL - d) / 2, d, d);
             }
@@ -3304,7 +3304,7 @@
         var arcT = (el - 2500) / 1000;
         if (arcT > 0 && !(leaving && tOut > 300)) {
           ctx.lineWidth = 1.4;
-          ctx.strokeStyle = GREEN;
+          ctx.strokeStyle = PURPLE;
           arcs.forEach(function (arc, ai) {
             var f = smooth(arcT - ai * 0.12);
             if (f <= 0) return;
@@ -3330,7 +3330,7 @@
             var pulse = (el / 1000) % 1.4 / 1.4;
             ctx.globalAlpha = 0.8 * (1 - pulse);
             ctx.beginPath(); ctx.arc(pt[0], pt[1], 3 + pulse * 18, 0, Math.PI * 2); ctx.stroke();
-            ctx.globalAlpha = 1; ctx.fillStyle = GREEN; ctx.fillRect(pt[0] - 3, pt[1] - 3, 6, 6);
+            ctx.globalAlpha = 1; ctx.fillStyle = PURPLE; ctx.fillRect(pt[0] - 3, pt[1] - 3, 6, 6);
           }
         }
         ctx.globalAlpha = 1;

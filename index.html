@@ -1091,6 +1091,32 @@
       margin-top: calc(var(--h) * 0.15);
     }
 
+    /* Name set in type (Philyron, no wordmark file): capitals span 70% of
+       the icon, centered on it (Newsreader caps are 0.715em). */
+    .case-logo--text {
+      align-items: center;
+    }
+
+    .case-name {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      position: relative;
+      top: calc(var(--h) * 0.08);
+      font-size: calc(var(--h) * 0.98);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: rgba(244, 241, 232, 0.95);
+    }
+
+    /* A word rather than a figure ("Pre-Seed"): a size that keeps the
+       longer line on one row. */
+    .case-stat--word {
+      font-size: 13.4cqw;
+    }
+
+    .case-sub--long {
+      line-height: 1.18;
+    }
+
     /* Bottom row of a case tile: Read more on the left, investors on the right. */
     .case-bottom {
       position: relative;
@@ -1157,7 +1183,8 @@
     .investor-ljv,
     .investor-spc,
     .investor-ssv,
-    .investor-mirae {
+    .investor-mirae,
+    .investor-speedrun {
       opacity: 0.85;
       transition: opacity 0.35s ease;
     }
@@ -1165,8 +1192,22 @@
     .investor-ljv:hover,
     .investor-spc:hover,
     .investor-ssv:hover,
-    .investor-mirae:hover {
+    .investor-mirae:hover,
+    .investor-speedrun:hover {
       opacity: 1;
+    }
+
+    .investor-speedrun {
+      height: max(22px, 5cqw);
+    }
+
+    .case-led {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 2.8cqw);
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.45);
     }
 
     .investor-ssv {
@@ -3102,30 +3143,26 @@
       </section>
       <section class="tile tile-text tile-case">
         <div class="case-top">
-          <div class="case-logo case-logo--caps">
-            <img class="case-icon" src="assets/portfolio/logo-6.jpg" alt="" />
-            <img class="case-word" src="assets/parasma-wordmark-white.png" alt="Parasma" />
+          <div class="case-logo case-logo--text">
+            <img class="case-icon" src="assets/portfolio/philyron.jpg" alt="" />
+            <span class="case-name">Philyron</span>
           </div>
-          <span class="case-label">New raise</span>
+          <span class="case-label">a16z SR007</span>
         </div>
         <div class="case-hero">
-          <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="7">$7M</span></h2>
-          <p class="case-sub">Seed round, backed by</p>
-          <div class="case-backers">
-            <a class="backer" href="https://x.com/paulg" target="_blank" rel="noopener noreferrer" data-cursor-label="Paul Graham">
-              <img src="assets/coinvestors/pg.jpg" alt="" />
-              <span><span class="backer-name">Paul Graham</span><span class="backer-role">Founder @ Y Combinator</span></span>
-            </a>
-            <a class="backer" href="https://x.com/kevinhartz" target="_blank" rel="noopener noreferrer" data-cursor-label="Kevin Hartz">
-              <img src="assets/coinvestors/kevin-hartz-2.jpg" alt="" />
-              <span><span class="backer-name">Kevin Hartz</span><span class="backer-role">Co-Founder @ A*</span></span>
-            </a>
+          <h2 class="case-stat case-stat--word"><span class="case-from">raises</span> Pre&#8209;Seed</h2>
+          <p class="case-sub case-sub--long">The first maritime startup to join a16z speedrun.</p>
+        </div>
+        <div class="case-bottom">
+          <a class="tile-button" href="https://philyron.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="philyron">
+            Read more
+            <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+          </a>
+          <div class="case-investors">
+            <span class="case-led">Led by</span>
+            <span class="investor investor-speedrun"><img src="assets/investors/a16z-speedrun-white.png" alt="a16z speedrun" /></span>
           </div>
         </div>
-        <a class="tile-button" href="https://www.thetimes.com/uk/science/article/lab-grown-brain-adhd-science-672n5xk0f" target="_blank" rel="noopener noreferrer" data-cursor-label="parasma">
-          Read more
-          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
-        </a>
       </section>
     </div>
 

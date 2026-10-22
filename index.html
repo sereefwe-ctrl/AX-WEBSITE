@@ -12,7 +12,7 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -2049,6 +2049,12 @@
       color: rgba(244, 241, 232, 0.42);
     }
 
+    /* Category lead-in, e.g. "Alumni News:", set in bold. */
+    .news-tag {
+      font-weight: 700;
+      color: rgba(244, 241, 232, 0.98);
+    }
+
     .news-go {
       display: inline-flex;
       align-self: center;
@@ -3107,23 +3113,23 @@
         <h2 class="news-head" id="news-title" aria-label="News (03)"><span class="news-label">News</span> <span class="news-count">(03)</span></h2>
         <ol class="news-list">
           <li class="news-item">
+            <a class="news-link" href="https://abecid.com/beckmann-world-models/" target="_blank" rel="noopener noreferrer" data-cursor-label="beckmann">
+              <time class="news-date" datetime="2026-10-21">Oct 21, 2026</time>
+              <p class="news-text"><b class="news-tag">Alumni News:</b> <strong>Adam Abecid</strong> releases <em>“Beckmann World Models: Direct Terminal-Map Learning for One-Step Action-Conditioned Prediction”</em>.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+          <li class="news-item">
             <a class="news-link" href="https://frontierlist.com/sf-event-hosts" target="_blank" rel="noopener noreferrer" data-cursor-label="frontier list">
               <time class="news-date" datetime="2026-10-08">Oct 8, 2026</time>
-              <p class="news-text"><strong>Sukone Hong</strong>, featured in Frontier List’s <em>“Great SF event hosts”</em>, alongside Dave Fontenot <span class="news-aside">(HF0)</span>, Ben Lang <span class="news-aside">(Cursor)</span>, and Vivian Shen <span class="news-aside">(Y Combinator)</span>.</p>
+              <p class="news-text"><b class="news-tag">Alumni News:</b> <strong>Sukone Hong</strong>, featured in Frontier List’s <em>“Great SF event hosts”</em>, alongside Dave Fontenot <span class="news-aside">(HF0)</span>, Ben Lang <span class="news-aside">(Cursor)</span>, and Vivian Shen <span class="news-aside">(Y Combinator)</span>.</p>
               <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
             </a>
           </li>
           <li class="news-item">
-            <a class="news-link" href="https://frontierlist.com/data-people" target="_blank" rel="noopener noreferrer" data-cursor-label="frontier list">
-              <time class="news-date" datetime="2026-10-05">Oct 5, 2026</time>
-              <p class="news-text"><strong>Daniel Chang</strong>, featured in Frontier List’s <em>“Insightful people in AI data and post-training”</em> alongside founders of Flapping Airplanes, Ricursive, and Applied Compute.</p>
-              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
-            </a>
-          </li>
-          <li class="news-item">
-            <a class="news-link" href="https://www.economist.com/science-and-technology/2026/03/30/why-a-startup-is-teaching-human-brain-cells-to-play-doom" target="_blank" rel="noopener noreferrer" data-cursor-label="economist">
-              <time class="news-date" datetime="2026-03-30">Mar 30, 2026</time>
-              <p class="news-text"><span class="news-aside">Portfolio News:</span> <strong>Parasma</strong>, featured in <em>Nature</em>, <em>The Times</em>, and <em>The Economist</em>.</p>
+            <a class="news-link" href="https://www.kakao.vc/posts/ai-eijeonteue-janggi-gieog-buyeohaneun-ariseuto-kakaobenceoseuseo-peuri-sideu-tuja-yuci" target="_blank" rel="noopener noreferrer" data-cursor-label="kakao ventures">
+              <time class="news-date" datetime="2026-06-24">Jun 24, 2026</time>
+              <p class="news-text"><b class="news-tag">Alumni News:</b> <strong>Aristo</strong> raises Pre-Seed funding from Kakao Ventures, building synced memory layer for AI agents.</p>
               <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
             </a>
           </li>

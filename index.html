@@ -1077,6 +1077,13 @@
       margin-top: calc(var(--h) * 0.29);
     }
 
+    /* Sans wordmark (Dentronic): capitals span 70% of the icon, centered on it.
+       The image runs from the "i" dot (10% above the caps) to the baseline. */
+    .case-logo--sans .case-word {
+      height: calc(var(--h) * 0.8);
+      margin-top: calc(var(--h) * 0.067);
+    }
+
     /* Bottom row of a case tile: Read more on the left, investors on the right. */
     .case-bottom {
       position: relative;
@@ -1138,6 +1145,25 @@
 
     .investor-chem:hover .is-color {
       opacity: 1;
+    }
+
+    .investor-ljv,
+    .investor-spc {
+      opacity: 0.85;
+      transition: opacity 0.35s ease;
+    }
+
+    .investor-ljv:hover,
+    .investor-spc:hover {
+      opacity: 1;
+    }
+
+    .investor-ljv {
+      height: max(28px, 6.4cqw);
+    }
+
+    .investor-spc {
+      height: max(34px, 8cqw);
     }
 
     .case-investors i {
@@ -2947,20 +2973,27 @@
       </section>
       <section class="tile tile-text tile-case">
         <div class="case-top">
-          <div class="case-logo">
-            <img class="case-icon" src="assets/portfolio/logo-4.jpg" alt="" />
-            <img class="case-word" src="assets/launchpoint-wordmark-white.png" alt="Launchpoint" />
+          <div class="case-logo case-logo--sans">
+            <img class="case-icon" src="assets/portfolio/dentronic.jpg" alt="" />
+            <img class="case-word" src="assets/dentronic-wordmark-white.svg" alt="Dentronic" />
           </div>
-          <span class="case-label">33× growth</span>
+          <span class="case-label">New raise</span>
         </div>
         <div class="case-hero">
-          <h2 class="case-stat"><span class="case-from">$1M</span><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg><span class="case-count" data-to="33">$33M</span></h2>
-          <p class="case-sub">ARR in 4 months</p>
+          <h2 class="case-stat"><span class="case-from">raises</span> Seed</h2>
+          <p class="case-sub">Led by Long Journey Ventures</p>
         </div>
-        <a class="tile-button" href="https://www.launchpointhq.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="launchpoint">
-          Read more
-          <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
-        </a>
+        <div class="case-bottom">
+          <a class="tile-button" href="https://dentronic.ai/" target="_blank" rel="noopener noreferrer" data-cursor-label="dentronic">
+            Read more
+            <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+          </a>
+          <div class="case-investors">
+            <span class="investor investor-ljv"><img src="assets/investors/long-journey-white.png" alt="Long Journey Ventures" /></span>
+            <i aria-hidden="true"></i>
+            <span class="investor investor-spc"><img src="assets/investors/spc-white.svg" alt="South Park Commons" /></span>
+          </div>
+        </div>
       </section>
     </div>
 

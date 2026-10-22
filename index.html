@@ -3950,11 +3950,11 @@
       function fit() {
         if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.removeProperty('--h'); return; }
         // Up to 1.35x the feed's height, as large as the column allows
-        // (the pinned pair is about 1.17x as wide as it is tall).
+        // (the pinned pair is about 1.17x as wide as it is tall), less 10%.
         var feed = list.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
         var dock = document.querySelector('.star-dock-square').getBoundingClientRect();
         var room = stamp.parentNode.getBoundingClientRect().right - dock.right - 48;
-        stamp.style.setProperty('--h', Math.min(feed * 1.35, room / 1.17) + 'px');
+        stamp.style.setProperty('--h', Math.min(feed * 1.35, room / 1.17) * 0.9 + 'px');
       }
       window.addEventListener('resize', fit);
       window.addEventListener('load', fit);

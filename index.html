@@ -1107,10 +1107,26 @@
       color: rgba(244, 241, 232, 0.95);
     }
 
-    /* A word rather than a figure ("Pre-Seed"): a size that keeps the
-       longer line on one row. */
-    .case-stat--word {
-      font-size: 13.4cqw;
+    /* A logo in place of the headline figure (Philyron: a16z speedrun). */
+    .case-mark img {
+      display: block;
+      width: 72cqw;
+      height: auto;
+      opacity: 0.95;
+    }
+
+    .case-person {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(14px, 3cqw);
+      line-height: 1.3;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    .case-person-name {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: 1.3em;
+      letter-spacing: -0.01em;
+      color: #f4f1e8;
     }
 
     .case-sub--long {
@@ -1183,8 +1199,7 @@
     .investor-ljv,
     .investor-spc,
     .investor-ssv,
-    .investor-mirae,
-    .investor-speedrun {
+    .investor-mirae {
       opacity: 0.85;
       transition: opacity 0.35s ease;
     }
@@ -1192,22 +1207,8 @@
     .investor-ljv:hover,
     .investor-spc:hover,
     .investor-ssv:hover,
-    .investor-mirae:hover,
-    .investor-speedrun:hover {
+    .investor-mirae:hover {
       opacity: 1;
-    }
-
-    .investor-speedrun {
-      height: max(22px, 5cqw);
-    }
-
-    .case-led {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: max(12px, 2.8cqw);
-      font-weight: 500;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: rgba(244, 241, 232, 0.45);
     }
 
     .investor-ssv {
@@ -3150,7 +3151,7 @@
           <span class="case-label">a16z SR007</span>
         </div>
         <div class="case-hero">
-          <h2 class="case-stat case-stat--word"><span class="case-from">raises</span> Pre&#8209;Seed</h2>
+          <h2 class="case-mark"><img src="assets/investors/a16z-speedrun-white.png" alt="a16z speedrun" /></h2>
           <p class="case-sub case-sub--long">The first maritime startup to join a16z speedrun.</p>
         </div>
         <div class="case-bottom">
@@ -3158,10 +3159,7 @@
             Read more
             <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
           </a>
-          <div class="case-investors">
-            <span class="case-led">Led by</span>
-            <span class="investor investor-speedrun"><img src="assets/investors/a16z-speedrun-white.png" alt="a16z speedrun" /></span>
-          </div>
+          <p class="case-person"><span class="case-person-name">Heon Lee</span>, Founder &amp; CEO</p>
         </div>
       </section>
     </div>

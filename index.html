@@ -1150,9 +1150,9 @@
 
     /* Full logo lockup (mark + wordmark in one file, Dentronic). */
     .case-lockup {
-      height: calc(var(--h) * 1.4);
+      height: calc(var(--h) * 1.25);
       width: auto;
-      margin: calc(var(--h) * -0.2) 0;
+      margin: calc(var(--h) * -0.125) 0;
     }
 
     /* All-caps lockup (AIM): letters at 90% of the icon height, centered. */
@@ -1163,8 +1163,8 @@
 
     /* Lockup whose mark is as tall as the image (Philyron). */
     .case-lockup--tall {
-      height: calc(var(--h) * 1.23);
-      margin: calc(var(--h) * -0.115) 0;
+      height: calc(var(--h) * 1.1);
+      margin: calc(var(--h) * -0.05) 0;
     }
 
     /* A logo in place of the headline figure (Philyron: a16z speedrun). */
@@ -3950,11 +3950,11 @@
       function fit() {
         if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.removeProperty('--h'); return; }
         // Up to 1.35x the feed's height, as large as the column allows
-        // (the pinned pair is about 1.17x as wide as it is tall), less 10%.
+        // (the pinned pair is about 1.17x as wide as it is tall).
         var feed = list.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
         var dock = document.querySelector('.star-dock-square').getBoundingClientRect();
         var room = stamp.parentNode.getBoundingClientRect().right - dock.right - 48;
-        stamp.style.setProperty('--h', Math.min(feed * 1.35, room / 1.17) * 0.9 + 'px');
+        stamp.style.setProperty('--h', Math.min(feed * 1.35, room / 1.17) + 'px');
       }
       window.addEventListener('resize', fit);
       window.addEventListener('load', fit);

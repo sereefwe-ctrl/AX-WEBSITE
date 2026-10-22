@@ -2217,298 +2217,181 @@
       }
     }
 
-    /* Team tile (left of Parasma): a roster centered in the tile. Rows draw in and decode when
-       scrolled into view; hovering a row spotlights it, swaps
-       its number for a spinning Stealth star and sets the dotted leader
-       running toward the role. Sized in cqw so it scales with the tile. */
-    .tile-team {
-      padding: 6.5%;
+    /* Events tile (left of Philyron): every AttentionX event with its
+       partners as small logo badges. Rows rise in when the tile scrolls
+       into view; hovering a row spotlights it and swaps its number for a
+       spinning AttentionX mark. Hovering a badge names the partner in the
+       cursor tag. Sized in cqw so it scales with the tile. */
+    .tile-events {
+      padding: 5.6% 6.5%;
       align-items: stretch;
-      justify-content: space-between;
     }
 
-    /* Hovering a name floats that person's photo beside the pointer: a
-       rounded card that eases after the cursor and tilts with its motion.
-       Rows with a bio add a text card cut to the photo's height. */
-    .team-peek {
-      position: absolute;
-      left: 0;
-      top: 0;
-      z-index: 3;
+    .ev-head {
       display: flex;
-      align-items: stretch;
-      gap: 1.2cqw;
-      pointer-events: none;
-      opacity: 0;
-      scale: 0.6;
-      transform-origin: 8.5cqw 50%;
-      transition: opacity 0.3s ease, scale 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-      will-change: transform;
-    }
-
-    .team-peek.is-on {
-      opacity: 1;
-      scale: 1;
-    }
-
-    .team-peek-photo,
-    .team-peek-bio {
-      border-radius: calc(var(--radius) * 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 24px 48px -16px rgba(0, 0, 0, 0.75);
-    }
-
-    .team-peek-photo {
-      flex: none;
-      width: 17cqw;
-      aspect-ratio: 1;
-      overflow: hidden;
-    }
-
-    .team-peek-photo img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* First and last lines sit on the photo's top and bottom insets. */
-    .team-peek-bio {
-      display: none;
-      flex-direction: column;
+      align-items: baseline;
       justify-content: space-between;
-      padding: 1.6cqw 2cqw;
-      background: rgba(18, 18, 20, 0.64);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
-      font-family: 'Newsreader', 'Times New Roman', serif;
-      font-size: max(11px, 2.45cqw);
-      line-height: 1.15;
-      letter-spacing: -0.005em;
-      white-space: nowrap;
-      color: rgba(244, 241, 232, 0.94);
+      margin-bottom: 2.6cqw;
     }
 
-    .team-peek.has-bio .team-peek-bio {
-      display: flex;
+    .ev-count {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.35);
     }
 
-    .team-peek-bio em {
-      font-style: normal;
-      color: rgba(244, 241, 232, 0.5);
-    }
-
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-
-    /* One grid for all rows (rows are subgrids), so numbers, names,
-       leaders and roles each line up in a shared column. */
-    .team-list {
-      position: relative;
+    /* One grid for all rows (rows are subgrids): numbers, names and
+       badges each share a column. */
+    .ev-list {
       display: grid;
-      grid-template-columns: 7cqw auto minmax(0, 1fr);
+      grid-template-columns: 5cqw minmax(0, 1fr) auto;
       column-gap: 2.4cqw;
       margin: auto 0;
       list-style: none;
-      counter-reset: team;
+      counter-reset: ev;
     }
 
-    .team-list::after {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 1px;
-      background: rgba(244, 241, 232, 0.14);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.6s;
-    }
-
-    .team-row {
+    .ev-row {
       position: relative;
-      counter-increment: team;
+      counter-increment: ev;
       display: grid;
       grid-column: 1 / -1;
       grid-template-columns: subgrid;
-      grid-template-areas: "num name end";
-      align-items: baseline;
-      padding: 3cqw 0 2.2cqw;
+      align-items: center;
+      padding: 1.05cqw 0;
+      border-top: 1px solid rgba(244, 241, 232, 0.1);
       opacity: 0;
-      transform: translateY(1.6cqw);
-      transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+      transform: translateY(1.2cqw);
+      transition: opacity 0.7s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: calc(var(--i, 0) * 60ms);
     }
 
-    .team-row::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 1px;
-      background: rgba(244, 241, 232, 0.14);
-      transform: scaleX(0);
-      transform-origin: left;
-      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s ease;
+    .ev-row:last-child {
+      border-bottom: 1px solid rgba(244, 241, 232, 0.1);
     }
 
-    .team-row:nth-child(2), .team-row:nth-child(2)::before { transition-delay: 0.12s; }
-    .team-row:nth-child(3), .team-row:nth-child(3)::before { transition-delay: 0.24s; }
-    .team-row:nth-child(4), .team-row:nth-child(4)::before { transition-delay: 0.36s; }
+    .tile-events.is-in .ev-row { opacity: 1; transform: none; }
 
-    .tile-team.is-in .team-row { opacity: 1; transform: none; }
-    .tile-team.is-in .team-row::before,
-    .tile-team.is-in .team-list::after { transform: scaleX(1); }
-
-    .team-num {
-      grid-area: num;
+    .ev-num {
       position: relative;
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: max(11px, 2.4cqw);
+      font-size: max(10px, 1.9cqw);
       font-variant-numeric: tabular-nums;
       letter-spacing: 0.04em;
       color: rgba(244, 241, 232, 0.35);
     }
 
-    .team-num::before {
-      content: "0" counter(team);
+    .ev-num::before {
+      content: counter(ev, decimal-leading-zero);
       transition: opacity 0.3s ease;
     }
 
-    .team-star {
+    .ev-mark {
       position: absolute;
       left: 0;
-      bottom: -0.1em;
-      width: 4.2cqw;
+      top: 50%;
+      width: 2.8cqw;
       height: auto;
+      margin-top: -1.4cqw;
       opacity: 0;
       scale: 0.3;
-      filter: drop-shadow(rgba(255, 255, 255, 0.42) 0 0 10px);
+      filter: drop-shadow(rgba(255, 255, 255, 0.42) 0 0 8px);
       transition: opacity 0.35s ease, scale 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .team-name {
-      grid-area: name;
+    .ev-name {
       font-family: 'Newsreader', 'Times New Roman', serif;
-      font-weight: 400;
-      font-size: 7cqw;
-      line-height: 1;
-      letter-spacing: -0.02em;
-      white-space: nowrap;
-      color: rgba(244, 241, 232, 0.96);
+      font-size: max(14px, 2.75cqw);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.92);
       transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    /* Leader and role share the last column: the dots run up to each
-       role, which sits flush right. */
-    .team-end {
-      grid-area: end;
+    .ev-hosts {
       display: flex;
-      align-items: baseline;
-      gap: 2.4cqw;
-      min-width: 0;
+      justify-content: flex-end;
+      gap: 0.8cqw;
     }
 
-    .team-dots {
-      flex: 1 1 2.4cqw;
-      align-self: baseline;
-      height: 2px;
-      transform: translateY(-0.2em);
-      background-image: radial-gradient(circle at 1px 1px, rgba(244, 241, 232, 0.3) 0.9px, transparent 1.3px);
-      background-size: 8px 2px;
-      background-repeat: repeat-x;
+    /* A partner logo on a small glass square. Logos that come on their
+       own tile fill it; wide wordmarks (AWS) get more room. */
+    .ev-host {
+      display: grid;
+      place-items: center;
+      width: max(20px, 3.3cqw);
+      aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 26%;
+      background: rgba(244, 241, 232, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(244, 241, 232, 0.12);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
     }
 
-    .team-role {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: max(10px, 2.1cqw);
-      font-weight: 500;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      color: rgba(244, 241, 232, 0.55);
-      transition: color 0.35s ease;
+    .ev-host img {
+      width: 62%;
+      height: 62%;
+      object-fit: contain;
     }
 
-    /* Dimmed aside inside a role, like "(stealth)" in the first title. */
-    .team-role-soft {
-      color: rgba(244, 241, 232, 0.28);
-      transition: color 0.35s ease;
+    .ev-host--wide img {
+      width: 74%;
     }
 
-    .team-row:hover .team-role-soft { color: rgba(244, 241, 232, 0.5); }
+    .ev-host--tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
 
     /* Hover: spotlight one row and quiet the others. */
-    .tile-team.is-settled .team-row { transition-delay: 0s; transition-duration: 0.35s; }
-    .tile-team.is-in .team-list:hover .team-row { opacity: 0.32; }
-    .tile-team.is-in .team-list .team-row:hover { opacity: 1; }
-    .team-row:hover::before { background-color: rgba(244, 241, 232, 0.4); }
-    .team-row:hover .team-num::before { opacity: 0; }
-    .team-row:hover .team-star { opacity: 1; scale: 1; animation: team-spin 4s linear infinite; }
-    .team-row:hover .team-name { transform: translateX(0.16em); }
-    .team-row:hover .team-dots {
-      background-image: radial-gradient(circle at 1px 1px, rgba(244, 241, 232, 0.75) 0.9px, transparent 1.3px);
-      animation: team-march 0.9s linear infinite;
-    }
-    .team-row:hover .team-role { color: rgba(244, 241, 232, 0.95); }
+    .tile-events.is-settled .ev-row { transition-delay: 0s; transition-duration: 0.35s; }
+    .tile-events.is-in .ev-list:hover .ev-row { opacity: 0.32; }
+    .tile-events.is-in .ev-list .ev-row:hover { opacity: 1; }
+    .ev-row:hover .ev-num::before { opacity: 0; }
+    .ev-row:hover .ev-mark { opacity: 1; scale: 1; animation: ev-spin 4s linear infinite; }
+    .ev-row:hover .ev-name { transform: translateX(0.2em); }
+    .ev-row:hover .ev-host { background-color: rgba(244, 241, 232, 0.14); }
+    .ev-host:hover { transform: translateY(-2px) scale(1.12); }
 
-    @keyframes team-spin { to { rotate: 360deg; } }
-    @keyframes team-march { to { background-position: 8px 0; } }
+    @keyframes ev-spin { to { rotate: 360deg; } }
 
     @media (max-width: 900px) {
-      .tile-team {
-        min-height: calc(var(--w) * 0.9);
+      .ev-list {
+        grid-template-columns: 7cqw minmax(0, 1fr) auto;
       }
 
-      .team-list {
-        display: block;
+      .ev-row {
+        padding: 2.2cqw 0;
       }
 
-      .team-row {
-        grid-column: auto;
-        column-gap: 2.4cqw;
-        grid-template-columns: 9cqw minmax(0, 1fr);
-        grid-template-areas:
-          "num name"
-          ".   end";
-        row-gap: 2.4cqw;
-        padding: 3.6cqw 0 3.2cqw;
+      .ev-name {
+        font-size: max(15px, 4.2cqw);
       }
 
-      .team-name {
-        font-size: 9cqw;
+      .ev-num {
+        font-size: max(10px, 2.8cqw);
       }
 
-      .team-dots {
-        display: none;
+      .ev-mark {
+        width: 4.2cqw;
+        margin-top: -2.1cqw;
       }
 
-      .team-role {
-        font-size: max(10px, 3cqw);
-      }
-
-      .team-star {
-        width: 5.4cqw;
+      .ev-host {
+        width: max(22px, 6cqw);
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .team-peek,
-      .team-row,
-      .team-row::before,
-      .team-list::after {
+      .ev-row {
         transition: none;
       }
 
-      .team-row:hover .team-star,
-      .team-row:hover .team-dots {
+      .ev-row:hover .ev-mark {
         animation: none;
       }
     }
@@ -3117,46 +3000,65 @@
       </section>
     </div>
 
-    <!-- Row 5: Parasma raise under the co-investors box. -->
+    <!-- Row 5: events list beside the Philyron raise. -->
     <div class="row row-palette">
-      <section class="tile tile-text tile-team" aria-labelledby="team-title">
-        <h2 class="visually-hidden" id="team-title">Team</h2>
-        <ol class="team-list">
-          <li class="team-row" data-photo="assets/team/sukone-hong.jpg">
-            <template class="team-bio"><span>High school &amp; college dropout,</span><span>Founded Paradox Computer</span><span><em>(acq. by Yeo Holdings).</em></span></template>
-            <span class="team-num"><img class="team-star" src="images/attentionx-mark.png" alt="" /></span>
-            <span class="team-name"><span data-decode>Sukone Hong</span></span>
-            <span class="team-end">
-              <span class="team-dots" aria-hidden="true"></span>
-              <span class="team-role">General Partner</span>
-            </span>
+      <section class="tile tile-text tile-events" id="events" aria-labelledby="events-title">
+        <div class="ev-head">
+          <h2 class="mf-label" id="events-title">Events</h2>
+          <span class="ev-count">(10)</span>
+        </div>
+        <ol class="ev-list">
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Founders Hackathon</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="OpenAI"><img src="assets/brands/openai.svg" alt="OpenAI" /></span><span class="ev-host cursor-link" data-cursor-label="Replit"><img src="assets/brands/replit.png" alt="Replit" /></span><span class="ev-host cursor-link ev-host--wide" data-cursor-label="AWS"><img src="assets/brands/aws.png" alt="AWS" /></span><span class="ev-host cursor-link" data-cursor-label="Gold House Ventures"><img src="assets/brands/gold-house.png" alt="Gold House Ventures" /></span></span>
           </li>
-          <li class="team-row" data-photo="assets/team/julia-lee.jpg">
-            <span class="team-num"><img class="team-star" src="images/attentionx-mark.png" alt="" /></span>
-            <span class="team-name">Dr. <span data-decode>Julia Lee</span></span>
-            <span class="team-end">
-              <span class="team-dots" aria-hidden="true"></span>
-              <span class="team-role">General Partner</span>
-            </span>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google DeepMind Gemini 4 Argon Hackathon</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google DeepMind"><img src="assets/brands/google-deepmind.svg" alt="Google DeepMind" /></span></span>
           </li>
-          <li class="team-row" data-photo="assets/team/daniel-chang.jpg">
-            <span class="team-num"><img class="team-star" src="images/attentionx-mark.png" alt="" /></span>
-            <span class="team-name"><span data-decode>Daniel Chang</span></span>
-            <span class="team-end">
-              <span class="team-dots" aria-hidden="true"></span>
-              <span class="team-role">Stealth <span class="team-role-soft">(Venture)</span> Partner</span>
-            </span>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">OpenAI Startup Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="OpenAI"><img src="assets/brands/openai.svg" alt="OpenAI" /></span></span>
           </li>
-          <li class="team-row" data-photo="assets/team/kunhak-lee.jpg">
-            <span class="team-num"><img class="team-star" src="images/attentionx-mark.png" alt="" /></span>
-            <span class="team-name"><span data-decode>Kunhak Lee</span></span>
-            <span class="team-end">
-              <span class="team-dots" aria-hidden="true"></span>
-              <span class="team-role">Operating Partner</span>
-            </span>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google DeepMind Gemini 3 Hackathon Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google DeepMind"><img src="assets/brands/google-deepmind.svg" alt="Google DeepMind" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Anthropic Claude Code Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Anthropic"><img src="assets/brands/anthropic.png" alt="Anthropic" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Manus Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Manus AI"><img src="assets/brands/manus.svg" alt="Manus AI" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Genspark Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Genspark"><img src="assets/brands/genspark.webp" alt="Genspark" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google DeepMind Gemini 3 Hackathon Singapore</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google DeepMind"><img src="assets/brands/google-deepmind.svg" alt="Google DeepMind" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google Cloud Hackathon</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google Cloud"><img src="assets/brands/google-cloud.png" alt="Google Cloud" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Anthropic Claude Code Meetup Pangyo</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Anthropic"><img src="assets/brands/anthropic.png" alt="Anthropic" /></span><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Yanolja"><img src="assets/brands/yanolja.png" alt="Yanolja" /></span></span>
           </li>
         </ol>
-        <div class="team-peek" aria-hidden="true"><div class="team-peek-photo"><img alt="" /></div><div class="team-peek-bio"></div></div>
       </section>
       <section class="tile tile-text tile-case">
         <div class="case-top">
@@ -3480,85 +3382,22 @@
       reveal();
     })();
 
-    // Team: reveal the roster when it scrolls into view, decoding each name
-    // from scrambled glyphs; hovering a row decodes its name again.
+    // Events: rows rise in once the tile scrolls into view.
     (function () {
-      var team = document.querySelector('.tile-team');
-      if (!team) return;
-      var names = team.querySelectorAll('[data-decode]');
-
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        team.classList.add('is-in', 'is-settled');
+      var tile = document.querySelector('.tile-events');
+      if (!tile) return;
+      tile.querySelectorAll('.ev-row').forEach(function (row, i) { row.style.setProperty('--i', i); });
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+        tile.classList.add('is-in', 'is-settled');
         return;
       }
-
-      function reveal() {
-        if (team.classList.contains('is-in')) return;
-        var r = team.getBoundingClientRect();
-        if (r.top > window.innerHeight * 0.8 || r.bottom < window.innerHeight * 0.2) return;
-        team.classList.add('is-in');
-        names.forEach(function (n, i) { decode(n, 250 + i * 140, 900); });
-        setTimeout(function () { team.classList.add('is-settled'); }, 1800);
-        window.removeEventListener('scroll', reveal);
-      }
-      window.addEventListener('scroll', reveal, { passive: true });
-      if ('IntersectionObserver' in window) {
-        new IntersectionObserver(function (entries) {
-          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
-        }, { threshold: 0.3 }).observe(team);
-      }
-      reveal();
-
-      names.forEach(function (n) {
-        n.closest('li').addEventListener('mouseenter', function () { decode(n, 0, 480); });
-      });
-    })();
-
-    // Team photos: hovering a name floats that person's photo next to the
-    // pointer. It eases after the cursor and tilts a little with its speed.
-    (function () {
-      var tile = document.querySelector('.tile-team');
-      var peek = tile && tile.querySelector('.team-peek');
-      if (!peek) return;
-      var img = peek.querySelector('img');
-      var bio = peek.querySelector('.team-peek-bio');
-      var x = 0, y = 0, tx = 0, ty = 0, tilt = 0, running = false;
-      tile.querySelectorAll('.team-row').forEach(function (row) {
-        new Image().src = row.dataset.photo;
-        row.addEventListener('mouseenter', function (e) {
-          img.src = row.dataset.photo;
-          img.style.objectPosition = row.dataset.photoPos || '';
-          var tpl = row.querySelector('template.team-bio');
-          bio.innerHTML = tpl ? tpl.innerHTML : '';
-          peek.classList.toggle('has-bio', !!tpl);
-          aim(e);
-          if (!peek.classList.contains('is-on')) { x = tx; y = ty; }
-          peek.classList.add('is-on');
-          if (!running) { running = true; requestAnimationFrame(tick); }
-        });
-        row.addEventListener('mouseleave', function () { peek.classList.remove('is-on'); });
-      });
-      tile.addEventListener('mousemove', aim);
-
-      // Right of the pointer, or left of it when the card would run past
-      // the tile's edge; kept inside the tile either way.
-      function aim(e) {
-        var r = tile.getBoundingClientRect();
-        var w = peek.offsetWidth, h = peek.offsetHeight, px = e.clientX - r.left;
-        tx = px + 28 + w > tile.clientWidth - 12 ? px - 28 - w : px + 28;
-        tx = Math.max(12, Math.min(tx, tile.clientWidth - w - 12));
-        ty = Math.max(12, Math.min(e.clientY - r.top - h / 2, tile.clientHeight - h - 12));
-      }
-
-      function tick() {
-        var dx = tx - x;
-        x += dx * 0.18;
-        y += (ty - y) * 0.18;
-        tilt += (Math.max(-12, Math.min(12, dx * 0.12)) - tilt) * 0.2;
-        peek.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) rotate(' + tilt.toFixed(2) + 'deg)';
-        if (peek.classList.contains('is-on') || Math.abs(dx) > 0.5) requestAnimationFrame(tick);
-        else running = false;
-      }
+      var io = new IntersectionObserver(function (entries) {
+        if (!entries[0].isIntersecting) return;
+        io.disconnect();
+        tile.classList.add('is-in');
+        setTimeout(function () { tile.classList.add('is-settled'); }, 1600);
+      }, { threshold: 0.25 });
+      io.observe(tile);
     })();
 
     // Falling star (after the AGI House story star): lay the track from

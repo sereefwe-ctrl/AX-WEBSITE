@@ -2157,46 +2157,72 @@
     .news-item:hover .news-date { color: rgba(244, 241, 232, 0.75); }
     .news-item:hover .news-text { color: rgba(244, 241, 232, 0.9); }
     .news-item:hover .news-go { color: rgba(244, 241, 232, 0.95); transform: translateX(0.35em); }
-    /* Stamp right of the landing square, mirroring the news: same inset
-       from the outer edge, top on the news label and bottom on the last
-       rule (height set by script). Dimmed and cooled to sit in the dark
-       palette, set at a slight tilt like a pasted stamp; hover lifts it. */
+    /* Event stamps right of the landing square, mirroring the news: as
+       tall as the feed (from its label to its last rule, --h set by
+       script) and pushed to the right edge. Two collages pinned side by
+       side at opposite tilts, the second set lower and tucked under the
+       first; hovering one straightens it and brings it to the front. */
     .dock-stamp {
+      --h: 18vw;
       grid-column: 3;
       grid-row: 1;
       justify-self: end;
-      margin-right: calc((var(--w) - var(--gap)) * 0.02);
-      height: 18vw;
-      aspect-ratio: 1420 / 1108;
-      /* Nudged a little left and down from that alignment. */
-      translate: -1.6vw 1.4vw;
+      display: flex;
+      align-items: flex-start;
+      height: var(--h);
+      margin: 0;
+      margin-right: calc((var(--w) - var(--gap)) * 0.01);
     }
 
     .dock-stamp img {
+      position: relative;
       display: block;
-      width: 100%;
-      height: 100%;
+      width: auto;
       object-fit: contain;
-      rotate: -3deg;
-      filter: brightness(0.62) saturate(0.55) contrast(1.08) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.55));
-      transition: rotate 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease, scale 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      filter: brightness(0.86) saturate(0.88) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.5));
+      transition: rotate 0.6s cubic-bezier(0.22, 1, 0.36, 1), translate 0.6s cubic-bezier(0.22, 1, 0.36, 1), scale 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
     }
 
-    .dock-stamp:hover img {
+    .dock-stamp .ds-a {
+      z-index: 2;
+      height: 100%;
+      rotate: -4deg;
+    }
+
+    .dock-stamp .ds-b {
+      z-index: 1;
+      height: 92%;
+      margin-left: calc(var(--h) * -0.14);
+      rotate: 5deg;
+      translate: 0 calc(var(--h) * 0.09);
+    }
+
+    .dock-stamp img:hover {
+      z-index: 3;
       rotate: 0deg;
-      scale: 1.02;
-      filter: brightness(0.85) saturate(0.8) contrast(1.05) drop-shadow(0 22px 36px rgba(0, 0, 0, 0.6));
+      scale: 1.04;
+      filter: brightness(1) saturate(1) drop-shadow(0 24px 40px rgba(0, 0, 0, 0.6));
     }
 
     @media (max-width: 900px) {
       .dock-stamp {
         grid-column: 1;
         grid-row: auto;
-        justify-self: start;
-        margin: var(--gap) 0 0;
+        justify-self: center;
         height: auto;
-        width: 70%;
-        translate: none;
+        margin: var(--gap) 0 0;
+      }
+
+      .dock-stamp img,
+      .dock-stamp .ds-a,
+      .dock-stamp .ds-b {
+        width: 50%;
+        height: auto;
+      }
+
+      .dock-stamp .ds-b {
+        margin-left: -6%;
+        translate: 0 8%;
       }
     }
 
@@ -3707,7 +3733,10 @@
         <p class="news-legal">© 2026 AttentionX. All rights reserved.<br />AttentionX™ is a trademark of its respective owner.</p>
       </section>
       <div class="star-dock-square" aria-hidden="true"></div>
-      <figure class="dock-stamp"><img src="assets/stamp-stealth-2.webp" alt="Stealth Fund 2026 stamp of a Viking ship in a storm" /></figure>
+      <figure class="dock-stamp">
+        <img class="ds-a" src="assets/stamps-events-1.webp" alt="AttentionX events as stamps: a DJ set at OpenAI, a talk on stage, and a hackathon" />
+        <img class="ds-b" src="assets/stamps-events-2.webp" alt="AttentionX events as stamps: a packed room under OpenAI banners, and a guest asking a question" />
+      </figure>
     </div>
 
     <div class="star-track" aria-hidden="true">
@@ -3884,15 +3913,15 @@
       });
     })();
 
-    // Stamp: as tall as the news, from its label to its last rule.
+    // Stamps: as tall as the news, from its label to its last rule.
     (function () {
       var stamp = document.querySelector('.dock-stamp');
       var head = document.querySelector('.news-head');
       var list = document.querySelector('.news-list');
       if (!stamp || !head || !list) return;
       function fit() {
-        if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.height = ''; return; }
-        stamp.style.height = (list.getBoundingClientRect().bottom - head.getBoundingClientRect().top) + 'px';
+        if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.removeProperty('--h'); return; }
+        stamp.style.setProperty('--h', (list.getBoundingClientRect().bottom - head.getBoundingClientRect().top) + 'px');
       }
       window.addEventListener('resize', fit);
       window.addEventListener('load', fit);

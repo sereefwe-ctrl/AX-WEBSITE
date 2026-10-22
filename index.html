@@ -2870,9 +2870,8 @@
     }
 
     /* ---------- Loader ----------
-       A globe drawn in letters. It opens on the Korean peninsula, glowing
-       blue and spelled in K-O-R-E-A, zooms out to the whole planet while
-       the rest of the world flips to the letters of ATTENTIONX, and arcs
+       A globe drawn in the letters of ATTENTIONX. It opens on the Korean
+       peninsula, glowing green, zooms out to the whole planet, and arcs
        of light leave Seoul for the world's tech hubs. Drag spins the
        globe, the pointer scrambles the letters under it, a click sends a
        ripple. When the page is ready the letters blink out and the curtain
@@ -2938,7 +2937,7 @@
     .ax-loader-glow.is-warm {
       width: 50vmin;
       height: 50vmin;
-      background: radial-gradient(circle, rgba(124, 164, 255, 0.12), transparent 64%);
+      background: radial-gradient(circle, rgba(96, 230, 165, 0.1), transparent 64%);
     }
 
     .ax-loader-globe {
@@ -3028,15 +3027,12 @@
         return false;
       }
 
-      // Letters: K-O-R-E-A for Korea and the opening shot, the letters of
-      // ATTENTIONX for the rest of the world as it comes into view.
-      var KOREA = ['K', 'O', 'R', 'E', 'A'];
-      var WORLD = ['A', 'T', 'E', 'N', 'I', 'O', 'X'];
-      var GLYPHS = KOREA.concat(WORLD), NK = KOREA.length, NW = WORLD.length;
-      var CREAM = '#f4f1e8', BLUE = '#8fb4ff';
+      // Every land is drawn in the letters of ATTENTIONX; Korea glows green.
+      var LETTERS = ['A', 'T', 'E', 'N', 'I', 'O', 'X'], NL = LETTERS.length;
+      var CREAM = '#f4f1e8', GREEN = '#7ef0b8';
       var atlas = document.createElement('canvas'), actx = atlas.getContext('2d');
 
-      var W, H, dpr, CELL, cols, rows, n, glyph, nextFlip, thr, born, gone;
+      var W, H, dpr, CELL, cols, rows, n, glyph, nextFlip, born, gone;
       function layout() {
         W = window.innerWidth; H = window.innerHeight;
         dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -3045,24 +3041,23 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         cols = Math.ceil(W / CELL); rows = Math.ceil(H / CELL); n = cols * rows;
         glyph = new Uint8Array(n); nextFlip = new Float32Array(n);
-        thr = new Float32Array(n); born = new Float32Array(n); gone = new Float32Array(n);
+        born = new Float32Array(n); gone = new Float32Array(n);
         for (var k = 0; k < n; k++) {
-          glyph[k] = Math.floor(Math.random() * GLYPHS.length);
-          thr[k] = Math.random();
+          glyph[k] = Math.floor(Math.random() * NL);
           born[k] = 80 + Math.random() * 520;
           gone[k] = Math.random() * 620;
         }
-        // Glyph atlas: a cream row, and a blue row with its glow baked in.
+        // Glyph atlas: a cream row, and a green row with its glow baked in.
         var A = Math.ceil(CELL * dpr);
-        atlas.width = A * GLYPHS.length; atlas.height = A * 2;
+        atlas.width = A * NL; atlas.height = A * 2;
         actx.clearRect(0, 0, atlas.width, atlas.height);
         actx.textAlign = 'center'; actx.textBaseline = 'middle';
         actx.font = '600 ' + Math.round(A * 0.82) + 'px "SF Mono", ui-monospace, Menlo, Consolas, monospace';
-        [CREAM, BLUE].forEach(function (col, row) {
+        [CREAM, GREEN].forEach(function (col, row) {
           actx.fillStyle = col;
-          actx.shadowColor = row ? 'rgba(124, 164, 255, 0.95)' : 'transparent';
+          actx.shadowColor = row ? 'rgba(96, 230, 165, 0.95)' : 'transparent';
           actx.shadowBlur = row ? A * 0.35 : 0;
-          GLYPHS.forEach(function (g, i) {
+          LETTERS.forEach(function (g, i) {
             actx.fillText(g, i * A + A / 2, row * A + A / 2 + A * 0.04);
           });
         });
@@ -3232,7 +3227,6 @@
         phi0 = Math.max(-1.2, Math.min(1.2, phi0));
         lam0 = ((lam0 + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
         sp0 = Math.sin(phi0); cp0 = Math.cos(phi0);
-        var g = smooth((z - 0.12) / 0.7);
 
         ctx.clearRect(0, 0, W, H);
         // Atmosphere once the planet has an edge.
@@ -3245,13 +3239,13 @@
           ctx.beginPath(); ctx.arc(W / 2, H / 2, R * 1.22, 0, Math.PI * 2); ctx.fill();
         }
 
-        // A soft blue glow under Korea, so it still reads when it is small.
+        // A soft green glow under Korea, so it still reads when it is small.
         project(koreaV, 1, R, pt);
         if (pt[2] > 0) {
           var kr = Math.max(40, R * 0.16);
           var kg = ctx.createRadialGradient(pt[0], pt[1], 0, pt[0], pt[1], kr);
-          kg.addColorStop(0, 'rgba(124, 164, 255, ' + (0.16 + 0.18 * z) * pt[2] + ')');
-          kg.addColorStop(1, 'rgba(124, 164, 255, 0)');
+          kg.addColorStop(0, 'rgba(96, 230, 165, ' + (0.14 + 0.16 * z) * pt[2] + ')');
+          kg.addColorStop(1, 'rgba(96, 230, 165, 0)');
           ctx.fillStyle = kg;
           ctx.beginPath(); ctx.arc(pt[0], pt[1], kr, 0, Math.PI * 2); ctx.fill();
         }
@@ -3289,9 +3283,8 @@
             var fresh = el - born[k] < 220 || (leaving && gone[k] - tOut < 160);
             if (isLand(latd, lond)) {
               var korea = inKorea(latd, lond);
-              var global = !korea && g > thr[k];
-              if (now > nextFlip[k] || fresh || (global !== glyph[k] >= NK)) {
-                glyph[k] = global ? NK + Math.floor(Math.random() * NW) : Math.floor(Math.random() * NK);
+              if (now > nextFlip[k] || fresh) {
+                glyph[k] = Math.floor(Math.random() * NL);
                 nextFlip[k] = now + (boost > 0.05 || fresh ? 40 + Math.random() * 60 : 500 + Math.random() * 2200);
               }
               var a = shade * (korea ? 1 : 0.72) + boost * 0.45;
@@ -3299,7 +3292,7 @@
               ctx.drawImage(atlas, glyph[k] * A, korea ? A : 0, A, A, i * CELL, j * CELL, CELL, CELL);
             } else {
               ctx.globalAlpha = Math.min(1, 0.07 * shade + boost * 0.35);
-              ctx.fillStyle = boost > 0.2 ? BLUE : CREAM;
+              ctx.fillStyle = boost > 0.2 ? GREEN : CREAM;
               var d = boost > 0.2 ? 3 : 2;
               ctx.fillRect(i * CELL + (CELL - d) / 2, j * CELL + (CELL - d) / 2, d, d);
             }
@@ -3311,7 +3304,7 @@
         var arcT = (el - 2500) / 1000;
         if (arcT > 0 && !(leaving && tOut > 300)) {
           ctx.lineWidth = 1.4;
-          ctx.strokeStyle = BLUE;
+          ctx.strokeStyle = GREEN;
           arcs.forEach(function (arc, ai) {
             var f = smooth(arcT - ai * 0.12);
             if (f <= 0) return;
@@ -3337,7 +3330,7 @@
             var pulse = (el / 1000) % 1.4 / 1.4;
             ctx.globalAlpha = 0.8 * (1 - pulse);
             ctx.beginPath(); ctx.arc(pt[0], pt[1], 3 + pulse * 18, 0, Math.PI * 2); ctx.stroke();
-            ctx.globalAlpha = 1; ctx.fillStyle = BLUE; ctx.fillRect(pt[0] - 3, pt[1] - 3, 6, 6);
+            ctx.globalAlpha = 1; ctx.fillStyle = GREEN; ctx.fillRect(pt[0] - 3, pt[1] - 3, 6, 6);
           }
         }
         ctx.globalAlpha = 1;

@@ -1838,7 +1838,8 @@
       position: absolute;
       inset: 0;
       overflow: clip;
-      clip-path: inset(0 0 calc(var(--s) / 2 + 39px));
+      /* Top: the line starts level with the top of the row below the gap. */
+      clip-path: inset(var(--line-top, 0px) 0 calc(var(--s) / 2 + 39px));
     }
 
     .star-line-row,
@@ -3975,6 +3976,7 @@
         var end = d.top + d.height / 2;
         track.style.setProperty('--x', (d.left + d.width / 2 - b.left) + 'px');
         track.style.top = (start - size / 2 - b.top) + 'px';
+        track.style.setProperty('--line-top', (row2.top - (start - size / 2)) + 'px');
         track.style.height = (end - start + size) + 'px';
         update();
       }

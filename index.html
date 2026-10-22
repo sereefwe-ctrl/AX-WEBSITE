@@ -2158,8 +2158,8 @@
     .news-item:hover .news-text { color: rgba(244, 241, 232, 0.9); }
     .news-item:hover .news-go { color: rgba(244, 241, 232, 0.95); transform: translateX(0.35em); }
     /* Event stamps right of the landing square, mirroring the news: as
-       tall as the feed (from its label to its last rule, --h set by
-       script) and pushed to the right edge. Two collages pinned side by
+       large as the column allows (up to 1.35x the feed's height, --h set
+       by script) and pushed to the right edge. Two collages pinned side by
        side at opposite tilts, the second set lower and tucked under the
        first; hovering one straightens it and brings it to the front. */
     .dock-stamp {
@@ -3921,7 +3921,12 @@
       if (!stamp || !head || !list) return;
       function fit() {
         if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.removeProperty('--h'); return; }
-        stamp.style.setProperty('--h', (list.getBoundingClientRect().bottom - head.getBoundingClientRect().top) + 'px');
+        // Up to 1.35x the feed's height, as large as the column allows
+        // (the pinned pair is about 1.17x as wide as it is tall).
+        var feed = list.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
+        var dock = document.querySelector('.star-dock-square').getBoundingClientRect();
+        var room = stamp.parentNode.getBoundingClientRect().right - dock.right - 48;
+        stamp.style.setProperty('--h', Math.min(feed * 1.35, room / 1.17) + 'px');
       }
       window.addEventListener('resize', fit);
       window.addEventListener('load', fit);

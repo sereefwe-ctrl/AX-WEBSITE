@@ -11,7 +11,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <script>
-    // Loader gate: show the wordmark loader unless the visitor
+    // Loader gate: show the playable wordmark loader unless the visitor
     // prefers reduced motion. window.axReady resolves when the loader
     // starts opening, so intro animations can wait for it. A safety
     // timer drops the loader if its script never runs.
@@ -30,7 +30,7 @@
         var l = document.querySelector('.ax-loader');
         if (l) l.remove();
         if (window.__axOpen) window.__axOpen();
-      }, 12000);
+      }, 14000);
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2870,13 +2870,13 @@
     }
 
     /* ---------- Loader ----------
-       The AttentionX wordmark on a dark curtain. Loading fills the word
-       with light from left to right. The word tilts toward the pointer,
-       a soft two-tone glow follows it, the pointer works as a lamp that
-       lets you peek at the unlit letters, and a sheen slides across the
-       glyphs. A click pulses the word. When loading is done the word
-       glides into the faded wordmark at the foot of the hero while the
-       curtain wipes away from the top. */
+       A playable wordmark. The letters of "Attention" drop in one by one
+       with real load progress, bouncing as they land; the X starts as
+       loose pixel squares that drift after the pointer and snap into the
+       logo's pixel X at the end. Letters are springs: sweep through them,
+       drag and fling one, or click for a shockwave. When it is done the
+       word flashes into the real logo, which glides into the faded
+       wordmark at the foot of the hero while the curtain wipes away. */
     .ax-loader {
       display: none;
       position: fixed;
@@ -2928,70 +2928,87 @@
     }
 
     .ax-loader-glow.is-warm {
-      background: radial-gradient(circle, rgba(232, 162, 124, 0.2), transparent 62%);
+      background: radial-gradient(circle, rgba(232, 162, 124, 0.18), transparent 62%);
     }
 
     .ax-loader-glow.is-cool {
       width: 80vmax;
       height: 80vmax;
       margin: -40vmax 0 0 -40vmax;
-      background: radial-gradient(circle, rgba(159, 180, 230, 0.16), transparent 62%);
+      background: radial-gradient(circle, rgba(159, 180, 230, 0.15), transparent 62%);
     }
 
-    .ax-loader-stage {
+    /* The word: real letters in the flow, moved only by transforms. */
+    .ax-l-word {
       position: absolute;
       left: 50%;
       top: 47%;
-      width: min(84vw, 1180px);
+      display: flex;
+      align-items: baseline;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: min(14.5vw, 232px);
+      line-height: 1;
+      letter-spacing: -0.012em;
+      color: #f4f1e8;
+      white-space: nowrap;
       transform: translate(-50%, -50%);
-      perspective: 1100px;
+    }
+
+    .ax-l-letter {
+      display: inline-block;
+      cursor: grab;
+      visibility: hidden;
+      transform-origin: 50% 90%;
+      will-change: transform;
+      text-shadow: 0 0 0.4em rgba(244, 241, 232, 0);
+      transition: text-shadow 0.35s ease, opacity 0.25s ease;
+    }
+
+    .ax-l-letter.is-in {
+      visibility: visible;
+    }
+
+    .ax-l-letter.is-held {
+      cursor: grabbing;
+      text-shadow: 0 0 0.35em rgba(244, 241, 232, 0.35);
+    }
+
+    /* Slot for the pixel X: logo proportions, cap height tall. */
+    .ax-l-xslot {
+      display: inline-block;
+      width: 0.72em;
+      height: 0.715em;
+      margin-left: 0.09em;
+    }
+
+    .ax-l-px {
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: #f4f1e8;
+      will-change: transform;
       pointer-events: none;
     }
 
-    .ax-loader-word {
-      position: relative;
-      transform-origin: 0 0;
-      will-change: transform;
+    /* Finale: a flash, then the real logo takes over for the glide. */
+    .ax-l-word.is-flash .ax-l-letter {
+      text-shadow: 0 0 0.5em rgba(244, 241, 232, 0.7), 0 0 1.4em rgba(232, 162, 124, 0.35);
     }
 
-    .ax-loader-tilt {
-      position: relative;
-      transform-style: preserve-3d;
-      will-change: transform;
-    }
-
-    .ax-loader-word img {
-      display: block;
-      width: 100%;
+    .ax-l-logo {
+      position: absolute;
+      left: 0;
+      top: 0;
       height: auto;
+      opacity: 0;
+      transform-origin: 0 0;
+      pointer-events: none;
       -webkit-user-drag: none;
     }
 
-    .ax-w-base {
-      opacity: 0.07;
-    }
-
-    /* Lit copy of the word, shown through the progress wipe and the lamp. */
-    .ax-w-fill {
-      position: absolute;
-      inset: 0;
-      filter: drop-shadow(0 0 28px rgba(244, 241, 232, 0.18));
-    }
-
-    /* A band of light cut to the letter shapes. */
-    .ax-w-sheen {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(100deg, transparent 38%, rgba(255, 255, 255, 0.95) 50%, transparent 62%) no-repeat;
-      background-size: 260% 100%;
-      background-position: var(--sheen, 120%) 0;
-      -webkit-mask: url("images/attentionx-logo.png") center / 100% 100% no-repeat;
-      mask: url("images/attentionx-logo.png") center / 100% 100% no-repeat;
-      opacity: 0.32;
-    }
-
     .ax-loader-tag,
-    .ax-loader-count {
+    .ax-loader-count,
+    .ax-loader-hint {
       position: absolute;
       bottom: max(26px, 4.5vh);
       font-family: 'Newsreader', 'Times New Roman', serif;
@@ -2999,6 +3016,7 @@
       letter-spacing: -0.005em;
       color: rgba(244, 241, 232, 0.5);
       transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
     }
 
     .ax-loader-tag {
@@ -3012,10 +3030,28 @@
       color: rgba(244, 241, 232, 0.8);
     }
 
-    .ax-loader.is-leaving .ax-loader-tag,
-    .ax-loader.is-leaving .ax-loader-count {
+    .ax-loader-hint {
+      left: 50%;
+      font-style: italic;
+      color: rgba(244, 241, 232, 0.38);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .ax-loader.is-played .ax-loader-hint {
       opacity: 0;
-      transform: translateY(8px);
+    }
+
+    .ax-loader.is-leaving .ax-loader-tag,
+    .ax-loader.is-leaving .ax-loader-count,
+    .ax-loader.is-leaving .ax-loader-hint {
+      opacity: 0;
+    }
+
+    @media (max-width: 700px) {
+      .ax-loader-hint {
+        bottom: calc(max(26px, 4.5vh) + 34px);
+      }
     }
 
   </style>
@@ -3026,21 +3062,15 @@
       <span class="ax-loader-glow is-cool"></span>
       <span class="ax-loader-glow is-warm"></span>
     </div>
-    <div class="ax-loader-stage">
-      <div class="ax-loader-word">
-        <div class="ax-loader-tilt">
-          <img class="ax-w-base" src="images/attentionx-logo.png" alt="" />
-          <img class="ax-w-fill" src="images/attentionx-logo.png" alt="" />
-          <span class="ax-w-sheen"></span>
-        </div>
-      </div>
-    </div>
+    <div class="ax-l-word"><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">A</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">e</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">n</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">i</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">o</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">n</span><span class="ax-l-xslot"></span></div>
+    <img class="ax-l-logo" src="images/attentionx-logo.png" alt="" />
     <p class="ax-loader-tag">Korea’s AI ecosystem</p>
+    <p class="ax-loader-hint">Toss the letters</p>
     <p class="ax-loader-count">(000)</p>
   </div>
   <script>
-    // Loader: real progress lights the wordmark; pointer tilt, glow, lamp
-    // and sheen make it playable; then the word glides into the hero.
+    // Loader: a word built by loading progress that you can play with,
+    // then handed to the hero. All motion is simple spring physics.
     (function () {
       var root = document.documentElement;
       var loader = document.querySelector('.ax-loader');
@@ -3048,32 +3078,111 @@
       var curtain = loader.querySelector('.ax-loader-curtain');
       var warm = loader.querySelector('.is-warm');
       var cool = loader.querySelector('.is-cool');
-      var word = loader.querySelector('.ax-loader-word');
-      var tilt = loader.querySelector('.ax-loader-tilt');
-      var fill = loader.querySelector('.ax-w-fill');
-      var sheen = loader.querySelector('.ax-w-sheen');
+      var wordEl = loader.querySelector('.ax-l-word');
+      var slot = loader.querySelector('.ax-l-xslot');
+      var logo = loader.querySelector('.ax-l-logo');
       var count = loader.querySelector('.ax-loader-count');
+      var hint = loader.querySelector('.ax-loader-hint');
+      var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      if (coarse) hint.textContent = 'Swipe the letters';
 
-      var MIN_MS = 2200, MAX_MS = 7000, LEAVE_MS = 1300;
+      var MIN_MS = 2600, MAX_MS = 7500, LEAVE_MS = 1300;
       var start = performance.now(), last = start;
       var W = window.innerWidth, H = window.innerHeight;
       window.addEventListener('resize', function () { W = window.innerWidth; H = window.innerHeight; });
 
-      // Pointer, eased. With no pointer for a while a slow drift takes over,
-      // so the word still breathes on phones and while the mouse rests.
-      var px = W / 2, py = H / 2, pointerAt = -1e4;
-      var gx = W / 2, gy = H / 2, cx2 = W / 2, cy2 = H / 2, lx = W / 2, ly = H / 2;
-      var rx = 0, ry = 0, pulse = 0;
-      function point(e) {
-        px = e.clientX;
-        py = e.clientY;
-        pointerAt = performance.now();
-      }
-      loader.addEventListener('pointermove', point);
-      loader.addEventListener('pointerdown', function (e) {
-        point(e);
-        pulse = 1;
+      // The logo's pixel X, sampled on a 9 x 9 grid.
+      var XMAP = ['001110111', '000110010', '000110100', '000111000', '000010000', '000111000', '001011000', '010011000', '111011100'];
+
+      // Bodies. Letters keep their place in the flow and move by an offset
+      // (x, y) from it; pixels live in screen space.
+      var letters = [].map.call(loader.querySelectorAll('.ax-l-letter'), function (el, i) {
+        return { el: el, i: i, x: 0, y: 0, vx: 0, vy: 0, a: 0, sq: 0, state: 'wait', cx: 0, cy: 0 };
       });
+      var pixels = [];
+      XMAP.forEach(function (row, r) {
+        for (var c = 0; c < row.length; c++) {
+          if (row[c] !== '1') continue;
+          var el = document.createElement('span');
+          el.className = 'ax-l-px';
+          loader.insertBefore(el, logo);
+          pixels.push({ el: el, r: r, c: c, x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0,
+            bx: Math.random(), by: Math.random(), ph: Math.random() * 6.28, spin: Math.random() * 360, home: false, hx: 0, hy: 0 });
+        }
+      });
+
+      // Layout: letter centres and the X cells, from the untransformed flow.
+      var cell = 10;
+      function measure() {
+        var wr = wordEl.getBoundingClientRect();
+        letters.forEach(function (b) {
+          b.cx = wr.left + b.el.offsetLeft + b.el.offsetWidth / 2;
+          b.cy = wr.top + b.el.offsetTop + b.el.offsetHeight / 2;
+        });
+        var sx = wr.left + slot.offsetLeft, sy = wr.top + slot.offsetTop;
+        cell = slot.offsetWidth / 9;
+        var ch = slot.offsetHeight / 9;
+        pixels.forEach(function (p) {
+          p.hx = sx + (p.c + 0.5) * cell;
+          p.hy = sy + (p.r + 0.5) * ch;
+          p.size = Math.ceil(Math.max(cell, ch)) + 0.5;
+        });
+      }
+      measure();
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+      window.addEventListener('resize', measure);
+
+      // Pointer: position, smoothed velocity, grabs and shockwaves.
+      var px = -1e4, py = -1e4, pvx = 0, pvy = 0, pt = 0, lastMove = -1e4, held = null, hox = 0, hoy = 0, played = false;
+      function play() {
+        if (played) return;
+        played = true;
+        loader.classList.add('is-played');
+      }
+      loader.addEventListener('pointermove', function (e) {
+        var now = performance.now(), dt = Math.max(8, now - pt) / 1000;
+        if (pt) {
+          pvx += ((e.clientX - px) / dt - pvx) * 0.5;
+          pvy += ((e.clientY - py) / dt - pvy) * 0.5;
+        }
+        px = e.clientX; py = e.clientY; pt = now; lastMove = now;
+        if (Math.abs(pvx) + Math.abs(pvy) > 900) play();
+      });
+      loader.addEventListener('pointerdown', function (e) {
+        px = e.clientX; py = e.clientY; pt = performance.now(); lastMove = pt;
+        play();
+        var hit = e.target.closest && e.target.closest('.ax-l-letter');
+        var b = hit && letters.filter(function (l) { return l.el === hit; })[0];
+        if (b && b.state === 'live') {
+          held = b;
+          hox = px - (b.cx + b.x);
+          hoy = py - (b.cy + b.y);
+          b.el.classList.add('is-held');
+          if (loader.setPointerCapture) try { loader.setPointerCapture(e.pointerId); } catch (err) {}
+          return;
+        }
+        shock(px, py);
+      });
+      function release() {
+        if (!held) return;
+        held.vx = pvx * 0.9;
+        held.vy = pvy * 0.9;
+        held.el.classList.remove('is-held');
+        held = null;
+      }
+      loader.addEventListener('pointerup', release);
+      loader.addEventListener('pointercancel', release);
+
+      function shock(x, y) {
+        letters.concat(pixels).forEach(function (b) {
+          if (b.state && b.state !== 'live') return;
+          var bx = b.cx !== undefined ? b.cx + b.x : b.x, by = b.cy !== undefined ? b.cy + b.y : b.y;
+          var dx = bx - x, dy = by - y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+          var f = Math.max(0, 1 - d / 700) * 2600;
+          b.vx += dx / d * f;
+          b.vy += dy / d * f - f * 0.25;
+        });
+      }
 
       // Real progress: images in the document, web fonts, then window load.
       var fontsDone = false, loaded = false;
@@ -3087,105 +3196,195 @@
         return (done + (fontsDone ? 1 : 0)) / (imgs.length + 2);
       }
 
-      var shown = 0, leaving = false, leaveAt = 0;
+      var shown = 0, assembled = 0, phase = 'build', phaseAt = 0, gx = W / 2, gy = H / 2, cgx = W / 2, cgy = H / 2;
       function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
       function pad(n) { return n < 10 ? '00' + n : n < 100 ? '0' + n : '' + n; }
 
       function frame(now) {
         // The safety timer in <head> may have removed the loader already.
         if (!loader.isConnected) return;
-        var el = now - start, dt = Math.min(now - last, 64);
+        var el = now - start, dt = Math.min(now - last, 40) / 1000;
         last = now;
-        var k = function (ms) { return 1 - Math.exp(-dt / ms); };
 
         var goal = el > MAX_MS ? 1 : Math.min(target(), el / MIN_MS);
-        shown += (goal - shown) * k(160);
+        shown += (goal - shown) * (1 - Math.exp(-dt / 0.16));
         if (goal === 1 && shown > 0.996) shown = 1;
         count.textContent = '(' + pad(Math.round(shown * 100)) + ')';
 
-        // Where the "lamp" is: the pointer, or a lazy figure-eight drift.
-        var idle = Math.max(0, Math.min(1, (now - pointerAt - 1400) / 1200));
+        // Letters arrive at even steps of progress; the X gathers last.
+        letters.forEach(function (b) {
+          if (b.state === 'wait' && shown >= (b.i + 1) / 11) {
+            b.state = 'drop';
+            b.y = -(b.cy + 140 + Math.random() * 120);
+            b.vy = 0;
+            b.el.classList.add('is-in');
+          }
+        });
+        if (!assembled && shown >= 10 / 11) assembled = now;
+
+        // Glow and idle drift: with the pointer resting, a lazy focus wanders.
+        var idle = Math.max(0, Math.min(1, (now - lastMove - 1500) / 1200));
         var t = now / 1000;
-        var tx = px + (W / 2 + Math.sin(t * 0.55) * W * 0.3 - px) * idle;
-        var ty = py + (H * 0.47 + Math.sin(t * 1.1) * H * 0.16 - py) * idle;
-        lx += (tx - lx) * k(90);
-        ly += (ty - ly) * k(90);
-        gx += (tx - gx) * k(260);
-        gy += (ty - gy) * k(260);
-        cx2 += (tx - cx2) * k(700);
-        cy2 += (ty - cy2) * k(700);
+        var fx = px < -1e3 ? W / 2 : px, fy = py < -1e3 ? H / 2 : py;
+        fx += (W / 2 + Math.sin(t * 0.5) * W * 0.3 - fx) * idle;
+        fy += (H * 0.47 + Math.sin(t * 1.0) * H * 0.18 - fy) * idle;
+        gx += (fx - gx) * (1 - Math.exp(-dt / 0.26));
+        gy += (fy - gy) * (1 - Math.exp(-dt / 0.26));
+        cgx += (fx - cgx) * (1 - Math.exp(-dt / 0.7));
+        cgy += (fy - cgy) * (1 - Math.exp(-dt / 0.7));
         warm.style.transform = 'translate(' + gx.toFixed(1) + 'px,' + gy.toFixed(1) + 'px)';
-        cool.style.transform = 'translate(' + cx2.toFixed(1) + 'px,' + cy2.toFixed(1) + 'px)';
+        cool.style.transform = 'translate(' + cgx.toFixed(1) + 'px,' + cgy.toFixed(1) + 'px)';
+        pvx *= Math.exp(-dt * 6);
+        pvy *= Math.exp(-dt * 6);
 
-        // Tilt toward the lamp; a click adds a soft pulse.
-        var nx = (lx / W) * 2 - 1, ny = (ly / H) * 2 - 1;
-        var calm = leaving ? Math.max(0, 1 - (now - leaveAt) / 300) : 1;
-        rx += (ny * -9 * calm - rx) * k(140);
-        ry += (nx * 13 * calm - ry) * k(140);
-        pulse += (0 - pulse) * k(260);
-        tilt.style.transform = 'rotateX(' + rx.toFixed(2) + 'deg) rotateY(' + ry.toFixed(2) + 'deg) scale(' + (1 + pulse * 0.035).toFixed(4) + ')';
+        var calm = phase === 'build' ? 1 : 0;
+        var R = Math.max(110, Math.min(W, 1400) * 0.11);
+        // Letters: springs home, pushed by the pointer, dragged when held.
+        letters.forEach(function (b) {
+          if (b.state === 'wait') return;
+          if (b === held) {
+            var nx = px - hox - b.cx, ny = py - hoy - b.cy;
+            b.a += ((nx - b.x) * 0.6 - b.a) * Math.min(1, dt * 12);
+            b.x = nx; b.y = ny;
+          } else if (b.state === 'drop') {
+            b.vy += 5200 * dt;
+            b.y += b.vy * dt;
+            if (b.y >= 0) {
+              b.y = 0;
+              if (b.vy > 420) { b.sq = Math.min(0.32, b.vy / 9000); b.vy = -b.vy * 0.36; }
+              else { b.vy = 0; b.state = 'live'; }
+            }
+          } else {
+            var K = calm ? 170 : 520, C = calm ? 11 : 30;
+            var ax = -K * b.x - C * b.vx, ay = -K * b.y - C * b.vy;
+            if (calm && px > -1e3) {
+              var dx = b.cx + b.x - px, dy = b.cy + b.y - py, d = Math.sqrt(dx * dx + dy * dy) || 1;
+              if (d < R) {
+                var f = (1 - d / R);
+                var speed = Math.min(2400, Math.sqrt(pvx * pvx + pvy * pvy));
+                ax += dx / d * f * f * (4000 + speed * 9) + pvx * f * 7;
+                ay += dy / d * f * f * (4000 + speed * 9) + pvy * f * 7;
+              }
+            }
+            b.vx += ax * dt; b.vy += ay * dt;
+            b.x += b.vx * dt; b.y += b.vy * dt;
+            var ta = Math.max(-32, Math.min(32, b.vx * 0.03 + b.x * 0.12));
+            b.a += (ta - b.a) * Math.min(1, dt * 10);
+          }
+          b.sq *= Math.exp(-dt * 9);
+          var sxs = 1 + b.sq * 0.7, sys = 1 - b.sq;
+          b.el.style.transform = 'translate(' + b.x.toFixed(1) + 'px,' + b.y.toFixed(1) + 'px) rotate(' + b.a.toFixed(2) + 'deg) scale(' + sxs.toFixed(3) + ',' + sys.toFixed(3) + ')';
+        });
 
-        // Light: the progress wipe plus the lamp, in the word's own space.
-        var r = tilt.getBoundingClientRect();
-        var mx = ((lx - r.left) / r.width) * 100, my = ((ly - r.top) / r.height) * 100;
-        var edge = shown * 112 - 6;
-        var lamp = 0.45 + pulse * 0.5;
-        var m = 'linear-gradient(90deg, #000 ' + (edge - 6).toFixed(2) + '%, transparent ' + (edge + 6).toFixed(2) + '%), ' +
-                'radial-gradient(' + (r.height * 1.1).toFixed(0) + 'px circle at ' + mx.toFixed(1) + '% ' + my.toFixed(1) + '%, rgba(0,0,0,' + lamp.toFixed(2) + '), transparent 70%)';
-        fill.style.webkitMaskImage = m;
-        fill.style.maskImage = m;
-        sheen.style.setProperty('--sheen', (110 - (lx / W) * 120).toFixed(1) + '%');
+        // Pixels: drift and follow the pointer like fireflies, then gather.
+        pixels.forEach(function (p, k) {
+          if (!p.home && assembled && now - assembled > k * 28) p.home = true;
+          var ax, ay;
+          if (p.home) {
+            var K2 = calm ? 210 : 520, C2 = calm ? 17 : 32;
+            ax = -K2 * (p.x - p.hx) - C2 * p.vx;
+            ay = -K2 * (p.y - p.hy) - C2 * p.vy;
+            p.spin += (Math.round(p.spin / 90) * 90 - p.spin) * Math.min(1, dt * 8);
+          } else {
+            var tx = (0.12 + p.bx * 0.76) * W + Math.sin(t * 0.6 + p.ph) * 60;
+            var ty = (0.12 + p.by * 0.76) * H + Math.cos(t * 0.8 + p.ph) * 50;
+            ax = -(p.x - tx) * 2.2 - p.vx * 1.6;
+            ay = -(p.y - ty) * 2.2 - p.vy * 1.6;
+            if (px > -1e3) {
+              var ddx = px - p.x, ddy = py - p.y, dd = Math.sqrt(ddx * ddx + ddy * ddy) || 1;
+              var pull = Math.exp(-dd / 320) * 900;
+              ax += ddx / dd * pull - ddy / dd * pull * 0.6;
+              ay += ddy / dd * pull + ddx / dd * pull * 0.6;
+              if (dd < 46) { ax -= ddx / dd * 2400; ay -= ddy / dd * 2400; }
+            }
+            p.spin += dt * 60;
+          }
+          if (calm && p.home && px > -1e3) {
+            var qx = p.x - px, qy = p.y - py, qd = Math.sqrt(qx * qx + qy * qy) || 1;
+            if (qd < R) { var qf = (1 - qd / R); ax += qx / qd * qf * qf * 5200; ay += qy / qd * qf * qf * 5200; }
+          }
+          p.vx += ax * dt; p.vy += ay * dt;
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          var sz = p.home ? p.size : cell * 0.55;
+          p.el.style.width = p.el.style.height = sz.toFixed(1) + 'px';
+          p.el.style.transform = 'translate(' + (p.x - sz / 2).toFixed(1) + 'px,' + (p.y - sz / 2).toFixed(1) + 'px) rotate(' + p.spin.toFixed(1) + 'deg)';
+        });
 
-        if (!leaving && shown === 1 && el > MIN_MS) leave(now);
-        if (leaving) {
-          // Curtain wipes away from the top, with a soft edge.
-          var p = ease(Math.min(1, (now - leaveAt - 150) / (LEAVE_MS - 150)));
-          if (p > 0) {
-            var y = p * (H + 160);
+        // When everything has landed: flash, swap to the logo, glide.
+        var settled = letters.every(function (b) { return b.state === 'live'; }) && assembled && now - assembled > pixels.length * 28 + 700;
+        // Someone playing keeps the toy up (until a hard cap); it leaves
+        // shortly after they stop.
+        var playing = held || (played && now - lastMove < 650 && el < MAX_MS + 2500);
+        if (phase === 'build' && shown === 1 && el > MIN_MS && settled && !playing) { phase = 'settle'; phaseAt = now; }
+        if (phase === 'settle' && now - phaseAt > 260) { phase = 'flash'; phaseAt = now; flash(); }
+        if (phase === 'flash' && now - phaseAt > 300) { phase = 'leave'; phaseAt = now; leave(); }
+        if (phase === 'leave') {
+          var lp = ease(Math.min(1, (now - phaseAt - 150) / (LEAVE_MS - 150)));
+          if (lp > 0) {
+            var y = lp * (H + 160);
             var cm = 'linear-gradient(to bottom, transparent ' + (y - 160).toFixed(0) + 'px, #000 ' + y.toFixed(0) + 'px)';
             curtain.style.webkitMaskImage = cm;
             curtain.style.maskImage = cm;
           }
         }
-        if (!leaving || now - leaveAt < LEAVE_MS + 120) requestAnimationFrame(frame);
+        if (phase !== 'leave' || now - phaseAt < LEAVE_MS + 160) requestAnimationFrame(frame);
         else finish();
       }
 
-      function leave(now) {
-        leaving = true;
-        leaveAt = now;
+      // Lay the logo over the word: same width as the word, its baseline on
+      // the word's baseline, so the swap hides inside the flash.
+      var LOGO_W = 1620, LOGO_H = 244, INK_BASE = 239;
+      function placeLogo() {
+        var wr = wordEl.getBoundingClientRect();
+        var left = wr.left + letters[0].el.offsetLeft;
+        var w = wr.left + slot.offsetLeft + slot.offsetWidth - left;
+        var h = w * LOGO_H / LOGO_W;
+        var top = wr.top + slot.offsetTop + slot.offsetHeight - INK_BASE * (h / LOGO_H);
+        logo.style.width = w.toFixed(1) + 'px';
+        logo.style.transform = 'translate(' + left.toFixed(1) + 'px,' + top.toFixed(1) + 'px)';
+        return { left: left, top: top, width: w, height: h };
+      }
+
+      var logoBox = null;
+      function flash() {
+        wordEl.classList.add('is-flash');
+        logoBox = placeLogo();
+        if (logo.animate) logo.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 120, easing: 'ease-out', fill: 'forwards' });
+        else logo.style.opacity = 1;
+        var parts = letters.map(function (b) { return b.el; }).concat(pixels.map(function (p) { return p.el; }));
+        parts.forEach(function (n) {
+          if (n.animate) n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, delay: 200, fill: 'forwards' });
+          else n.style.opacity = 0;
+        });
+      }
+
+      function leave() {
         loader.classList.add('is-leaving');
         root.classList.add('ax-grain-top');
         root.classList.remove('ax-loading');
         if (window.__axOpen) window.__axOpen();
-        if (!word.animate) return;
-        // A last sweep of light across the letters.
-        sheen.animate([{ backgroundPosition: '130% 0', opacity: 0.85 }, { backgroundPosition: '-30% 0', opacity: 0.32 }],
-          { duration: 700, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' });
+        if (!logo.animate || !logoBox) return;
         // Glide into the faded wordmark at the foot of the hero, landing on
-        // its image (inside its padding) and fading out as it arrives, so
-        // the hero's own wordmark takes over.
+        // its image (inside its padding) and fading out as it arrives.
         var hero = document.querySelector('.hero-fade');
-        var from = word.getBoundingClientRect();
         var to = null;
         if (hero) {
           var hr = hero.getBoundingClientRect(), cs = getComputedStyle(hero);
           var pl = parseFloat(cs.paddingLeft), pr = parseFloat(cs.paddingRight);
-          var pt = parseFloat(cs.paddingTop), pb = parseFloat(cs.paddingBottom);
-          to = { left: hr.left + pl, top: hr.top + pt, width: hr.width - pl - pr, height: hr.height - pt - pb };
+          var pt2 = parseFloat(cs.paddingTop), pb = parseFloat(cs.paddingBottom);
+          to = { left: hr.left + pl, top: hr.top + pt2, width: hr.width - pl - pr, height: hr.height - pt2 - pb };
           if (to.top > H || to.top + to.height < 0) to = null;
         }
+        var fromT = getComputedStyle(logo).transform;
         if (to) {
-          var sc = to.width / from.width;
-          word.animate([
-            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-            { transform: 'translate(0, -1.5%) scale(1.02)', opacity: 1, offset: 0.16 },
-            { opacity: 0.3, offset: 0.82 },
-            { transform: 'translate(' + (to.left - from.left).toFixed(1) + 'px, ' + (to.top - from.top).toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')', opacity: 0 }
-          ], { duration: LEAVE_MS, delay: 120, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+          var s2 = to.width / logoBox.width;
+          logo.animate([
+            { transform: fromT, opacity: 1 },
+            { opacity: 0.32, offset: 0.82 },
+            { transform: 'translate(' + to.left.toFixed(1) + 'px,' + to.top.toFixed(1) + 'px) scale(' + s2.toFixed(4) + ')', opacity: 0 }
+          ], { duration: LEAVE_MS, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
         } else {
-          word.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.08)', opacity: 0 }],
-            { duration: LEAVE_MS, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+          logo.animate([{ opacity: 1 }, { opacity: 0 }], { duration: LEAVE_MS * 0.6, fill: 'forwards' });
         }
       }
 

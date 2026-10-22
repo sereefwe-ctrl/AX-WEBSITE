@@ -2937,7 +2937,7 @@
     .ax-loader-glow.is-warm {
       width: 50vmin;
       height: 50vmin;
-      background: radial-gradient(circle, rgba(160, 124, 255, 0.12), transparent 64%);
+      background: radial-gradient(circle, rgba(185, 165, 230, 0.1), transparent 64%);
     }
 
     .ax-loader-globe {
@@ -3029,7 +3029,7 @@
 
       // Every land is drawn in the letters of ATTENTIONX; Korea glows purple.
       var LETTERS = ['A', 'T', 'E', 'N', 'I', 'O', 'X'], NL = LETTERS.length;
-      var CREAM = '#f4f1e8', PURPLE = '#b79cff';
+      var CREAM = '#f4f1e8', PURPLE = '#c3aef0';
       var atlas = document.createElement('canvas'), actx = atlas.getContext('2d');
 
       var W, H, dpr, CELL, cols, rows, n, glyph, nextFlip, born, gone;
@@ -3055,8 +3055,8 @@
         actx.font = '600 ' + Math.round(A * 0.82) + 'px "SF Mono", ui-monospace, Menlo, Consolas, monospace';
         [CREAM, PURPLE].forEach(function (col, row) {
           actx.fillStyle = col;
-          actx.shadowColor = row ? 'rgba(160, 124, 255, 0.95)' : 'transparent';
-          actx.shadowBlur = row ? A * 0.35 : 0;
+          actx.shadowColor = row ? 'rgba(185, 165, 230, 0.6)' : 'transparent';
+          actx.shadowBlur = row ? A * 0.28 : 0;
           LETTERS.forEach(function (g, i) {
             actx.fillText(g, i * A + A / 2, row * A + A / 2 + A * 0.04);
           });
@@ -3244,8 +3244,8 @@
         if (pt[2] > 0) {
           var kr = Math.max(40, R * 0.16);
           var kg = ctx.createRadialGradient(pt[0], pt[1], 0, pt[0], pt[1], kr);
-          kg.addColorStop(0, 'rgba(160, 124, 255, ' + (0.14 + 0.16 * z) * pt[2] + ')');
-          kg.addColorStop(1, 'rgba(160, 124, 255, 0)');
+          kg.addColorStop(0, 'rgba(185, 165, 230, ' + (0.12 + 0.14 * z) * pt[2] + ')');
+          kg.addColorStop(1, 'rgba(185, 165, 230, 0)');
           ctx.fillStyle = kg;
           ctx.beginPath(); ctx.arc(pt[0], pt[1], kr, 0, Math.PI * 2); ctx.fill();
         }

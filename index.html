@@ -1088,11 +1088,10 @@
       margin: calc(var(--h) * -0.125) 0;
     }
 
-    /* AIM: the icon carries the "+", so only the capitals sit beside it,
-       at 70% of the icon and centered on it. */
-    .case-logo--aim .case-word {
-      height: calc(var(--h) * 0.7);
-      margin-top: calc(var(--h) * 0.15);
+    /* All-caps lockup (AIM): letters at 90% of the icon height, centered. */
+    .case-lockup--caps {
+      height: calc(var(--h) * 0.9);
+      margin: calc(var(--h) * 0.05) 0;
     }
 
     /* Name set in type (Philyron, no wordmark file): capitals span 70% of
@@ -3064,9 +3063,8 @@
     <div class="row row-palette">
       <section class="tile tile-text tile-case">
         <div class="case-top">
-          <div class="case-logo case-logo--aim">
-            <img class="case-icon" src="assets/portfolio/aim-intelligence.jpg" alt="" />
-            <img class="case-word" src="assets/aim-wordmark-white.svg" alt="AIM Intelligence" />
+          <div class="case-logo">
+            <img class="case-lockup case-lockup--caps" src="assets/aim-logo-white.svg" alt="AIM Intelligence" />
           </div>
           <span class="case-label">New raise</span>
         </div>

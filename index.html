@@ -10,6 +10,28 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <script>
+    // Loader gate: show the attention-field loader unless the visitor
+    // prefers reduced motion. window.axReady resolves when the loader
+    // starts opening, so intro animations can wait for it. A safety
+    // timer drops the loader if its script never runs.
+    (function () {
+      var d = document.documentElement;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        window.axReady = Promise.resolve();
+        return;
+      }
+      d.classList.add('ax-loading', 'ax-mark-hidden');
+      window.axReady = new Promise(function (resolve) { window.__axOpen = resolve; });
+      setTimeout(function () {
+        if (!d.classList.contains('ax-loading')) return;
+        d.classList.remove('ax-loading', 'ax-mark-hidden');
+        var l = document.querySelector('.ax-loader');
+        if (l) l.remove();
+        if (window.__axOpen) window.__axOpen();
+      }, 9000);
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet" />
@@ -2845,9 +2867,333 @@
       pointer-events: none;
       opacity: 0.11;
     }
+
+    /* ---------- Loader ----------
+       An attention field: a grid of squares on the cursor trail's pixel
+       grid. Squares near the pointer (the "query") light up and swell;
+       with no pointer a slow focus drifts on its own, and a click sends
+       a ripple through the field. The AttentionX mark in the middle
+       lights one diamond per quarter of real loading progress. To leave,
+       the field opens from the centre and the mark flies into the nav. */
+    .ax-loader {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      cursor: crosshair;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: none;
+    }
+
+    html.ax-loading .ax-loader,
+    .ax-loader.is-leaving {
+      display: block;
+    }
+
+    .ax-loader.is-leaving {
+      pointer-events: none;
+    }
+
+    html.ax-loading {
+      overflow: hidden;
+    }
+
+    /* Grain sits over the loader while it is up. */
+    html.ax-loading .grain,
+    html.ax-grain-top .grain {
+      z-index: 9001;
+    }
+
+    html.ax-mark-hidden .nav-mark {
+      opacity: 0;
+    }
+
+    .ax-loader-bg {
+      position: absolute;
+      inset: 0;
+      background: #0e0e0d;
+    }
+
+    .ax-loader-field {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .ax-loader-core {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      width: max-content;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .ax-loader-mark {
+      width: 64px;
+      height: 64px;
+      overflow: visible;
+      color: #f4f1e8;
+    }
+
+    .ax-loader-mark polygon {
+      fill: currentColor;
+      fill-opacity: 0;
+      stroke: currentColor;
+      stroke-opacity: 0.38;
+      stroke-width: 1.4;
+      vector-effect: non-scaling-stroke;
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: fill-opacity 0.45s ease, stroke-opacity 0.45s ease, scale 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      scale: 0.86;
+    }
+
+    .ax-loader-mark polygon.is-lit {
+      fill-opacity: 1;
+      stroke-opacity: 0;
+      scale: 1;
+    }
+
+    .ax-loader-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.45);
+      transition: opacity 0.35s ease;
+    }
+
+    .ax-loader-count {
+      min-width: 3.4em;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.08em;
+      text-align: right;
+      color: rgba(244, 241, 232, 0.9);
+    }
+
+    .ax-loader-hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: max(28px, 5vh);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-align: center;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.28);
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .ax-loader.is-leaving .ax-loader-meta,
+    .ax-loader.is-leaving .ax-loader-hint {
+      opacity: 0;
+    }
   </style>
 </head>
 <body>
+  <div class="ax-loader" aria-hidden="true">
+    <div class="ax-loader-bg"><canvas class="ax-loader-field"></canvas></div>
+    <div class="ax-loader-core">
+      <svg class="ax-loader-mark" viewBox="0 0 100 100">
+        <polygon class="d1" points="25,0 50,25 25,50 0,25" />
+        <polygon class="d2" points="75,0 100,25 75,50 50,25" />
+        <polygon class="d3" points="25,50 50,75 25,100 0,75" />
+        <polygon class="d4" points="75,50 100,75 75,100 50,75" />
+      </svg>
+      <div class="ax-loader-meta"><span>Paying attention</span><span class="ax-loader-count">0%</span></div>
+    </div>
+    <p class="ax-loader-hint">Move to focus &middot; click to ping</p>
+  </div>
+  <script>
+    // Loader: attention field, real progress, and the hand-off to the nav.
+    (function () {
+      var root = document.documentElement;
+      var loader = document.querySelector('.ax-loader');
+      if (!loader || !root.classList.contains('ax-loading')) return;
+      var bg = loader.querySelector('.ax-loader-bg');
+      var canvas = loader.querySelector('.ax-loader-field');
+      var ctx = canvas.getContext('2d');
+      var mark = loader.querySelector('.ax-loader-mark');
+      var diamonds = [mark.querySelector('.d1'), mark.querySelector('.d2'), mark.querySelector('.d4'), mark.querySelector('.d3')];
+      var count = loader.querySelector('.ax-loader-count');
+      var hint = loader.querySelector('.ax-loader-hint');
+      var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      if (coarse) hint.textContent = 'Tap to ping';
+
+      var MIN_MS = 1900, MAX_MS = 7000;
+      var start = performance.now();
+      var W = 0, H = 0, dpr = 1, S = 22;
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth;
+        H = window.innerHeight;
+        S = W < 700 ? 18 : 22;
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      // Queries: the pointer, plus a drifting focus while the pointer rests.
+      var px = -1e4, py = -1e4, pointerAt = -1e4;
+      var ripples = [];
+      function point(e) {
+        px = e.clientX;
+        py = e.clientY;
+        pointerAt = performance.now();
+      }
+      loader.addEventListener('pointermove', point);
+      loader.addEventListener('pointerdown', function (e) {
+        point(e);
+        ripples.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+        if (ripples.length > 6) ripples.shift();
+      });
+
+      // Real progress: images in the document, web fonts, then window load.
+      var fontsDone = false, loaded = false;
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fontsDone = true; });
+      else fontsDone = true;
+      window.addEventListener('load', function () { loaded = true; });
+      function target() {
+        if (loaded) return 1;
+        var imgs = document.images, done = 0;
+        for (var i = 0; i < imgs.length; i++) if (imgs[i].complete) done++;
+        return (done + (fontsDone ? 1 : 0)) / (imgs.length + 2);
+      }
+
+      var shown = 0, lit = 0, leaving = false, leaveAt = 0, last = start, maxR = 1;
+
+      function smooth(t) { return t * t * (3 - 2 * t); }
+      function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+      function frame(now) {
+        // The safety timer in <head> may have removed the loader already.
+        if (!loader.isConnected) return;
+        var el = now - start, dt = now - last;
+        last = now;
+        // Shown progress chases the real one, never faster than the
+        // minimum duration allows, and finishes by MAX_MS regardless.
+        var goal = el > MAX_MS ? 1 : Math.min(target(), el / MIN_MS);
+        shown += (goal - shown) * (1 - Math.exp(-dt / 140));
+        if (goal === 1 && shown > 0.995) shown = 1;
+        var pct = Math.round(shown * 100);
+        count.textContent = pct + '%';
+        var want = Math.min(4, Math.floor(shown * 4 + 0.0001));
+        while (lit < want) diamonds[lit++].classList.add('is-lit');
+        if (!leaving && shown === 1 && el > MIN_MS) leave(now);
+
+        draw(now);
+        if (!leaving || now - leaveAt < 1100) requestAnimationFrame(frame);
+        else finish();
+      }
+
+      function draw(now) {
+        ctx.clearRect(0, 0, W, H);
+        var mx = W / 2, my = H / 2;
+        // Drifting focus: a slow figure-eight, faded out while the pointer moves.
+        var t = now / 1000;
+        var idle = Math.max(0, Math.min(1, (now - pointerAt - 1200) / 900));
+        var dx = mx + Math.sin(t * 0.7) * W * 0.28;
+        var dy = my + Math.sin(t * 1.4) * H * 0.22;
+        var sp = 150 * 150 * 2, sd = 230 * 230 * 2;
+        var R = leaving ? ease(Math.min(1, (now - leaveAt) / 950)) * maxR : -1;
+        var cols = Math.ceil(W / S) + 1, rows = Math.ceil(H / S) + 1;
+        var ox = (W - (cols - 1) * S) / 2, oy = (H - (rows - 1) * S) / 2;
+        ctx.fillStyle = '#f4f1e8';
+        for (var j = 0; j < rows; j++) {
+          var y = oy + j * S;
+          for (var i = 0; i < cols; i++) {
+            var x = ox + i * S;
+            var w = 0, ddx, ddy;
+            ddx = x - px; ddy = y - py;
+            w += Math.exp(-(ddx * ddx + ddy * ddy) / sp);
+            ddx = x - dx; ddy = y - dy;
+            w += 0.55 * idle * Math.exp(-(ddx * ddx + ddy * ddy) / sd);
+            for (var k = 0; k < ripples.length; k++) {
+              var rp = ripples[k], age = (now - rp.t) / 1000;
+              if (age > 1.6) continue;
+              var rd = Math.sqrt((x - rp.x) * (x - rp.x) + (y - rp.y) * (y - rp.y));
+              var band = (rd - age * 760) / 46;
+              w += Math.exp(-band * band) * (1 - age / 1.6);
+            }
+            // Keep a quiet pocket around the mark.
+            var cdx = x - mx, cdy = y - my, cd = Math.sqrt(cdx * cdx + cdy * cdy);
+            w *= smooth(Math.max(0, Math.min(1, (cd - 60) / 90)));
+            var a = 0.1;
+            if (R >= 0) {
+              // Opening: squares inside the edge are gone, the edge glows.
+              if (cd < R) continue;
+              var edge = (cd - R) / 70;
+              w += Math.exp(-edge * edge) * 0.9;
+            }
+            if (w > 1) w = 1;
+            var size = Math.round(1.6 + w * 5.4);
+            ctx.globalAlpha = a + w * 0.82;
+            ctx.fillRect(Math.round(x - size / 2), Math.round(y - size / 2), size, size);
+          }
+        }
+        ctx.globalAlpha = 1;
+        if (R >= 0) {
+          var m = 'radial-gradient(circle at ' + mx + 'px ' + my + 'px, transparent ' + R.toFixed(1) + 'px, #000 ' + (R + 80).toFixed(1) + 'px)';
+          bg.style.webkitMaskImage = m;
+          bg.style.maskImage = m;
+        }
+      }
+
+      function leave(now) {
+        leaving = true;
+        leaveAt = now;
+        maxR = Math.sqrt(W * W + H * H) / 2 + 100;
+        loader.classList.add('is-leaving');
+        root.classList.add('ax-grain-top');
+        root.classList.remove('ax-loading');
+        if (window.__axOpen) window.__axOpen();
+        // Fly the mark into the nav logo, spreading the diamonds mid-flight.
+        var navMark = document.querySelector('.nav-mark');
+        if (!navMark || !mark.animate) return;
+        var a = mark.getBoundingClientRect(), b = navMark.getBoundingClientRect();
+        var tx = (b.left + b.width / 2) - (a.left + a.width / 2);
+        var ty = (b.top + b.height / 2) - (a.top + a.height / 2);
+        var sc = b.width / a.width;
+        mark.animate([
+          { transform: 'translate(0, 0) scale(1) rotate(0deg)' },
+          { transform: 'translate(0, 0) scale(1.18) rotate(0deg)', offset: 0.18 },
+          { transform: 'translate(' + tx + 'px, ' + ty + 'px) scale(' + sc + ') rotate(90deg)' }
+        ], { duration: 1050, easing: 'cubic-bezier(0.7, 0, 0.2, 1)', fill: 'forwards' });
+        [['d1', -1, -1], ['d2', 1, -1], ['d3', -1, 1], ['d4', 1, 1]].forEach(function (d) {
+          mark.querySelector('.' + d[0]).animate([
+            { translate: '0 0' },
+            { translate: (d[1] * 16) + 'px ' + (d[2] * 16) + 'px', offset: 0.45 },
+            { translate: '0 0' }
+          ], { duration: 1050, easing: 'ease-in-out' });
+        });
+      }
+
+      function finish() {
+        root.classList.remove('ax-mark-hidden', 'ax-grain-top');
+        window.removeEventListener('resize', resize);
+        loader.remove();
+      }
+
+      requestAnimationFrame(frame);
+    })();
+  </script>
   <div class="ambient" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
 
   <header class="nav">
@@ -3686,9 +4032,12 @@
 
         if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         el.classList.add('is-rising');
-        // Two frames so the start pose is painted before rising.
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () { el.classList.add('is-up'); });
+        // Two frames so the start pose is painted before rising, and not
+        // before the loader has started to open.
+        (window.axReady || Promise.resolve()).then(function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { el.classList.add('is-up'); });
+          });
         });
         // Drop the clip once the last letter has landed.
         var last = el.querySelectorAll('.rise-glyph');
@@ -3711,7 +4060,9 @@
           io.unobserve(e.target);
         });
       }, { rootMargin: '0px 0px -20% 0px' });
-      marks.forEach(function (m) { io.observe(m); });
+      (window.axReady || Promise.resolve()).then(function () {
+        marks.forEach(function (m) { io.observe(m); });
+      });
     })();
 
     // Navigation: condense on scroll, sliding hover pill, letter-roll

@@ -1537,24 +1537,31 @@
       background-size: 100% 100%;
     }
 
+    /* Name, then role, then each affiliation on its own line. */
     .tq-person {
       display: flex;
       flex-direction: column;
+      align-items: flex-start;
       gap: 6px;
     }
 
     .tq-name {
+      margin-bottom: 2px;
       font-family: 'Newsreader', 'Times New Roman', serif;
-      font-size: clamp(20px, 1.6vw, 26px);
+      font-size: clamp(24px, 2vw, 32px);
       line-height: 1.1;
       color: #f4f1e8;
     }
 
-    .tq-bio {
+    .tq-role,
+    .tq-org {
       font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: 13px;
-      line-height: 1.5;
-      color: rgba(244, 241, 232, 0.6);
+      font-size: clamp(14px, 1.1vw, 16px);
+      line-height: 1.45;
+    }
+
+    .tq-role {
+      color: rgba(244, 241, 232, 0.65);
     }
 
     @media (max-width: 820px) {
@@ -1579,10 +1586,11 @@
       }
     }
 
-    /* Row 3: two equal tiles. */
+    /* Row 3: two equal tiles. Keeps the reference proportion, but grows
+       when a tile (like the testimonial) needs more room. */
     .row-2 {
       grid-template-columns: 1fr 1fr;
-      height: calc(var(--w) * 0.323);
+      min-height: calc(var(--w) * 0.323);
     }
 
     /* Six equal squares (3 x 2), sized to the largest square that fits the
@@ -2925,7 +2933,9 @@
             </blockquote>
             <figcaption class="tq-person">
               <span class="tq-name">Dan Han</span>
-              <span class="tq-bio">CEO &amp; Cofounder @ <span class="brand"><img class="brand-tile" src="assets/portfolio/aleph-lab.jpg" alt="" />Aleph Lab</span> <span class="brand"><img class="brand-tile" src="assets/brands/y-combinator.png" alt="" />YC F25</span></span>
+              <span class="tq-role">CEO &amp; Cofounder</span>
+              <span class="tq-org"><span class="brand"><img class="brand-tile" src="assets/portfolio/aleph-lab.jpg" alt="" />Aleph Lab</span></span>
+              <span class="tq-org"><span class="brand"><img class="brand-tile" src="assets/brands/y-combinator.png" alt="" />YC F25</span></span>
             </figcaption>
           </figure>
         </div>

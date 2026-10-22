@@ -1031,6 +1031,21 @@
       font-size: max(10px, 2.2cqw);
     }
 
+    /* Founder names link to their LinkedIn, underlined so they read as links. */
+    .case-person-link {
+      color: rgba(244, 241, 232, 0.7);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.3em;
+      text-decoration-color: rgba(244, 241, 232, 0.4);
+      transition: color 0.25s ease, text-decoration-color 0.25s ease;
+    }
+
+    .case-person-link:hover {
+      color: #f4f1e8;
+      text-decoration-color: currentColor;
+    }
+
     /* Centered between the header and the link. */
     .case-hero {
       position: relative;
@@ -1118,20 +1133,6 @@
       width: 60cqw;
       height: auto;
       opacity: 0.95;
-    }
-
-    .case-person {
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-      font-size: max(14px, 3cqw);
-      line-height: 1.3;
-      color: rgba(244, 241, 232, 0.55);
-    }
-
-    .case-person-name {
-      font-family: 'Newsreader', 'Times New Roman', serif;
-      font-size: 1.3em;
-      letter-spacing: -0.01em;
-      color: #f4f1e8;
     }
 
     .case-sub--long {
@@ -3048,7 +3049,7 @@
           <div class="case-logo">
             <img class="case-lockup" src="assets/dentronic-logo-dark.svg" alt="Dentronic" />
           </div>
-          <span class="case-label case-label--names">Soy&nbsp;Choi &amp;&nbsp;Ken&nbsp;Choi</span>
+          <span class="case-label case-label--names"><a class="case-person-link" href="https://www.linkedin.com/in/soy-choi/" target="_blank" rel="noopener noreferrer" data-cursor-label="linkedin">Soy&nbsp;Choi</a> &amp;&nbsp;Ken&nbsp;Choi</span>
         </div>
         <div class="case-hero">
           <h2 class="case-stat"><span class="case-from">raises</span> Seed</h2>
@@ -3074,7 +3075,7 @@
           <div class="case-logo">
             <img class="case-lockup case-lockup--caps" src="assets/aim-logo-white.svg" alt="AIM Intelligence" />
           </div>
-          <span class="case-label case-label--names">Haon&nbsp;Park &amp;&nbsp;Sangyoon&nbsp;Yu</span>
+          <span class="case-label case-label--names"><a class="case-person-link" href="https://www.linkedin.com/in/haonpark/" target="_blank" rel="noopener noreferrer" data-cursor-label="linkedin">Haon&nbsp;Park</a> &amp;&nbsp;<a class="case-person-link" href="https://www.linkedin.com/in/sangyoon-david-yu-391501225/" target="_blank" rel="noopener noreferrer" data-cursor-label="linkedin">Sangyoon&nbsp;Yu</a></span>
         </div>
         <div class="case-hero">
           <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="10" data-prefix="₩" data-suffix="B">₩10B</span></h2>
@@ -3156,7 +3157,7 @@
           <div class="case-logo">
             <img class="case-lockup case-lockup--tall" src="assets/philyron-logo-white.png" alt="Philyron" />
           </div>
-          <span class="case-label">a16z SR007</span>
+          <span class="case-label case-label--names">Heon&nbsp;Lee</span>
         </div>
         <div class="case-hero">
           <h2 class="case-mark"><img src="assets/investors/a16z-speedrun-white.png" alt="a16z speedrun" /></h2>
@@ -3167,7 +3168,6 @@
             Read more
             <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
           </a>
-          <p class="case-person"><span class="case-person-name">Heon Lee</span>, Founder &amp; CEO</p>
         </div>
       </section>
     </div>

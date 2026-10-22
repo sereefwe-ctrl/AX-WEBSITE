@@ -2197,6 +2197,22 @@
       translate: 0 calc(var(--h) * 0.09);
     }
 
+    /* The DeepMind stamp, tossed on top of the left collage's bottom
+       photo and hanging past its lower-left corner. */
+    .dock-stamp {
+      position: relative;
+    }
+
+    .dock-stamp .ds-c {
+      position: absolute;
+      z-index: 4;
+      left: calc(var(--h) * -0.18);
+      top: calc(var(--h) * 0.64);
+      width: calc(var(--h) * 0.62);
+      height: auto;
+      rotate: -9deg;
+    }
+
     .dock-stamp img:hover {
       z-index: 3;
       rotate: 0deg;
@@ -2223,6 +2239,17 @@
       .dock-stamp .ds-b {
         margin-left: -6%;
         translate: 0 8%;
+      }
+
+      .dock-stamp {
+        padding-bottom: 26%;
+      }
+
+      .dock-stamp .ds-c {
+        left: 2%;
+        top: auto;
+        bottom: 0;
+        width: 56%;
       }
     }
 
@@ -3736,6 +3763,7 @@
       <figure class="dock-stamp">
         <img class="ds-a" src="assets/stamps-events-1.webp" alt="AttentionX events as stamps: a DJ set at OpenAI, a talk on stage, and a hackathon" />
         <img class="ds-b" src="assets/stamps-events-2.webp" alt="AttentionX events as stamps: a packed room under OpenAI banners, and a guest asking a question" />
+        <img class="ds-c" src="assets/stamps-events-3.webp" alt="Stamp of the Google DeepMind AI Hackathon with Google Cloud and AttentionX, Seoul" />
       </figure>
     </div>
 

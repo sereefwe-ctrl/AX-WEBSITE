@@ -3005,7 +3005,6 @@
       transition: text-shadow 0.6s ease;
     }
 
-    .ax-loader-count,
     .ax-loader-hint {
       position: absolute;
       bottom: max(26px, 4.5vh);
@@ -3017,10 +3016,16 @@
       pointer-events: none;
     }
 
-    .ax-loader-count {
-      right: max(24px, 3.5vw);
-      font-variant-numeric: tabular-nums lining-nums;
-      color: rgba(244, 241, 232, 0.8);
+    /* Load progress in pixel digits (same squares as the logo's X), centred
+       under the word. Drawn on a canvas by the loader script. */
+    .ax-loader-pct {
+      position: absolute;
+      left: 50%;
+      top: calc(47% + min(14.5vw, 232px) * 0.64);
+      transform: translateX(-50%);
+      filter: drop-shadow(0 0 10px rgba(244, 241, 232, 0.22));
+      transition: opacity 0.4s ease;
+      pointer-events: none;
     }
 
     .ax-loader-hint {
@@ -3035,7 +3040,7 @@
       opacity: 0;
     }
 
-    .ax-loader.is-leaving .ax-loader-count,
+    .ax-loader.is-leaving .ax-loader-pct,
     .ax-loader.is-leaving .ax-loader-hint {
       opacity: 0;
     }
@@ -3052,7 +3057,7 @@
     <div class="ax-l-word"><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">A</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">e</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">n</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">i</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">o</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">n</span><span class="ax-l-xslot"></span></div>
     </div>
     <p class="ax-loader-hint">Toss the letters</p>
-    <p class="ax-loader-count">(000)</p>
+    <canvas class="ax-loader-pct"></canvas>
   </div>
   <script>
     // Loader: a word built by loading progress that you can play with,
@@ -3067,7 +3072,7 @@
       var wordEl = loader.querySelector('.ax-l-word');
       var slot = loader.querySelector('.ax-l-xslot');
       var group = loader.querySelector('.ax-l-group');
-      var count = loader.querySelector('.ax-loader-count');
+      var pct = loader.querySelector('.ax-loader-pct');
       var hint = loader.querySelector('.ax-loader-hint');
       var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
       if (coarse) hint.textContent = 'Swipe the letters';
@@ -3182,8 +3187,66 @@
         return (done + (fontsDone ? 1 : 0)) / (imgs.length + 2);
       }
 
+      // Pixel digits: a 5 x 7 bitmap per glyph, three digit slots and a
+      // percent sign. Each square fades in or out at its own pace, so the
+      // number shimmers as it changes.
+      var GLYPHS = {
+        '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+        '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+        '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+        '3': ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+        '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+        '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+        '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+        '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+        '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+        '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+        '%': ['11000', '11001', '00010', '00100', '01000', '10011', '00011']
+      };
+      var PCOLS = 23, PROWS = 7;
+      var pctx = pct.getContext('2d');
+      var lit = new Float32Array(PCOLS * PROWS), want = new Uint8Array(PCOLS * PROWS), pace = new Float32Array(PCOLS * PROWS);
+      for (var q = 0; q < pace.length; q++) pace[q] = 0.04 + Math.random() * 0.1;
+      var pp = 6, shownPct = -1;
+      function sizePct() {
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+        pp = Math.max(5, Math.min(12, Math.round(W * 0.0068)));
+        pct.width = Math.round(PCOLS * pp * dpr);
+        pct.height = Math.round(PROWS * pp * dpr);
+        pct.style.width = PCOLS * pp + 'px';
+        pct.style.height = PROWS * pp + 'px';
+        pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      sizePct();
+      window.addEventListener('resize', sizePct);
+      function setPct(n) {
+        if (n === shownPct) return;
+        shownPct = n;
+        var str = String(n);
+        while (str.length < 3) str = ' ' + str;
+        str += '%';
+        want.fill(0);
+        for (var g = 0; g < 4; g++) {
+          var rows = GLYPHS[str[g]];
+          if (!rows) continue;
+          for (var r = 0; r < PROWS; r++) for (var c = 0; c < 5; c++) if (rows[r][c] === '1') want[r * PCOLS + g * 6 + c] = 1;
+        }
+      }
+      function drawPct(dt) {
+        pctx.clearRect(0, 0, PCOLS * pp, PROWS * pp);
+        pctx.fillStyle = '#f4f1e8';
+        for (var i = 0; i < lit.length; i++) {
+          lit[i] += (want[i] - lit[i]) * (1 - Math.exp(-dt / pace[i]));
+          var a = lit[i];
+          if (a < 0.02) continue;
+          var sz = (pp - 1) * (0.5 + 0.5 * a);
+          pctx.globalAlpha = a;
+          pctx.fillRect((i % PCOLS) * pp + (pp - sz) / 2, Math.floor(i / PCOLS) * pp + (pp - sz) / 2, sz, sz);
+        }
+        pctx.globalAlpha = 1;
+      }
+
       var shown = 0, assembled = 0, phase = 'build', phaseAt = 0, gx = W / 2, gy = H / 2, cgx = W / 2, cgy = H / 2;
-      function pad(n) { return n < 10 ? '00' + n : n < 100 ? '0' + n : '' + n; }
 
       function frame(now) {
         // The safety timer in <head> may have removed the loader already.
@@ -3194,7 +3257,8 @@
         var goal = el > MAX_MS ? 1 : Math.min(target(), el / MIN_MS);
         shown += (goal - shown) * (1 - Math.exp(-dt / 0.16));
         if (goal === 1 && shown > 0.996) shown = 1;
-        count.textContent = '(' + pad(Math.round(shown * 100)) + ')';
+        setPct(Math.max(1, Math.round(shown * 100)));
+        drawPct(dt);
 
         // Letters arrive at even steps of progress; the X gathers last.
         letters.forEach(function (b) {

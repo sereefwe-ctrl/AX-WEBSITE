@@ -1439,7 +1439,8 @@
       }
 
       .tile-case,
-      .tile-coinvest {
+      .tile-coinvest,
+      .tile-quote {
         min-height: calc(var(--w) * 0.8);
       }
 
@@ -1469,6 +1470,134 @@
       .coinvest-grid li {
         min-height: 0;
         aspect-ratio: 1;
+      }
+    }
+
+    /* Testimonial tile: label, a large serif quote whose words rise into
+       place on first view, and the person with their companies as logo
+       chips. A faint oversized quote mark sits in the corner; hovering the
+       tile lifts the photo and lets the mark drift. */
+    .tile-quote {
+      padding: clamp(28px, 3.4vw, 56px);
+    }
+
+    .tq {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .tq::before {
+      content: "\201C";
+      position: absolute;
+      top: -0.32em;
+      right: -0.04em;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(140px, 13vw, 240px);
+      line-height: 1;
+      color: rgba(244, 241, 232, 0.07);
+      pointer-events: none;
+      transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), color 0.6s ease;
+    }
+
+    .tile-quote:hover .tq::before {
+      transform: translate(-6px, 6px) rotate(-4deg);
+      color: rgba(244, 241, 232, 0.11);
+    }
+
+    .tq-quote {
+      margin: auto 0;
+      padding: 24px 0;
+      max-width: 22em;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(24px, 2.35vw, 40px);
+      line-height: 1.2;
+      letter-spacing: -0.015em;
+      color: rgba(244, 241, 232, 0.9);
+    }
+
+    .tq-quote em {
+      font-style: italic;
+      color: #fff;
+    }
+
+    /* Words rise in one after another (split by script). */
+    .tq-w {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(0.35em);
+      filter: blur(4px);
+      transition:
+        opacity 0.6s ease calc(var(--i) * 40ms),
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--i) * 40ms),
+        filter 0.6s ease calc(var(--i) * 40ms);
+    }
+
+    .tile-quote.is-in .tq-w {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+
+    .tq-person {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.7s ease 0.7s, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.7s;
+    }
+
+    .tile-quote.is-in .tq-person {
+      opacity: 1;
+      transform: none;
+    }
+
+    .tq-avatar {
+      flex: 0 0 auto;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      object-fit: cover;
+      outline: 1px solid rgba(244, 241, 232, 0.22);
+      outline-offset: 3px;
+      transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), outline-color 0.4s ease;
+    }
+
+    .tile-quote:hover .tq-avatar {
+      transform: scale(1.06);
+      outline-color: rgba(244, 241, 232, 0.6);
+    }
+
+    .tq-who {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .tq-name {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: 20px;
+      line-height: 1.15;
+      color: #f4f1e8;
+    }
+
+    .tq-bio {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(244, 241, 232, 0.6);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tq-w,
+      .tq-person {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
       }
     }
 
@@ -2808,8 +2937,21 @@
     </section>
 
     <div class="row row-2">
-      <!-- Portfolio logos removed; kept as an empty box. -->
-      <section class="tile tile-grid" id="companies"></section>
+      <section class="tile tile-quote" id="companies" data-quote>
+        <figure class="tq">
+          <p class="mf-label">From our fellows</p>
+          <blockquote class="tq-quote">
+            <p>If you’re building AI in Korea, you’ll end up at <em>AttentionX</em> eventually. Might as well go early.</p>
+          </blockquote>
+          <figcaption class="tq-person">
+            <img class="tq-avatar" src="assets/team/dan-han.jpg" alt="Dan Han" />
+            <span class="tq-who">
+              <span class="tq-name">Dan Han</span>
+              <span class="tq-bio">CEO &amp; Cofounder @ <span class="brand"><img class="brand-tile" src="assets/portfolio/aleph-lab.jpg" alt="" />Aleph Lab</span> <span class="brand"><img class="brand-tile" src="assets/brands/y-combinator.png" alt="" />YC F25</span></span>
+            </span>
+          </figcaption>
+        </figure>
+      </section>
       <section class="tile tile-text tile-case">
         <div class="case-top">
           <div class="case-logo">
@@ -3494,6 +3636,34 @@
           if (t < 1) requestAnimationFrame(step);
         })(start);
       });
+
+      // Testimonial: split the quote into words (keeping the <em>), then
+      // let them rise in once the tile is in view.
+      var tq = document.querySelector('[data-quote]');
+      if (tq) {
+        var qi = 0;
+        var split = function (node) {
+          Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+            if (child.nodeType === 3) {
+              var frag = document.createDocumentFragment();
+              child.textContent.split(/(\s+)/).forEach(function (part) {
+                if (!part) return;
+                if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+                var w = document.createElement('span');
+                w.className = 'tq-w';
+                w.style.setProperty('--i', qi++);
+                w.textContent = part;
+                frag.appendChild(w);
+              });
+              node.replaceChild(frag, child);
+            } else if (child.nodeType === 1) {
+              split(child);
+            }
+          });
+        };
+        split(tq.querySelector('.tq-quote p'));
+        once(tq, function () { tq.classList.add('is-in'); });
+      }
 
       // Launchpad lines rise in once; afterwards hover reacts without delay.
       var pts = document.querySelector('[data-points]');

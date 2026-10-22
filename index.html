@@ -3016,13 +3016,12 @@
       pointer-events: none;
     }
 
-    /* Load progress in pixel digits (same squares as the logo's X), centred
-       under the word. Drawn on a canvas by the loader script. */
+    /* Load progress in pixel digits (same squares as the logo's X), small
+       in the top-left corner. Drawn on a canvas by the loader script. */
     .ax-loader-pct {
       position: absolute;
-      left: 50%;
-      top: calc(47% + min(14.5vw, 232px) * 0.64);
-      transform: translateX(-50%);
+      left: max(24px, 3.5vw);
+      top: max(24px, 4vh);
       filter: drop-shadow(0 0 10px rgba(244, 241, 232, 0.22));
       transition: opacity 0.4s ease;
       pointer-events: none;
@@ -3210,7 +3209,7 @@
       var pp = 6, shownPct = -1;
       function sizePct() {
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        pp = Math.max(5, Math.min(12, Math.round(W * 0.0068)));
+        pp = Math.max(3, Math.min(5, Math.round(W * 0.003)));
         pct.width = Math.round(PCOLS * pp * dpr);
         pct.height = Math.round(PROWS * pp * dpr);
         pct.style.width = PCOLS * pp + 'px';

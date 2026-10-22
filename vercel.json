@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/2027", "destination": "/", "permanent": true },
+    { "source": "/2027/:path*", "destination": "/", "permanent": true }
+  ]
+}

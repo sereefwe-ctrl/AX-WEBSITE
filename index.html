@@ -371,20 +371,29 @@
     }
 
     /* Same for the logo grid on the left: it sits at the bottom of its
-       column. Flex stops the stat and text margins collapsing, so the text
-       keeps its old spacing with a small top margin. */
+       column, and the stat with its line drops into the free space under
+       the label (level with the launchpad lines opposite). Flex stops the
+       stat and text margins collapsing, so the text keeps its old spacing
+       with a small top margin. */
     .mf-col-raised {
       display: flex;
       flex-direction: column;
     }
 
+    .mf-col-raised .mf-label {
+      margin-bottom: 20px;
+    }
+
+    .mf-col-raised .mf-stat {
+      margin-top: auto;
+    }
+
     .mf-col-raised .mf-body {
       margin-top: 4px;
-      margin-bottom: clamp(24px, 2.6vw, 40px);
     }
 
     .mf-col-raised .mf-slots {
-      margin-top: auto;
+      margin-top: 24px;
     }
 
     .mf-col:first-child {

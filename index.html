@@ -1527,6 +1527,11 @@
       color: rgba(244, 241, 232, 0.55);
     }
 
+    .tq-quote--long {
+      font-size: clamp(18px, 1.55vw, 27px);
+      line-height: 1.28;
+    }
+
     .tq-hl {
       color: #fff;
       background: linear-gradient(transparent 58%, rgba(244, 241, 232, 0.16) 58%, rgba(244, 241, 232, 0.16) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
@@ -1660,7 +1665,7 @@
     /* Row 4: Convergent raise, then an empty six-square grid (mirrors row 3). */
     .row-palette {
       grid-template-columns: 1fr 1fr;
-      height: calc(var(--w) * 0.323);
+      min-height: calc(var(--w) * 0.323);
     }
 
     /* ---- Falling star -------------------------------------------------
@@ -2987,8 +2992,22 @@
           </div>
         </div>
       </section>
-      <!-- Investors tile emptied; kept as an empty box. -->
-      <section class="tile tile-coinvest" aria-hidden="true"></section>
+      <section class="tile tile-quote" data-quote>
+        <div class="tq">
+          <div class="tq-photo"><img src="assets/team/haon-park.jpg" alt="Haon Park" /></div>
+          <figure class="tq-body">
+            <p class="mf-label">AttentionX Fellow</p>
+            <blockquote class="tq-quote tq-quote--long">
+              <p>“Sukone and AttentionX were instrumental in helping AIM Intelligence recruit top AI researchers from the AttentionX builder community. They truly <mark class="tq-hl">bring together the best AI talent in Korea and beyond.</mark>”</p>
+            </blockquote>
+            <figcaption class="tq-person">
+              <span class="tq-name">Haon Park</span>
+              <span class="tq-role">CTO &amp; Cofounder</span>
+              <span class="tq-org"><span class="brand"><img class="brand-tile" src="assets/portfolio/aim-intelligence.jpg" alt="" />AIM Intelligence</span></span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
     </div>
 
     <!-- Row 5: Parasma raise under the co-investors box. -->
@@ -3625,9 +3644,10 @@
         })(start);
       });
 
-      // Testimonial: sweep the highlight in once the tile is in view.
-      var tq = document.querySelector('[data-quote]');
-      if (tq) once(tq, function () { tq.classList.add('is-in'); });
+      // Testimonials: sweep each highlight in once its tile is in view.
+      document.querySelectorAll('[data-quote]').forEach(function (tq) {
+        once(tq, function () { tq.classList.add('is-in'); });
+      });
 
       // Launchpad lines rise in once; afterwards hover reacts without delay.
       var pts = document.querySelector('[data-points]');

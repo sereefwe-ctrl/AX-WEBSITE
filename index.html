@@ -413,13 +413,15 @@
     /* Marker highlight behind the lower half of the figure (same soft band
        as the hero's name highlights), sweeping left to right while the
        figure counts up. */
-    .mf-stat span {
+    .mf-stat span,
+    .mark-band {
       position: relative;
       display: inline-block;
       isolation: isolate;
     }
 
-    .mf-stat span::after {
+    .mf-stat span::after,
+    .mark-band::after {
       content: "";
       position: absolute;
       z-index: -1;
@@ -433,12 +435,14 @@
       transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .mf-stat span.is-drawn::after {
+    .mf-stat span.is-drawn::after,
+    .mark-band.is-drawn::after {
       transform: scaleX(1);
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .mf-stat span::after {
+      .mf-stat span::after,
+      .mark-band::after {
         transition: none;
       }
     }
@@ -3041,7 +3045,7 @@
         </div>
         <div class="case-hero">
           <h2 class="case-stat"><span class="case-from">raises</span> Seed</h2>
-          <p class="case-sub">Led by Long Journey Ventures</p>
+          <p class="case-sub">Led by <span class="mark-band">Long Journey Ventures</span></p>
         </div>
         <div class="case-bottom">
           <a class="tile-button" href="https://dentronic.ai/" target="_blank" rel="noopener noreferrer" data-cursor-label="dentronic">
@@ -3730,6 +3734,11 @@
       });
 
       // Testimonials: sweep each highlight in once its tile is in view.
+      // Marker bands (same as the $70,000,000 one) sweep in once in view.
+      document.querySelectorAll('.mark-band').forEach(function (el) {
+        once(el, function () { el.classList.add('is-drawn'); });
+      });
+
       document.querySelectorAll('[data-quote]').forEach(function (tq) {
         once(tq, function () { tq.classList.add('is-in'); });
       });

@@ -370,6 +370,23 @@
       margin-top: auto;
     }
 
+    /* Same for the logo grid on the left: it sits at the bottom of its
+       column. Flex stops the stat and text margins collapsing, so the text
+       keeps its old spacing with a small top margin. */
+    .mf-col-raised {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mf-col-raised .mf-body {
+      margin-top: 4px;
+      margin-bottom: clamp(24px, 2.6vw, 40px);
+    }
+
+    .mf-col-raised .mf-slots {
+      margin-top: auto;
+    }
+
     .mf-col:first-child {
       padding-right: clamp(26px, 3.4vw, 64px);
     }
@@ -2706,7 +2723,7 @@
       </div>
 
       <div class="mf-grid">
-        <div class="mf-col">
+        <div class="mf-col mf-col-raised">
           <p class="mf-label">Raised by our fellows</p>
           <div class="mf-stat" aria-label="$70,000,000"><span data-count-to="70000000">$70,000,000</span></div>
           <p class="mf-body">Our fellows have raised over $70M in funding from leading venture funds and institutional investors.</p>

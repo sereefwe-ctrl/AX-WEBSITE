@@ -440,9 +440,26 @@
       transform: scaleX(1);
     }
 
+    /* Same band for text that wraps: drawn as an inline background so it
+       runs under every line, sweeping through them in reading order. */
+    .mark-band--wrap {
+      display: inline;
+      background: linear-gradient(rgba(244, 241, 232, 0.16), rgba(244, 241, 232, 0.16)) no-repeat 0 calc(100% - 0.1em) / 0% 0.38em;
+      transition: background-size 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mark-band--wrap::after {
+      content: none;
+    }
+
+    .mark-band--wrap.is-drawn {
+      background-size: 100% 0.38em;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .mf-stat span::after,
-      .mark-band::after {
+      .mark-band::after,
+      .mark-band--wrap {
         transition: none;
       }
     }
@@ -3069,7 +3086,7 @@
         </div>
         <div class="case-hero">
           <h2 class="case-mark"><img src="assets/investors/a16z-speedrun-white.png" alt="a16z speedrun" /></h2>
-          <p class="case-sub case-sub--long">The first maritime startup to join a16z speedrun.</p>
+          <p class="case-sub case-sub--long"><span class="mark-band mark-band--wrap">The first maritime startup to join a16z speedrun.</span></p>
         </div>
         <div class="case-bottom">
           <a class="tile-button" href="https://philyron.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="philyron">

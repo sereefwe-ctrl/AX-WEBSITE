@@ -1,0 +1,4485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AttentionX</title>
+  <meta name="description" content="AttentionX" />
+  <meta property="og:image" content="images/attentionx-logo.png" />
+  <meta name="robots" content="noindex, nofollow" />
+  <script>
+    // Relative paths need a trailing slash when served from a folder
+    // (attentionx.org/2027 -> /2027/).
+    if (!/\/$|\.html$/.test(location.pathname)) {
+      location.replace(location.pathname + '/' + location.search + location.hash);
+    }
+  </script>
+  <link rel="icon" href="favicon.ico" sizes="48x48" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <script>
+    // Loader gate: show the globe loader unless the visitor
+    // prefers reduced motion. window.axReady resolves when the loader
+    // starts opening, so intro animations can wait for it. A safety
+    // timer drops the loader if its script never runs.
+    (function () {
+      var d = document.documentElement;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        window.axReady = Promise.resolve();
+        return;
+      }
+      d.classList.add('ax-loading');
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.axReady = new Promise(function (resolve) { window.__axOpen = resolve; });
+      setTimeout(function () {
+        if (!d.classList.contains('ax-loading')) return;
+        d.classList.remove('ax-loading');
+        var l = document.querySelector('.ax-loader');
+        if (l) l.remove();
+        if (window.__axOpen) window.__axOpen();
+      }, 14000);
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700;1,6..72,400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --gap: clamp(14px, 2.2vw, 44px);
+      --radius: clamp(14px, 1.4vw, 28px);
+      /* Content width; row heights below are fractions of it so the
+         grid keeps the proportions of the reference layout. */
+      --w: calc(100vw - 2 * var(--gap));
+      --third: calc((var(--w) - 2 * var(--gap)) / 3);
+      --glass-edge: rgba(255, 255, 255, 0.09);
+      --glass-line: rgba(255, 255, 255, 0.07);
+    }
+
+    body {
+      background-color: #0e0e0d;
+      overflow-x: hidden;
+    }
+
+    /* Slow-moving light behind the glass so the tiles have something to blur. */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .ambient span {
+      position: absolute;
+      width: 70vmax;
+      height: 70vmax;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.55;
+      will-change: transform;
+    }
+
+    .ambient .a {
+      top: -25vmax;
+      left: -20vmax;
+      background: radial-gradient(circle, rgba(159, 180, 230, 0.32), transparent 65%);
+      animation: drift-a 38s ease-in-out infinite alternate;
+    }
+
+    .ambient .b {
+      bottom: -30vmax;
+      right: -25vmax;
+      background: radial-gradient(circle, rgba(232, 162, 124, 0.26), transparent 65%);
+      animation: drift-b 46s ease-in-out infinite alternate;
+    }
+
+    .ambient .c {
+      top: 30%;
+      left: 35%;
+      width: 45vmax;
+      height: 45vmax;
+      background: radial-gradient(circle, rgba(244, 241, 232, 0.06), transparent 65%);
+      animation: drift-c 54s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift-a { to { transform: translate(30vw, 25vh) scale(1.15); } }
+    @keyframes drift-b { to { transform: translate(-35vw, -30vh) scale(0.9); } }
+    @keyframes drift-c { to { transform: translate(-25vw, 20vh) scale(1.3); } }
+
+    .bento {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      padding: var(--gap);
+    }
+
+    /* Frosted-glass tile with a soft highlight that follows the pointer. */
+    .tile {
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015) 55%, rgba(255, 255, 255, 0.03));
+      border: 1px solid var(--glass-edge);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 30px 60px -40px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(28px) saturate(140%);
+      -webkit-backdrop-filter: blur(28px) saturate(140%);
+    }
+
+    .tile::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.08), transparent 60%);
+    }
+
+    .tile:hover::before {
+      opacity: 1;
+    }
+
+    /* Row 1: hero panel, fills the first screen. */
+    .hero {
+      height: calc(100vh - 2 * var(--gap));
+      height: calc(100svh - 2 * var(--gap));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Back button, top left of the hero: a white rounded square holding
+       the site's curved-barb arrow turned to point left. Goes back a page
+       when there is one, otherwise to bluebrown.vc. */
+    .back-button {
+      position: absolute;
+      top: clamp(14px, 1.6vw, 28px);
+      left: clamp(14px, 1.6vw, 28px);
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: clamp(46px, 3.9vw, 68px);
+      aspect-ratio: 1;
+      border-radius: 28%;
+      background: #b9b6ae;
+      color: #0e0e0d;
+      box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.7);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+    }
+
+    .back-button svg {
+      width: 52%;
+      height: auto;
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .back-button:hover {
+      transform: scale(1.06);
+      background: #d2cfc7;
+    }
+
+    .back-button:hover svg {
+      transform: translateX(-12%);
+    }
+
+    .back-button:focus-visible {
+      outline: 2px solid rgba(244, 241, 232, 0.7);
+      outline-offset: 3px;
+    }
+
+    /* Hero wordmark: the footer treatment inside the top box. Spans the
+       box at its bottom edge, dimmed and fading in from the top. */
+    .hero {
+      align-items: flex-end;
+    }
+
+    .hero-fade {
+      display: block;
+      width: 100%;
+      height: auto;
+      padding: 0 2.5% 2.5%;
+      opacity: 0.16;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      user-select: none;
+    }
+
+    /* Site subtitle, top left of the hero. Letters rise into place one
+       after another from behind their baseline, tipped 10° and settling
+       upright (after motostudios.co). */
+    .hero-copy {
+      position: absolute;
+      top: max(132px, 20%);
+      left: 3.5%;
+      right: 3.5%;
+    }
+
+    .hero-sub {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: clamp(32px, 4.5vw, 78px);
+      line-height: 1.04;
+      letter-spacing: -0.025em;
+      color: rgba(244, 241, 232, 0.96);
+    }
+
+    .rise-word {
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .rise-letter {
+      display: inline-block;
+    }
+
+    /* While rising, each letter is clipped just under its baseline so it
+       appears to come up out of a line. */
+    .hero-sub.is-rising .rise-letter {
+      clip-path: inset(-0.6em -0.4em -0.06em -0.4em);
+    }
+
+    .rise-glyph {
+      display: inline-block;
+      transform-origin: 0% 100%;
+      transform: translateY(115%) rotate(10deg);
+      transition: transform 0.68s cubic-bezier(0.215, 0.61, 0.355, 1);
+      transition-delay: var(--d, 0s);
+    }
+
+    .hero-sub.is-up .rise-glyph {
+      transform: none;
+    }
+
+    /* Subheading: quieter serif under the subtitle; drifts up into view
+       as the last letters of the subtitle land. */
+    .hero-lede {
+      max-width: 36em;
+      margin-top: 0.9em;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(17px, 1.55vw, 26px);
+      line-height: 1.38;
+      letter-spacing: -0.008em;
+      color: rgba(244, 241, 232, 0.58);
+      opacity: 0;
+      transform: translateY(14px);
+      filter: blur(6px);
+      transition: opacity 0.9s ease, transform 1s cubic-bezier(0.215, 0.61, 0.355, 1), filter 0.9s ease;
+      transition-delay: 0.95s;
+    }
+
+    .hero-sub.is-up + .hero-lede {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+
+    /* Backer names: full-bright, with a soft light marker stroke sweeping
+       under each one in turn once the subheading is in. */
+    .hero-lede mark {
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.97);
+      background: linear-gradient(transparent 58%, rgba(244, 241, 232, 0.16) 58%, rgba(244, 241, 232, 0.16) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      transition: background-size 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: calc(1.45s + var(--i) * 0.12s);
+    }
+
+    .hero-sub.is-up + .hero-lede mark {
+      background-size: 100% 100%;
+    }
+
+    @media (max-width: 820px) {
+      .hero-copy {
+        top: 120px;
+        left: 6%;
+        right: 6%;
+      }
+
+      .hero-sub {
+        font-size: clamp(30px, 9vw, 50px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .rise-glyph,
+      .hero-lede {
+        opacity: 1;
+        transform: none;
+        filter: none;
+        transition: none;
+      }
+
+      .hero-lede mark {
+        background-size: 100% 100%;
+        transition: none;
+      }
+    }
+
+    /* ---------- Fellowship manifesto ----------
+       One wide glass tile in three acts: a large statement whose words
+       light up as it scrolls through the screen, then a counting "$70M+"
+       beside the backers, and the support list as pills that pop in. */
+    .manifesto {
+      padding: clamp(28px, 5.2vw, 96px);
+      display: grid;
+      gap: clamp(36px, 5vw, 88px);
+    }
+
+    .mf-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.45);
+    }
+
+    .mf-label::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      background: rgba(244, 241, 232, 0.55);
+    }
+
+    .mf-lead {
+      max-width: 22em;
+      margin-top: 22px;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(28px, 3.7vw, 64px);
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      color: #f4f1e8;
+    }
+
+    /* Words start dim and are lit by the scroll position (set in script). */
+    .mf-lead .w {
+      opacity: var(--lit, 0.16);
+      transition: opacity 0.25s linear;
+    }
+
+    .mf-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-top: 1px solid rgba(244, 241, 232, 0.12);
+    }
+
+    .mf-col {
+      padding-top: clamp(26px, 3vw, 48px);
+    }
+
+    .mf-col + .mf-col {
+      padding-left: clamp(26px, 3.4vw, 64px);
+      border-left: 1px solid rgba(244, 241, 232, 0.12);
+    }
+
+    /* The milestone list sits at the bottom of its column, so it ends
+       level with the divider beside it. */
+    .mf-col-ms {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mf-col-ms .mf-points {
+      margin-top: clamp(30px, 3.2vw, 52px);
+      margin-bottom: 26px;
+    }
+
+    .mf-col-ms .ms {
+      margin-top: auto;
+    }
+
+    /* Same for the logo grid on the left: it sits at the bottom of its
+       column. The stat sits the same distance under its label as the
+       launchpad lines opposite, so both columns start level; any spare
+       height collects above the logos. Flex stops the stat and text
+       margins collapsing, so the text keeps its old spacing with a small
+       top margin. */
+    .mf-col-raised {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .mf-col-raised .mf-stat {
+      margin-top: clamp(30px, 3.2vw, 52px);
+    }
+
+    .mf-col-raised .mf-body {
+      margin-top: 4px;
+      margin-bottom: 24px;
+    }
+
+    .mf-col-raised .mf-slots {
+      margin-top: auto;
+    }
+
+    .mf-col:first-child {
+      padding-right: clamp(26px, 3.4vw, 64px);
+    }
+
+    .mf-stat {
+      margin: 20px 0 14px;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: clamp(40px, 5.6vw, 104px);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      color: #f4f1e8;
+    }
+
+    /* Marker highlight behind the lower half of the figure (same soft band
+       as the hero's name highlights), sweeping left to right while the
+       figure counts up. */
+    .mf-stat span,
+    .mark-band {
+      position: relative;
+      display: inline-block;
+      isolation: isolate;
+    }
+
+    .mf-stat span::after,
+    .mark-band::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: -0.04em;
+      right: -0.02em;
+      bottom: 0.06em;
+      height: 0.38em;
+      background: rgba(244, 241, 232, 0.16);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mf-stat span.is-drawn::after,
+    .mark-band.is-drawn::after {
+      transform: scaleX(1);
+    }
+
+    /* Same band for text that wraps: drawn as an inline background so it
+       runs under every line, sweeping through them in reading order. */
+    .mark-band--wrap {
+      display: inline;
+      background: linear-gradient(rgba(244, 241, 232, 0.16), rgba(244, 241, 232, 0.16)) no-repeat 0 calc(100% - 0.1em) / 0% 0.38em;
+      transition: background-size 1.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mark-band--wrap::after {
+      content: none;
+    }
+
+    .mark-band--wrap.is-drawn {
+      background-size: 100% 0.38em;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mf-stat span::after,
+      .mark-band::after,
+      .mark-band--wrap {
+        transition: none;
+      }
+    }
+
+    .mf-stat sup {
+      font-size: 0.42em;
+      vertical-align: 0.95em;
+      margin-left: 0.04em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    .mf-body {
+      max-width: 30em;
+      margin-top: 18px;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(18px, 1.55vw, 25px);
+      line-height: 1.45;
+      color: rgba(244, 241, 232, 0.62);
+    }
+
+    .mf-body strong {
+      font-weight: 400;
+      color: #f4f1e8;
+    }
+
+    /* Launchpad block: a quiet lead-in with "launchpad" in bright italic,
+       then the two directions, each led by the site's curved arrow,
+       pointing straight ahead. Lines rise in on first view with the arrows
+       gliding in from the left; hovering a line nudges its arrow right. */
+    .mf-points > p {
+      font-size: clamp(20px, 1.85vw, 30px);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    .mf-points em {
+      font-style: italic;
+      color: #fff;
+    }
+
+    .mf-points ol {
+      margin-top: 0.4em;
+      list-style: none;
+    }
+
+    .mf-points li {
+      --delay: calc(150ms + var(--i) * 120ms);
+      display: grid;
+      grid-template-columns: 0.95em 1fr;
+      column-gap: 0.55em;
+      align-items: start;
+      padding: 0.1em 0;
+      font-size: clamp(24px, 2.3vw, 38px);
+      line-height: 1.2;
+      letter-spacing: -0.012em;
+      color: #f4f1e8;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.6s ease var(--delay), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--delay);
+    }
+
+    .mf-points.is-shown li {
+      opacity: 1;
+      transform: none;
+    }
+
+    .mf-arrow {
+      --rot: 0deg;
+      display: block;
+      margin-top: 0.27em;
+      color: rgba(244, 241, 232, 0.5);
+      transform: translate(var(--dx, 0px), var(--dy, 0px)) rotate(var(--rot));
+      transition:
+        transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--delay) + 200ms),
+        opacity 0.5s ease calc(var(--delay) + 200ms),
+        color 0.3s ease;
+    }
+
+    .mf-arrow svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* Before the reveal, each arrow waits a little back along its path. */
+    .mf-points:not(.is-shown) .mf-arrow {
+      --dx: -0.4em;
+      opacity: 0;
+    }
+
+    /* Once in, hover responds at once. */
+    .mf-points.is-settled li,
+    .mf-points.is-settled .mf-arrow {
+      transition-delay: 0s;
+    }
+
+    .mf-points li:hover .mf-arrow {
+      --dx: 0.15em;
+      color: #fff;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mf-points li,
+      .mf-arrow {
+        transition: none;
+      }
+    }
+
+    /* Six glass slots under the funding line, ready for logos: drop an
+       <img> (optionally wrapped in a link) into any <li>. Same frame as the
+       portfolio grid. */
+    .mf-slots {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(10px, 1.2vw, 18px);
+      max-width: 560px;
+      margin-top: clamp(24px, 2.6vw, 40px);
+      list-style: none;
+    }
+
+    .mf-slots li {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border-radius: calc(var(--radius) * 0.6);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015) 60%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: border-color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .mf-slots li:hover {
+      background-color: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+
+    .mf-slots a {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mf-slots img {
+      display: block;
+      width: 74%;
+      height: 74%;
+      object-fit: cover;
+      border-radius: 16%;
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mf-slots li:hover img,
+    .mf-slots li:active img {
+      transform: scale(1.06);
+    }
+
+    /* Milestones: a plain list with one thin line down its left edge that
+       fills in as the page scrolls past (progress in --fill, from script).
+       Rows slide in on first view; hovering a row lifts it and fills its
+       tag. */
+    .ms {
+      position: relative;
+      margin-top: 26px;
+    }
+
+    .ms-list {
+      list-style: none;
+      border-top: 1px solid rgba(244, 241, 232, 0.1);
+    }
+
+    .ms-item {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: baseline;
+      column-gap: 14px;
+      padding: 15px 10px 15px 22px;
+      border-bottom: 1px solid rgba(244, 241, 232, 0.1);
+      opacity: 0;
+      transform: translateY(12px);
+      transition:
+        opacity 0.6s ease calc(var(--i) * 80ms),
+        transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) calc(var(--i) * 80ms),
+        background-color 0.35s ease;
+    }
+
+    .ms.is-in .ms-item {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* Once in, hover changes respond at once. */
+    .ms.is-settled .ms-item {
+      transition: opacity 0.35s ease, background-color 0.35s ease;
+    }
+
+    .ms.is-settled .ms-list:hover .ms-item {
+      opacity: 0.38;
+    }
+
+    .ms.is-settled .ms-list .ms-item:hover {
+      opacity: 1;
+      background-color: rgba(244, 241, 232, 0.035);
+    }
+
+    .ms-rail,
+    .ms-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      pointer-events: none;
+    }
+
+    .ms-rail {
+      background: rgba(244, 241, 232, 0.12);
+    }
+
+    .ms-fill {
+      background: #f4f1e8;
+      transform-origin: top;
+      transform: scaleY(var(--fill, 0));
+    }
+
+    .ms-title {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(17px, 1.4vw, 23px);
+      line-height: 1.3;
+      letter-spacing: -0.008em;
+      color: rgba(244, 241, 232, 0.88);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), color 0.3s ease;
+    }
+
+    /* Company name with its logo, in a light box (like a tool chip).
+       The chip is plain inline text, so its name sits on exactly the same
+       baseline as the sentence around it; the box comes from the inline
+       background, the same height for every chip. Newsreader's capitals
+       are 0.715em tall, so logos (0.86em) are centred on the middle of the
+       capitals, and a wordmark is sized to the capital height and stands
+       on the baseline. */
+    .brand {
+      padding: 0.04em 0.3em 0.06em 0.22em;
+      border-radius: 0.18em;
+      background: rgba(244, 241, 232, 0.09);
+      color: #f4f1e8;
+      white-space: nowrap;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    .brand img {
+      display: inline-block;
+      width: 0.86em;
+      height: 0.86em;
+      margin-right: 0.26em;
+      vertical-align: -0.07em;
+      object-fit: contain;
+    }
+
+    /* Logos that come on their own tile keep it, as a small rounded icon. */
+    .brand img.brand-tile {
+      object-fit: cover;
+      border-radius: 0.18em;
+    }
+
+    /* A wordmark stands in for the name. */
+    .brand-wordmark img {
+      width: auto;
+      height: 0.715em;
+      margin-right: 0;
+      vertical-align: baseline;
+    }
+
+    /* Date of each milestone, quiet and right-aligned. */
+    .ms-date {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.5);
+      transition: color 0.3s ease;
+    }
+
+    .ms-item:hover .ms-title {
+      transform: translateX(6px);
+      color: #fff;
+    }
+
+    .ms-item:hover .ms-date {
+      color: #f4f1e8;
+    }
+
+    @media (max-width: 820px) {
+      .ms-item {
+        grid-template-columns: 1fr;
+      }
+
+      .ms-date {
+        justify-self: start;
+        margin-top: 8px;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .mf-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mf-stat {
+        font-size: 12.5vw;
+      }
+
+      .mf-col:first-child {
+        padding-right: 0;
+      }
+
+      .mf-col + .mf-col {
+        margin-top: 30px;
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid rgba(244, 241, 232, 0.12);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .mf-lead .w {
+        --lit: 1;
+        transition: none;
+      }
+
+      .ms-item {
+        opacity: 1;
+        transform: none;
+        transition: none;
+      }
+    }
+
+    .row {
+      display: grid;
+      gap: var(--gap);
+    }
+
+    /* Row 2: three equal tiles. */
+    .row-3 {
+      grid-template-columns: repeat(3, 1fr);
+      /* Reference proportion, but grows if a tile's text needs more room. */
+      min-height: calc(var(--w) * 0.252);
+    }
+
+    /* Text tiles size their type to the tile's own width. */
+    .tile-text {
+      container-type: inline-size;
+      padding: 7%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .tile-title {
+      position: relative;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: 7.4cqw;
+      line-height: 1.16;
+      letter-spacing: -0.012em;
+      color: rgba(244, 241, 232, 0.94);
+    }
+
+    .tile-title em {
+      color: rgba(244, 241, 232, 0.5);
+    }
+
+    /* Highlighted phrase: full-bright text with a soft light marker stroke that
+       sweeps in, line by line, when the tile scrolls into view. */
+    .tile-title mark.hl {
+      color: rgba(244, 241, 232, 0.98);
+      background: linear-gradient(transparent 56%, rgba(244, 241, 232, 0.16) 56%, rgba(244, 241, 232, 0.16) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      transition: background-size 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+    }
+
+    .tile-title mark.hl.is-in {
+      background-size: 100% 100%;
+    }
+
+    /* Scout tile: small print framing three big italic verbs, then an
+       italic punchline. Rows reveal and decode when scrolled into view. */
+    .tile-scout {
+      align-items: stretch;
+      justify-content: space-between;
+      gap: clamp(10px, 1.1vw, 18px);
+    }
+
+    .scout-note {
+      position: relative;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: 7.4cqw;
+      line-height: 1.16;
+      letter-spacing: -0.012em;
+      color: rgba(244, 241, 232, 0.94);
+    }
+
+    .scout-note em {
+      color: rgba(244, 241, 232, 0.5);
+    }
+
+    .scout-list {
+      position: relative;
+      /* Sits at the bottom of the tile, under the intro. */
+      margin: auto 0 0;
+      list-style: none;
+      counter-reset: scout;
+    }
+
+    .scout-list::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+    }
+
+    .scout-list li {
+      position: relative;
+      counter-increment: scout;
+      display: grid;
+      grid-template-columns: 6cqw 36cqw 1fr;
+      column-gap: 2cqw;
+      /* Number, verb and detail share one baseline; extra top padding sets
+         the verbs a little lower between the rules. */
+      align-items: baseline;
+      padding: 2.9cqw 0 1.1cqw;
+      opacity: 0;
+      transform: translateY(1.6cqw);
+      transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scout-list li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scout-list li:nth-child(2), .scout-list li:nth-child(2)::before { transition-delay: 0.14s; }
+    .scout-list li:nth-child(3), .scout-list li:nth-child(3)::before { transition-delay: 0.28s; }
+
+    .tile-scout.is-in .scout-list li { opacity: 1; transform: none; }
+    .tile-scout.is-in .scout-list li::before,
+    .tile-scout.is-in .scout-list::after { transform: scaleX(1); }
+
+    .scout-num {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 3.4cqw);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    .scout-num::before {
+      content: "0" counter(scout);
+    }
+
+    .scout-verb {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 8.4cqw;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: rgba(244, 241, 232, 0.96);
+      white-space: nowrap;
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .scout-obj {
+      justify-self: end;
+      text-align: right;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(13px, 3.9cqw);
+      line-height: 1.25;
+      color: rgba(244, 241, 232, 0.6);
+      transition: color 0.35s ease;
+    }
+
+    /* Hovering the list spotlights one row and quiets the others. */
+    .tile-scout.is-settled .scout-list li { transition-delay: 0s; transition-duration: 0.35s; }
+    .tile-scout.is-in .scout-list:hover li { opacity: 0.32; }
+    .tile-scout.is-in .scout-list li:hover { opacity: 1; }
+    .scout-list li:hover .scout-verb { transform: translateX(1.4cqw); }
+    .scout-list li:hover .scout-obj { color: rgba(244, 241, 232, 0.95); }
+
+    .scout-punch {
+      position: relative;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 6.2cqw;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      color: rgba(244, 241, 232, 0.96);
+    }
+
+    .scout-punch-lead {
+      display: block;
+      margin-bottom: 0.55em;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-style: normal;
+      font-size: max(13px, 3.8cqw);
+      line-height: 1.42;
+      letter-spacing: -0.005em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    /* Case-study tile: company header, then a full-width serif stat that
+       counts up on reveal. */
+    .tile-case {
+      padding: 6.5%;
+      justify-content: space-between;
+    }
+
+    .case-top {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5cqw;
+      width: 100%;
+    }
+
+    .case-logo {
+      flex: none;
+    }
+
+    .case-logo {
+      --h: max(32px, 6.2cqw);
+      display: flex;
+      align-items: flex-start;
+      gap: calc(var(--h) * 0.33);
+    }
+
+    .case-icon {
+      width: var(--h);
+      height: var(--h);
+      border-radius: 24%;
+      object-fit: cover;
+      /* Faint ring so dark icons (Parasma) still read on the dark glass. */
+      box-shadow: 0 0 0 1px rgba(244, 241, 232, 0.16);
+    }
+
+    .case-word {
+      height: calc(var(--h) * 0.775);
+      width: auto;
+      margin-top: calc(var(--h) * 0.1625);
+      opacity: 0.95;
+    }
+
+    .case-label {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 2.8cqw);
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      line-height: 1.5;
+      text-align: right;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.45);
+    }
+
+    /* Founder names in the corner: a step smaller than "New raise". */
+    .case-label--names {
+      font-size: max(10px, 2.2cqw);
+    }
+
+    /* Founder names link to their LinkedIn, underlined so they read as links. */
+    .case-person-link {
+      color: rgba(244, 241, 232, 0.7);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.3em;
+      text-decoration-color: rgba(244, 241, 232, 0.4);
+      transition: color 0.25s ease, text-decoration-color 0.25s ease;
+    }
+
+    .case-person-link:hover {
+      color: #f4f1e8;
+      text-decoration-color: currentColor;
+    }
+
+    /* Centered between the header and the link. */
+    .case-hero {
+      position: relative;
+      width: 100%;
+      margin: auto 0;
+    }
+
+    .tile-case .tile-button {
+      margin-top: 0;
+    }
+
+    .case-stat {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-weight: 400;
+      font-size: 16.8cqw;
+      line-height: 0.95;
+      letter-spacing: -0.035em;
+      white-space: nowrap;
+      font-variant-numeric: lining-nums tabular-nums;
+      color: rgba(244, 241, 232, 0.97);
+    }
+
+    .case-from,
+    .case-stat svg {
+      color: rgba(244, 241, 232, 0.36);
+    }
+
+    .case-stat svg {
+      display: inline-block;
+      width: 0.6em;
+      height: auto;
+      margin: 0 0.16em 0 0.12em;
+      vertical-align: 0.12em;
+    }
+
+    .case-sub {
+      margin-top: 2.6cqw;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-style: italic;
+      font-size: 6.4cqw;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.8);
+    }
+
+    /* Convergent lockup: the wordmark's capital height (72% of its image)
+       spans 70% of the icon and is centered on it; the "g" descends below. */
+    .case-logo--center {
+      align-items: flex-start;
+    }
+
+    .case-logo--center .case-word {
+      height: calc(var(--h) * 0.972);
+      margin-top: calc(var(--h) * 0.1315);
+    }
+
+    /* All-caps wordmark (Parasma): letters at 42% of the icon, centered on it. */
+    .case-logo--caps .case-word {
+      height: calc(var(--h) * 0.42);
+      margin-top: calc(var(--h) * 0.29);
+    }
+
+    /* Full logo lockup (mark + wordmark in one file, Dentronic). */
+    .case-lockup {
+      height: calc(var(--h) * 1.25);
+      width: auto;
+      margin: calc(var(--h) * -0.125) 0;
+    }
+
+    /* All-caps lockup (AIM): letters at 90% of the icon height, centered. */
+    .case-lockup--caps {
+      height: calc(var(--h) * 1.01);
+      margin: calc(var(--h) * -0.005) 0;
+    }
+
+    /* Lockup whose mark is as tall as the image (Philyron). */
+    .case-lockup--tall {
+      height: calc(var(--h) * 1.1);
+      margin: calc(var(--h) * -0.05) 0;
+    }
+
+    /* A logo in place of the headline figure (Philyron: a16z speedrun). */
+    .case-mark img {
+      display: block;
+      width: 60cqw;
+      height: auto;
+      opacity: 0.95;
+    }
+
+    .case-sub--long {
+      line-height: 1.18;
+    }
+
+    /* Bottom row of a case tile: Read more on the left, investors on the right. */
+    .case-bottom {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 3cqw;
+      width: 100%;
+    }
+
+    .case-investors {
+      display: flex;
+      align-items: center;
+      gap: 3.6cqw;
+    }
+
+    .investor {
+      position: relative;
+      display: block;
+      line-height: 0;
+    }
+
+    .investor img {
+      display: block;
+      height: 100%;
+      width: auto;
+      transition: opacity 0.35s ease;
+    }
+
+    .investor-a16z {
+      height: max(44px, 9.6cqw);
+      opacity: 0.85;
+      transition: opacity 0.35s ease;
+    }
+
+    .investor-a16z:hover {
+      opacity: 1;
+    }
+
+    /* Chemistry shows in white, and its brand colors come through on hover. */
+    .investor-chem {
+      height: max(22px, 4.8cqw);
+    }
+
+    .investor-chem .is-white {
+      opacity: 0.82;
+    }
+
+    .investor-chem .is-color {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+    }
+
+    .investor-chem:hover .is-white {
+      opacity: 0;
+    }
+
+    .investor-chem:hover .is-color {
+      opacity: 1;
+    }
+
+    .investor-ljv,
+    .investor-spc,
+    .investor-ssv,
+    .investor-mirae,
+    .investor-residency {
+      opacity: 0.85;
+      transition: opacity 0.35s ease;
+    }
+
+    .investor-ljv:hover,
+    .investor-spc:hover,
+    .investor-ssv:hover,
+    .investor-mirae:hover,
+    .investor-residency:hover {
+      opacity: 1;
+    }
+
+    .investor-residency {
+      height: max(24px, 5.2cqw);
+    }
+
+    .investor-ssv {
+      height: max(12px, 2.7cqw);
+    }
+
+    .investor-mirae {
+      height: max(40px, 9cqw);
+    }
+
+    /* The swoosh rises above the lettering, so the image's center sits high:
+       lift it until the lettering (rows 73-203 of 204) centers on the row. */
+    .investor-mirae img {
+      transform: translateY(-17.6%);
+    }
+
+    .investor-ljv {
+      height: max(28px, 6.4cqw);
+    }
+
+    .investor-spc {
+      height: max(34px, 8cqw);
+    }
+
+    .case-investors i {
+      width: 1px;
+      height: max(30px, 6.6cqw);
+      background: rgba(244, 241, 232, 0.2);
+    }
+
+    /* Co-investors tile: title, then a 4 x 2 wall of glass name slots that
+       fills the rest of the tile. Type a name inside any <li>. */
+    .tile-coinvest {
+      padding: 6.5%;
+      align-items: stretch;
+    }
+
+    .coinvest-title {
+      font-size: 5.6cqw;
+      max-width: 92%;
+    }
+
+    .coinvest-grid {
+      position: relative;
+      flex: 1 1 0;
+      min-height: 0;
+      display: grid;
+      /* minmax(0, 1fr): slot sizes come from the tile, not the images. */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 1.8cqw;
+      margin-top: 4.5cqw;
+      list-style: none;
+    }
+
+    .coinvest-grid li {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 1.4cqw;
+      min-height: 13cqw;
+      border-radius: calc(var(--radius) * 0.55);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.012) 60%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: max(13px, 3.4cqw);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      text-align: center;
+      color: rgba(244, 241, 232, 0.9);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .coinvest-grid li:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    /* Co-investor marks, all rounded squares. Each links out (fund website or
+       the person's profile), and the cursor label shows the name on hover. */
+    .coinvest-grid a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .coinvest-grid img {
+      display: block;
+      height: 72%;
+      aspect-ratio: 1;
+      width: auto;
+      object-fit: cover;
+      border-radius: 18%;
+      box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.7);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .coinvest-grid li:hover img {
+      transform: scale(1.06);
+    }
+
+    /* Backers inside a case tile: portrait chips with name and role, each
+       linking out. Black and white until hovered. */
+    .case-backers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3cqw 6cqw;
+      margin-top: 3.6cqw;
+    }
+
+    .backer {
+      display: flex;
+      align-items: center;
+      gap: 2.4cqw;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .backer img {
+      width: max(40px, 8.6cqw);
+      height: max(40px, 8.6cqw);
+      border-radius: 24%;
+      object-fit: cover;
+      object-position: 50% 30%;
+      box-shadow: 0 0 0 1px rgba(244, 241, 232, 0.16);
+      filter: grayscale(1) contrast(1.05);
+      transition: filter 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .backer:hover img {
+      filter: none;
+      transform: scale(1.05);
+    }
+
+    .backer-name {
+      display: block;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: max(15px, 3.9cqw);
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.96);
+    }
+
+    .backer-role {
+      display: block;
+      margin-top: 0.5cqw;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 2.3cqw);
+      letter-spacing: -0.005em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    /* Logo centered in the space between a tile's title and its link. */
+    .tile-mark .tile-mark-logo {
+      position: relative;
+      align-self: center;
+      width: 64%;
+      margin: auto 0;
+      line-height: 0;
+    }
+
+    /* Shine: letters rest a little dim, then a bright white band sweeps
+       through them (masked to the letter shapes) while a blurred flare of
+       light travels across with it and the whole mark blooms. */
+    .tile-mark-logo img {
+      display: block;
+      width: 100%;
+      height: auto;
+      opacity: 0.7;
+      animation: logo-glow 3.6s ease-in-out infinite;
+    }
+
+    .logo-shine {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.85) 42%,
+        #fff 50%,
+        rgba(255, 255, 255, 0.85) 58%,
+        transparent 70%);
+      background-size: 250% 100%;
+      background-repeat: no-repeat;
+      -webkit-mask: url("assets/arcadia-wordmark-white.png") center / 100% 100% no-repeat;
+      mask: url("assets/arcadia-wordmark-white.png") center / 100% 100% no-repeat;
+      animation: logo-sweep 3.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+      pointer-events: none;
+    }
+
+    .logo-flare {
+      position: absolute;
+      top: -120%;
+      bottom: -120%;
+      left: 0;
+      width: 34%;
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.12) 45%, transparent 70%);
+      filter: blur(6px);
+      mix-blend-mode: screen;
+      opacity: 0;
+      animation: logo-flare 3.6s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+      pointer-events: none;
+    }
+
+    @keyframes logo-sweep {
+      0%        { background-position: 130% 0; }
+      55%, 100% { background-position: -30% 0; }
+    }
+
+    @keyframes logo-flare {
+      0%        { transform: translateX(-60%); opacity: 0; }
+      8%        { opacity: 1; }
+      47%       { opacity: 1; }
+      55%, 100% { transform: translateX(300%); opacity: 0; }
+    }
+
+    @keyframes logo-glow {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); opacity: 0.7; }
+      28%      { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 28px rgba(255, 255, 255, 0.35)); opacity: 1; }
+      60%      { filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); opacity: 0.7; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tile-mark-logo img,
+      .logo-shine,
+      .logo-flare {
+        animation: none;
+      }
+
+      .tile-mark-logo img {
+        opacity: 0.92;
+      }
+
+      .logo-shine,
+      .logo-flare {
+        display: none;
+      }
+    }
+
+    .tile-mark .tile-button {
+      margin-top: 0;
+    }
+
+    /* Same size as the links in the three-tile row. */
+    .tile-case .tile-button {
+      /* 4.4% of a three-row tile's content box (tile minus 7% padding each side and its border). */
+      font-size: max(14px, calc((var(--third) * 0.86 - 2px) * 0.044));
+    }
+
+    /* Plain text link pinned to the bottom of the tile; the arrow slides
+       forward on hover. */
+    .tile-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55em;
+      margin-top: auto;
+      color: rgba(244, 241, 232, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(14px, 4.4cqw);
+      font-weight: 500;
+      letter-spacing: -0.005em;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .tile-button svg {
+      width: 1.6em;
+      height: auto;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .tile-button:hover {
+      color: #fff;
+    }
+
+    .tile-button:hover svg {
+      transform: translateX(0.3em);
+    }
+
+    /* Phones and small tablets: the three tiles are too narrow for text, so
+       they stack. */
+    @media (max-width: 900px) {
+      .row-3 {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .row-3 > .tile {
+        min-height: calc(var(--w) / 1.27);
+      }
+
+      .tile-title,
+      .scout-note {
+        font-size: 8.4cqw;
+      }
+
+      /* Stacked tiles grow with their text, so keep clear space above
+         the link at the bottom. */
+      .tile-text > .tile-title {
+        margin-bottom: 32px;
+      }
+
+      .scout-verb {
+        font-size: 9.2cqw;
+      }
+
+      :root {
+        --third: var(--w);
+      }
+
+      .row.row-2 {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .tile-grid {
+        height: calc(var(--w) * 0.7);
+      }
+
+      .tile-case,
+      .tile-coinvest,
+      .tile-quote {
+        min-height: calc(var(--w) * 0.8);
+      }
+
+      .row.row-palette {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+
+      .case-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .coinvest-title {
+        font-size: 7.4cqw;
+      }
+
+      .tile-case .case-hero {
+        margin: 7cqw 0;
+      }
+
+      .coinvest-grid {
+        flex: none;
+        grid-template-rows: repeat(2, auto);
+      }
+
+      .coinvest-grid li {
+        min-height: 0;
+        aspect-ratio: 1;
+      }
+    }
+
+    /* Testimonial tile, photo-led: the portrait fills the left side and
+       rests in black and white, blooming into colour with a slow zoom when
+       the tile is hovered. The quote sits in soft grey with its key line in
+       bright white under a marker stroke that sweeps in on first view. */
+    .tile-quote {
+      padding: 12px;
+    }
+
+    .tq {
+      display: grid;
+      grid-template-columns: 42% 1fr;
+      gap: clamp(20px, 2.6vw, 44px);
+      height: 100%;
+    }
+
+    .tq-photo {
+      position: relative;
+      overflow: hidden;
+      border-radius: calc(var(--radius) * 0.7);
+      background: #1a1a19;
+    }
+
+    .tq-photo img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 32%;
+      filter: grayscale(1) contrast(1.05) brightness(0.88);
+      transform: scale(1.02);
+      transition: filter 0.8s ease, transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .tile-quote:hover .tq-photo img {
+      filter: none;
+      transform: scale(1.07);
+    }
+
+    .tq-body {
+      display: flex;
+      flex-direction: column;
+      padding: clamp(16px, 2.2vw, 34px) clamp(10px, 1.6vw, 26px) clamp(16px, 2.2vw, 34px) 0;
+    }
+
+    .tq-quote {
+      margin: auto 0;
+      padding: 20px 0;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(21px, 2vw, 34px);
+      line-height: 1.24;
+      letter-spacing: -0.015em;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    .tq-quote--long {
+      font-size: clamp(18px, 1.55vw, 27px);
+      line-height: 1.28;
+    }
+
+    .tq-hl {
+      color: #fff;
+      background: linear-gradient(transparent 58%, rgba(244, 241, 232, 0.16) 58%, rgba(244, 241, 232, 0.16) 94%, transparent 94%) no-repeat 0 0 / 0% 100%;
+      transition: background-size 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+    }
+
+    .tile-quote.is-in .tq-hl {
+      background-size: 100% 100%;
+    }
+
+    /* Name, then role, then each affiliation on its own line. */
+    .tq-person {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .tq-name {
+      margin-bottom: 2px;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(24px, 2vw, 32px);
+      line-height: 1.1;
+      color: #f4f1e8;
+    }
+
+    .tq-role,
+    .tq-org {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: clamp(15px, 1.3vw, 19px);
+      line-height: 1.45;
+    }
+
+    .tq-role {
+      color: rgba(244, 241, 232, 0.65);
+    }
+
+    @media (max-width: 820px) {
+      .tq {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .tq-photo {
+        aspect-ratio: 4 / 3;
+      }
+
+      .tq-body {
+        padding: 4px 12px 16px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .tq-hl {
+        background-size: 100% 100%;
+        transition: none;
+      }
+    }
+
+    /* Row 3: two equal tiles. Keeps the reference proportion, but grows
+       when a tile (like the testimonial) needs more room. */
+    .row-2 {
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(var(--w) * 0.323);
+    }
+
+    /* Six equal squares (3 x 2), sized to the largest square that fits the
+       tile with even padding, and centered. */
+    .tile-grid {
+      container-type: size;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mini-grid {
+      --pad: 7cqh;
+      --g: 4.5cqh;
+      --s: min(calc((100cqw - 2 * var(--pad) - 2 * var(--g)) / 3), calc((100cqh - 2 * var(--pad) - var(--g)) / 2));
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, var(--s));
+      grid-template-rows: repeat(2, var(--s));
+      gap: var(--g);
+    }
+
+    .mini {
+      position: relative;
+      overflow: hidden;
+      border-radius: calc(var(--radius) * 0.6);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015) 60%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Logo sits inset in its glass square, which frames it like a
+       rounded app-icon border. */
+    .mini {
+      display: grid;
+      place-items: center;
+    }
+
+    /* Each portfolio logo links to the company's site. */
+    .mini a {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+    }
+
+    .mini img {
+      display: block;
+      width: 74%;
+      height: 74%;
+      object-fit: cover;
+      border-radius: 16%;
+      box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.7);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .mini:hover img {
+      transform: scale(1.05);
+    }
+
+    .mini:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    /* Row 4: Convergent raise, then an empty six-square grid (mirrors row 3). */
+    .row-palette {
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(var(--w) * 0.323);
+    }
+
+    /* ---- Falling star -------------------------------------------------
+       After the AGI House story star: the star rides the center gutter,
+       held at the middle of the screen (sticky) so it travels down the
+       page. Once it is moving a soft line trails up behind it, small
+       stars twinkle at random over the rows, and it lands in a square
+       under the last row, which lights up. It spins clockwise scrolling
+       down and the other way scrolling up, and squares up when it lands
+       so it sits flush in the frame. Positioned by script; hidden where
+       the grid stacks (phones). */
+    .star-track {
+      --s: 48px;
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    /* The trail stops at the landing square's top edge (half the star
+       plus the square's 39px half-width above the track's end), so once
+       the star is in, the line runs into the frame instead of across it. */
+    .star-clip {
+      position: absolute;
+      inset: 0;
+      overflow: clip;
+      /* Top: the line starts level with the top of the row below the gap. */
+      clip-path: inset(var(--line-top, 0px) 0 calc(var(--s) / 2 + 39px));
+    }
+
+    .star-line-row,
+    .star-row {
+      position: sticky;
+      top: calc(50vh - var(--s) / 2);
+      height: var(--s);
+    }
+
+    .star-line {
+      position: absolute;
+      bottom: 50%;
+      left: var(--x);
+      width: 4px;
+      height: 200vh;
+      border-radius: 999px;
+      background: linear-gradient(transparent, rgba(255, 255, 255, 0.41) 99%);
+      opacity: 0;
+      transform: translate(-50%);
+      transition: opacity 0.18s;
+    }
+
+    .star-track[data-trail-active="true"] .star-line {
+      opacity: 1;
+    }
+
+    .star-marker {
+      position: absolute;
+      left: calc(var(--x) - var(--s) / 2);
+      top: 0;
+      display: block;
+      width: var(--s);
+      height: var(--s);
+      filter: drop-shadow(rgba(255, 255, 255, 0.42) 0 0 12px);
+      transform-origin: center;
+      will-change: rotate;
+    }
+
+    .star-sparkles {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+    }
+
+    .star-sparkle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      animation: star-sparkle 2s linear;
+    }
+
+    @keyframes star-sparkle {
+      0%   { transform: scale(0.25) rotate(0deg); }
+      50%  { transform: scale(1.25) rotate(180deg); }
+      100% { transform: scale(0.25) rotate(360deg); }
+    }
+
+    /* Landing square under the last row: dark gray until the star
+       arrives, then white with a glow (the AGI House stand). Sized so
+       the 48px star sits in it with an even 9px margin all round. */
+    .star-dock {
+      display: grid;
+      /* News | landing square | (open): the square stays centered on the
+         gutter the star rides down. */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      column-gap: var(--gap);
+      align-items: start;
+      padding-top: calc(var(--gap) * 1.5);
+    }
+
+    .star-dock-square {
+      grid-column: 2;
+    }
+
+    .star-dock-square {
+      --frame: 6px;
+      width: calc(48px + 2 * 9px + 2 * var(--frame));
+      aspect-ratio: 1;
+      border: var(--frame) solid currentColor;
+      border-radius: 16px;
+      color: #343539;
+      transition: color 0.5s, filter 0.5s;
+    }
+
+    .star-dock-square.is-lit {
+      color: #fff;
+      filter: drop-shadow(rgba(255, 255, 255, 0.38) 0 0 12px);
+    }
+
+    @media (max-width: 900px) {
+      .star-track,
+      .star-dock-square {
+        display: none;
+      }
+
+      .star-dock {
+        grid-template-columns: minmax(0, 1fr);
+        padding-top: var(--gap);
+      }
+    }
+
+    /* News: an editorial feed left of the landing square. Each item is one
+       link: date, a serif line with the names picked out, and an arrow.
+       Rows draw in on reveal; hovering one lifts it and quiets the rest. */
+    .news {
+      grid-column: 1;
+      grid-row: 1;
+      /* Shifted right (not narrowed) a little in from the tiles' edge. */
+      --inset: calc((var(--w) - var(--gap)) * 0.02);
+      margin-left: var(--inset);
+      margin-right: calc(var(--inset) * -1);
+      padding-right: clamp(8px, 2vw, 40px);
+    }
+
+    .news-head {
+      display: flex;
+      align-items: center;
+      gap: 0.9em;
+      padding-bottom: clamp(12px, 1.1vw, 20px);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 0.8vw);
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.55);
+    }
+
+    /* A small live light before the label. */
+    .news-head::before {
+      content: "";
+      width: 0.55em;
+      height: 0.55em;
+      border-radius: 50%;
+      background: #f4f1e8;
+      box-shadow: 0 0 0 0 rgba(244, 241, 232, 0.5);
+      animation: news-pulse 2.4s ease-out infinite;
+    }
+
+    @keyframes news-pulse {
+      0% { box-shadow: 0 0 0 0 rgba(244, 241, 232, 0.45); }
+      70%, 100% { box-shadow: 0 0 0 0.9em rgba(244, 241, 232, 0); }
+    }
+
+    .news-count {
+      margin-left: auto;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    .news-list {
+      position: relative;
+      list-style: none;
+    }
+
+    .news-list::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1) 0.85s;
+    }
+
+    .news-item {
+      position: relative;
+      transition: opacity 0.35s ease;
+    }
+
+    .news-item::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(244, 241, 232, 0.14);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.35s ease;
+    }
+
+    .news-item::before { transition-delay: calc(var(--d, 0s) - 0.2s), 0s; }
+    .news.is-in .news-item::before,
+    .news.is-in .news-list::after { transform: scaleX(1); }
+
+    .news-link {
+      display: grid;
+      grid-template-columns: clamp(78px, 7.4vw, 140px) minmax(0, 1fr) auto;
+      column-gap: clamp(14px, 1.6vw, 32px);
+      align-items: baseline;
+      padding: clamp(16px, 1.5vw, 28px) 0;
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .news-date {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(11px, 0.76vw);
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: rgba(244, 241, 232, 0.42);
+      transition: color 0.35s ease;
+    }
+
+    .news-text {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(16px, 1.42vw, 26px);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.7);
+      transition: color 0.35s ease;
+    }
+
+    .news-text strong {
+      font-weight: 400;
+      color: rgba(244, 241, 232, 0.98);
+    }
+
+    .news-text em {
+      color: rgba(244, 241, 232, 0.92);
+    }
+
+    .news-aside {
+      color: rgba(244, 241, 232, 0.42);
+    }
+
+    /* Category lead-in, e.g. "Alumni News:", set in bold. */
+    .news-tag {
+      font-weight: 700;
+      color: rgba(244, 241, 232, 0.98);
+    }
+
+    .news-go {
+      display: inline-flex;
+      align-self: center;
+      width: clamp(22px, 1.6vw, 30px);
+      color: rgba(244, 241, 232, 0.4);
+      opacity: 0;
+      translate: -0.8em 0;
+      transition:
+        color 0.35s ease,
+        transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 0.8s cubic-bezier(0.23, 1, 0.32, 1) var(--ad, 0s),
+        translate 0.9s cubic-bezier(0.23, 1, 0.32, 1) var(--ad, 0s);
+    }
+
+    .news.is-in .news-go {
+      opacity: 1;
+      translate: 0 0;
+    }
+
+    /* Split-text rise, after stanfordai.club: each word sits in a clipped
+       slot and slides up into place as it fades in (0.65s, 22ms apart); the
+       label's letters rise tilted and swing upright from their bottom-left
+       corner (0.75s, 55ms apart). Both on a strong ease-out. Script splits
+       the text and sets --d (when a block starts) and --i (its order). */
+    .news .sw {
+      display: inline-block;
+      overflow: hidden;
+      vertical-align: top;
+      padding: 0 0.08em 0.16em;
+      margin: 0 -0.08em -0.16em;
+    }
+
+    .news .sw > span {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(110%);
+      transition:
+        transform 0.65s cubic-bezier(0.23, 1, 0.32, 1),
+        opacity 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+      transition-delay: calc(var(--d, 0s) + var(--i, 0) * 22ms);
+    }
+
+    .news .sl > span {
+      opacity: 1;
+      transform: translateY(120%) rotate(-16deg);
+      transform-origin: 0% 100%;
+      transition: transform 0.75s cubic-bezier(0.23, 1, 0.32, 1);
+      transition-delay: calc(var(--d, 0s) + var(--i, 0) * 55ms);
+    }
+
+    .news.is-in .sw > span {
+      opacity: 1;
+      transform: none;
+    }
+
+    .news-head::before {
+      opacity: 0;
+      scale: 0.3;
+      transition: opacity 0.6s ease 0.1s, scale 0.8s cubic-bezier(0.23, 1, 0.32, 1) 0.1s;
+    }
+
+    .news.is-in .news-head::before {
+      opacity: 1;
+      scale: 1;
+    }
+
+    .news-go svg {
+      width: 100%;
+      height: auto;
+    }
+
+    .news.is-settled .news-item { transition-delay: 0s; transition-duration: 0.35s; }
+    .news.is-in .news-list:hover .news-item { opacity: 0.38; }
+    .news.is-in .news-list .news-item:hover { opacity: 1; }
+    .news-item:hover::before { background-color: rgba(244, 241, 232, 0.42); }
+    .news-item:hover .news-date { color: rgba(244, 241, 232, 0.75); }
+    .news-item:hover .news-text { color: rgba(244, 241, 232, 0.9); }
+    .news-item:hover .news-go { color: rgba(244, 241, 232, 0.95); transform: translateX(0.35em); }
+    /* Event stamps right of the landing square, mirroring the news: as
+       large as the column allows (up to 1.35x the feed's height, --h set
+       by script) and pushed to the right edge. Two collages pinned side by
+       side at opposite tilts, the second set lower and tucked under the
+       first; hovering one straightens it and brings it to the front. */
+    .dock-stamp {
+      --h: 18vw;
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
+      display: flex;
+      align-items: flex-start;
+      height: var(--h);
+      margin: 0;
+      margin-right: calc((var(--w) - var(--gap)) * 0.01);
+    }
+
+    .dock-stamp img {
+      position: relative;
+      display: block;
+      width: auto;
+      object-fit: contain;
+      filter: brightness(0.86) saturate(0.88) drop-shadow(0 18px 30px rgba(0, 0, 0, 0.5));
+      transition: rotate 0.6s cubic-bezier(0.22, 1, 0.36, 1), translate 0.6s cubic-bezier(0.22, 1, 0.36, 1), scale 0.6s cubic-bezier(0.22, 1, 0.36, 1), filter 0.6s ease;
+    }
+
+    .dock-stamp .ds-a {
+      z-index: 2;
+      height: 100%;
+      rotate: -4deg;
+    }
+
+    .dock-stamp .ds-b {
+      z-index: 1;
+      height: 92%;
+      margin-left: calc(var(--h) * -0.14);
+      rotate: 5deg;
+      translate: 0 calc(var(--h) * 0.09);
+    }
+
+    /* The DeepMind stamp, tossed on top of the left collage's bottom
+       photo and across into the second collage, inside the column. */
+    .dock-stamp {
+      position: relative;
+    }
+
+    .dock-stamp .ds-c {
+      position: absolute;
+      z-index: 4;
+      left: calc(var(--h) * 0.06);
+      top: calc(var(--h) * 0.62);
+      width: calc(var(--h) * 0.58);
+      height: auto;
+      rotate: 6deg;
+    }
+
+    .dock-stamp img:hover {
+      z-index: 3;
+      rotate: 0deg;
+      scale: 1.04;
+      filter: brightness(1) saturate(1) drop-shadow(0 24px 40px rgba(0, 0, 0, 0.6));
+    }
+
+    @media (max-width: 900px) {
+      .dock-stamp {
+        grid-column: 1;
+        grid-row: auto;
+        justify-self: center;
+        height: auto;
+        margin: var(--gap) 0 0;
+      }
+
+      .dock-stamp img,
+      .dock-stamp .ds-a,
+      .dock-stamp .ds-b {
+        width: 50%;
+        height: auto;
+      }
+
+      .dock-stamp .ds-b {
+        margin-left: -6%;
+        translate: 0 8%;
+      }
+
+      .dock-stamp {
+        padding-bottom: 26%;
+      }
+
+      .dock-stamp .ds-c {
+        left: 2%;
+        top: auto;
+        bottom: 0;
+        width: 56%;
+      }
+    }
+
+    /* Fine print under the feed, on the same left edge. */
+    .news-legal {
+      margin-top: clamp(28px, 2.8vw, 52px);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(12px, 0.96vw);
+      line-height: 1.6;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 232, 0.4);
+    }
+
+    .news-link:focus-visible { outline: 1px solid rgba(244, 241, 232, 0.5); outline-offset: 4px; }
+
+    @media (max-width: 900px) {
+      .news {
+        margin-left: 0;
+        margin-right: 0;
+        padding-right: 0;
+      }
+
+      .news-head {
+        font-size: 11px;
+      }
+
+      .news-link {
+        grid-template-columns: minmax(0, 1fr) auto;
+        row-gap: 8px;
+      }
+
+      .news-date {
+        grid-column: 1 / -1;
+        font-size: 11px;
+      }
+
+      .news-text {
+        font-size: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .news-head::before {
+        animation: none;
+      }
+
+      .news-item,
+      .news-item::before,
+      .news-list::after,
+      .news-go,
+      .news-head::before,
+      .news .sw > span {
+        transition: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .star-sparkle {
+        animation: none;
+      }
+
+      .star-line {
+        transition: none;
+      }
+    }
+
+    /* Events tile (left of Philyron): every AttentionX event with its
+       partners as small logo badges. Rows rise in when the tile scrolls
+       into view; hovering a row spotlights it and swaps its number for a
+       spinning AttentionX mark. Hovering a badge names the partner in the
+       cursor tag. Sized in cqw so it scales with the tile. */
+    .tile-events {
+      padding: 5.6% 6.5%;
+      align-items: stretch;
+    }
+
+    .ev-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 2.6cqw;
+    }
+
+    .ev-count {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    /* One grid for all rows (rows are subgrids): numbers, names and
+       badges each share a column. */
+    .ev-list {
+      display: grid;
+      grid-template-columns: 5cqw minmax(0, 1fr) auto;
+      column-gap: 2.4cqw;
+      margin: auto 0;
+      list-style: none;
+      counter-reset: ev;
+    }
+
+    .ev-row {
+      position: relative;
+      counter-increment: ev;
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      align-items: center;
+      padding: 0.6cqw 0;
+      border-top: 1px solid rgba(244, 241, 232, 0.1);
+      opacity: 0;
+      transform: translateY(1.2cqw);
+      transition: opacity 0.7s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+      transition-delay: calc(var(--i, 0) * 60ms);
+    }
+
+    .ev-row:last-child {
+      border-bottom: 1px solid rgba(244, 241, 232, 0.1);
+    }
+
+    .tile-events.is-in .ev-row { opacity: 1; transform: none; }
+
+    .ev-num {
+      position: relative;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: max(10px, 1.9cqw);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.04em;
+      color: rgba(244, 241, 232, 0.35);
+    }
+
+    .ev-num::before {
+      content: counter(ev, decimal-leading-zero);
+      transition: opacity 0.3s ease;
+    }
+
+    .ev-mark {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 2.8cqw;
+      height: auto;
+      margin-top: -1.4cqw;
+      opacity: 0;
+      scale: 0.3;
+      filter: drop-shadow(rgba(255, 255, 255, 0.42) 0 0 8px);
+      transition: opacity 0.35s ease, scale 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ev-name {
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: max(14px, 2.75cqw);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: rgba(244, 241, 232, 0.92);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ev-hosts {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1cqw;
+    }
+
+    /* A partner logo on a small glass square. Logos that come on their
+       own tile fill it; wide wordmarks (AWS) get more room. */
+    .ev-host {
+      display: grid;
+      place-items: center;
+      width: max(26px, 4.4cqw);
+      aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 26%;
+      background: rgba(244, 241, 232, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(244, 241, 232, 0.12);
+      transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s ease;
+    }
+
+    .ev-host img {
+      width: 76%;
+      height: 76%;
+      object-fit: contain;
+    }
+
+    .ev-host--wide img {
+      width: 86%;
+    }
+
+    .ev-host--tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Hover: spotlight one row and quiet the others. */
+    .tile-events.is-settled .ev-row { transition-delay: 0s; transition-duration: 0.35s; }
+    .tile-events.is-in .ev-list:hover .ev-row { opacity: 0.32; }
+    .tile-events.is-in .ev-list .ev-row:hover { opacity: 1; }
+    .ev-row:hover .ev-num::before { opacity: 0; }
+    .ev-row:hover .ev-mark { opacity: 1; scale: 1; animation: ev-spin 4s linear infinite; }
+    .ev-row:hover .ev-name { transform: translateX(0.2em); }
+    .ev-row:hover .ev-host { background-color: rgba(244, 241, 232, 0.14); }
+    .ev-host:hover { transform: translateY(-2px) scale(1.12); }
+
+    @keyframes ev-spin { to { rotate: 360deg; } }
+
+    @media (max-width: 900px) {
+      .ev-list {
+        grid-template-columns: 7cqw minmax(0, 1fr) auto;
+      }
+
+      .ev-row {
+        padding: 2.2cqw 0;
+      }
+
+      .ev-name {
+        font-size: max(15px, 4.2cqw);
+      }
+
+      .ev-num {
+        font-size: max(10px, 2.8cqw);
+      }
+
+      .ev-mark {
+        width: 4.2cqw;
+        margin-top: -2.1cqw;
+      }
+
+      .ev-host {
+        width: max(26px, 7cqw);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ev-row {
+        transition: none;
+      }
+
+      .ev-row:hover .ev-mark {
+        animation: none;
+      }
+    }
+
+    /* Closing wordmark: edge to edge at the very bottom, dimmed and fading
+       in from the top so it reads as part of the background. */
+    .outro {
+      /* Breathing room between the news and the wordmark. */
+      padding-top: clamp(48px, 7vw, 140px);
+      line-height: 0;
+    }
+
+    .outro img {
+      display: block;
+      width: 100%;
+      height: auto;
+      opacity: 0.16;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      mask-image: linear-gradient(to bottom, transparent, #000 70%);
+      user-select: none;
+    }
+
+    /* ---------- Navigation ----------
+       Sits open across the top of the hero, then condenses into a
+       floating glass pill once the page scrolls. A light pill slides
+       between links on hover and each label rolls letter by letter. */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    [id] {
+      scroll-margin-top: 110px;
+    }
+
+    .nav {
+      --nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
+      position: fixed;
+      top: calc(var(--gap) + 12px);
+      left: 50%;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      width: calc(100% - 2 * var(--gap) - 24px);
+      height: 64px;
+      padding: 0 12px 0 14px;
+      border-radius: 14px;
+      border: 1px solid transparent;
+      color: rgba(244, 241, 232, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      transform: translate(-50%, 0);
+      transition:
+        width 0.7s var(--nav-ease),
+        top 0.7s var(--nav-ease),
+        background-color 0.5s ease,
+        border-color 0.5s ease,
+        box-shadow 0.5s ease,
+        backdrop-filter 0.5s ease;
+      animation: nav-in 1s var(--nav-ease) both;
+    }
+
+    @keyframes nav-in {
+      from { opacity: 0; transform: translate(-50%, -24px); }
+    }
+
+    .nav.is-compact {
+      top: 14px;
+      width: min(780px, calc(100% - 28px));
+      background-color: rgba(22, 22, 21, 0.62);
+      border-color: rgba(255, 255, 255, 0.09);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 24px 50px -24px rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(22px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+    }
+
+    /* Contact: its own glass box just right of the bar, shown only once
+       the bar has condensed. */
+    .nav-contact {
+      position: absolute;
+      top: -1px;
+      bottom: -1px;
+      left: calc(100% + 10px);
+      display: grid;
+      place-items: center;
+      padding: 0 26px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background-color: rgba(22, 22, 21, 0.62);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 24px 50px -24px rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(22px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      color: rgba(244, 241, 232, 0.86);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      text-decoration: none;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-12px);
+      transition: opacity 0.45s ease, transform 0.6s var(--nav-ease), visibility 0s linear 0.45s, color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .nav.is-compact .nav-contact {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      transition: opacity 0.45s ease 0.25s, transform 0.6s var(--nav-ease) 0.25s, visibility 0s, color 0.3s ease, background-color 0.3s ease;
+    }
+
+    .nav-contact:hover {
+      color: #f4f1e8;
+      background-color: rgba(44, 44, 42, 0.72);
+    }
+
+    /* No room beside the bar on narrower screens. */
+    @media (max-width: 1100px) {
+      .nav-contact {
+        display: none;
+      }
+    }
+
+    /* Thin scroll-progress line along the bottom edge of the pill. */
+    .nav-progress {
+      position: absolute;
+      left: 28px;
+      right: 28px;
+      bottom: -1px;
+      height: 1px;
+      transform-origin: left;
+      transform: scaleX(var(--progress, 0));
+      background: linear-gradient(90deg, rgba(244, 241, 232, 0.3), #f4f1e8);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    .nav.is-compact .nav-progress {
+      opacity: 0.8;
+    }
+
+    /* Logo mark: four diamonds, redrawn as vector so each can move. */
+    .nav-logo {
+      justify-self: start;
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      color: #f4f1e8;
+      transition: background-color 0.3s ease;
+    }
+
+    .nav-logo:hover {
+      background-color: rgba(244, 241, 232, 0.07);
+    }
+
+    .nav-mark {
+      width: 28px;
+      height: 28px;
+      overflow: visible;
+      transform: rotate(var(--spin, 0deg));
+    }
+
+    .nav-mark polygon {
+      fill: currentColor;
+      transition: transform 0.55s var(--nav-ease), fill 0.3s ease;
+    }
+
+    /* On hover the diamonds drift apart and the top-left one lights up. */
+    .nav-logo:hover .d1 { transform: translate(-9px, -9px); }
+    .nav-logo:hover .d2 { transform: translate(9px, -9px); }
+    .nav-logo:hover .d3 { transform: translate(-9px, 9px); }
+    .nav-logo:hover .d4 { transform: translate(9px, 9px); }
+
+    .nav-links {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    /* Sliding hover pill, positioned by script. */
+    .nav-pill {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      left: 0;
+      width: var(--pill-w, 0px);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(244, 241, 232, 0.13), rgba(244, 241, 232, 0.06));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      transform: translateX(var(--pill-x, 0px));
+      opacity: 0;
+      transition:
+        transform 0.5s var(--nav-ease),
+        width 0.5s var(--nav-ease),
+        opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .nav-links.has-pill .nav-pill {
+      opacity: 1;
+    }
+
+    .nav-link {
+      position: relative;
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 5px;
+      padding: 12px 18px;
+      border-radius: 8px;
+      color: rgba(244, 241, 232, 0.66);
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      animation: nav-in-item 0.9s var(--nav-ease) both;
+      animation-delay: calc(0.25s + var(--n) * 0.07s);
+    }
+
+    @keyframes nav-in-item {
+      from { opacity: 0; transform: translateY(-10px); }
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible,
+    .nav-link.is-active {
+      color: #fff;
+    }
+
+    .nav-link:focus-visible {
+      outline: 2px solid rgba(244, 241, 232, 0.6);
+      outline-offset: 2px;
+    }
+
+    .nav-num {
+      font-size: 9.5px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+      color: rgba(244, 241, 232, 0.38);
+      transform: translateY(-1px);
+      transition: color 0.3s ease;
+    }
+
+    .nav-link:hover .nav-num,
+    .nav-link.is-active .nav-num {
+      color: rgba(244, 241, 232, 0.85);
+    }
+
+    /* Letter roll: two copies of the word; letters swap upward one after
+       another on hover. */
+    .nav-roll {
+      position: relative;
+      display: inline-block;
+      overflow: hidden;
+      height: 1.2em;
+    }
+
+    .nav-roll > span {
+      display: block;
+      white-space: pre;
+    }
+
+    .nav-roll > span + span {
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .nav-roll i {
+      display: inline-block;
+      font-style: normal;
+      transition: transform 0.5s var(--nav-ease);
+      transition-delay: calc(var(--i) * 22ms);
+    }
+
+    .nav-roll > span + span i {
+      transform: translateY(110%);
+    }
+
+    .nav-link:hover .nav-roll > span:first-child i {
+      transform: translateY(-110%);
+    }
+
+    .nav-link:hover .nav-roll > span + span i {
+      transform: translateY(0);
+    }
+
+    /* Live Seoul clock on the right. */
+    .nav-clock {
+      justify-self: end;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding-right: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: rgba(244, 241, 232, 0.55);
+      white-space: nowrap;
+      animation: nav-in-item 0.9s var(--nav-ease) 0.6s both;
+    }
+
+    .nav-clock time {
+      color: rgba(244, 241, 232, 0.9);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav-dot {
+      position: relative;
+      width: 7px;
+      height: 7px;
+      border-radius: 2px;
+      background: #f4f1e8;
+    }
+
+    .nav-dot::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 4px;
+      border: 1px solid rgba(244, 241, 232, 0.8);
+      opacity: 0;
+      animation: nav-ping 2.4s ease-out infinite;
+    }
+
+    @keyframes nav-ping {
+      0% { opacity: 0.8; transform: scale(0.6); }
+      100% { opacity: 0; transform: scale(1.6); }
+    }
+
+    /* Menu button and full-screen sheet for small screens. */
+    .nav-toggle {
+      display: none;
+      justify-self: end;
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(244, 241, 232, 0.1);
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      position: absolute;
+      left: 13px;
+      right: 13px;
+      height: 1.5px;
+      border-radius: 1px;
+      background: #f4f1e8;
+      transition: transform 0.45s var(--nav-ease), top 0.45s var(--nav-ease);
+    }
+
+    .nav-toggle span:first-child { top: 18px; }
+    .nav-toggle span:last-child { top: 25px; }
+
+    .nav.is-open .nav-toggle span:first-child { top: 21.5px; transform: rotate(45deg); }
+    .nav.is-open .nav-toggle span:last-child { top: 21.5px; transform: rotate(-45deg); }
+
+    .nav-sheet {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 120px 28px 40px;
+      background: rgba(14, 14, 13, 0.7);
+      backdrop-filter: blur(26px) saturate(140%);
+      -webkit-backdrop-filter: blur(26px) saturate(140%);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+    }
+
+    .nav-sheet.is-open {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease;
+    }
+
+    .nav-sheet a {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      color: #f4f1e8;
+      font-family: 'Newsreader', 'Times New Roman', serif;
+      font-size: clamp(40px, 12vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .nav-sheet a span {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: rgba(244, 241, 232, 0.5);
+    }
+
+    .nav-sheet.is-open a {
+      opacity: 1;
+      transform: none;
+      transition-delay: calc(0.08s + var(--n) * 0.06s);
+    }
+
+    .nav-sheet .nav-clock {
+      justify-self: auto;
+      margin-top: 28px;
+      animation: none;
+    }
+
+    @media (max-width: 820px) {
+      .nav {
+        grid-template-columns: 1fr auto;
+        height: 58px;
+        padding: 0 8px 0 10px;
+      }
+
+      .nav-links,
+      .nav > .nav-clock {
+        display: none;
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      .nav.is-compact {
+        width: calc(100% - 28px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .nav,
+      .nav-link,
+      .nav-clock {
+        animation: none;
+      }
+
+      .nav-roll i,
+      .nav-mark polygon,
+      .nav-pill {
+        transition: none;
+      }
+
+      .nav-dot::after {
+        display: none;
+      }
+    }
+
+    /* Live film grain, redrawn by the script below. */
+    .grain {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.11;
+    }
+
+    /* ---------- Loader ----------
+       A globe drawn in characters (X, @, # and friends). It opens on the
+       Korean peninsula, glowing bright white, zooms out to the whole
+       planet, and arcs
+       of light leave Seoul for the world's tech hubs. Drag spins the
+       globe, the pointer scrambles the letters under it, a click sends a
+       ripple. When the page is ready the letters blink out and the curtain
+       fades. */
+    .ax-loader {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      overflow: hidden;
+      cursor: grab;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .ax-loader.is-dragging {
+      cursor: grabbing;
+    }
+
+    html.ax-loading .ax-loader,
+    .ax-loader.is-leaving {
+      display: block;
+    }
+
+    .ax-loader.is-leaving {
+      pointer-events: none;
+    }
+
+    html.ax-loading {
+      overflow: hidden;
+    }
+
+    /* Grain sits over the loader while it is up. */
+    html.ax-loading .grain,
+    html.ax-grain-top .grain {
+      z-index: 9001;
+    }
+
+    .ax-loader-curtain {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      background: #0e0e0d;
+    }
+
+    .ax-loader-glow {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 90vmin;
+      height: 90vmin;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(50px);
+      pointer-events: none;
+    }
+
+    .ax-loader-glow.is-cool {
+      background: radial-gradient(circle, rgba(159, 180, 230, 0.16), transparent 64%);
+    }
+
+    .ax-loader-glow.is-warm {
+      width: 50vmin;
+      height: 50vmin;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 64%);
+    }
+
+    .ax-loader-globe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Load progress in pixel digits, small in the top-left corner. */
+    .ax-loader-pct {
+      position: absolute;
+      left: max(24px, 3.5vw);
+      top: max(24px, 4vh);
+      filter: drop-shadow(0 0 10px rgba(244, 241, 232, 0.22));
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .ax-loader.is-leaving .ax-loader-pct {
+      opacity: 0;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="ax-loader" aria-hidden="true">
+    <div class="ax-loader-curtain">
+      <span class="ax-loader-glow is-cool"></span>
+      <span class="ax-loader-glow is-warm"></span>
+    </div>
+    <canvas class="ax-loader-globe"></canvas>
+    <canvas class="ax-loader-pct"></canvas>
+  </div>
+  <script>
+    // Loader: Korea to the world, drawn in letters on a spinnable globe.
+    (function () {
+      var root = document.documentElement;
+      var loader = document.querySelector('.ax-loader');
+      if (!loader || !root.classList.contains('ax-loading')) return;
+      var curtain = loader.querySelector('.ax-loader-curtain');
+      var cv = loader.querySelector('.ax-loader-globe');
+      var ctx = cv.getContext('2d');
+      var pct = loader.querySelector('.ax-loader-pct');
+
+      var MIN_MS = 3600, MAX_MS = 8000, OUT_MS = 950;
+      var D2R = Math.PI / 180;
+      var start = performance.now(), last = start;
+
+      // Land, from Natural Earth 1:50m (public domain), run-length coded:
+      // rows north to south, alternating water/land runs in base 36.
+      // WORLD is 1 degree cells; NEAR covers 105-150E, 22-52N at 0.1 degree.
+      var WORLD = 'a0,a0,a0,a0,a0,a0,2u.a.l.n.5o,2j.s.1.13.1.2.5i,2c.2d.1p.1.3.c.n.3.1.4.2b,27.3.1.2b.u.c.3.3.a.m.c.3.a.9.28,22.8.1.r.1.1g.r.i.m.2.6.2.g.2.d.e.23,1t.6.4.v.1.1j.s.e.2.4.1u.c.20,1n.c.2.3.1.4.1.5.1.h.2.1k.u.6.1.5.16.1.l.1.5.2.2.9.20,1l.b.1.y.5.1i.x.3.16.9.n.m.n.3.1.2.5.2.2.1.r,1l.18.b.2.5.18.20.c.e.2.3.s.l.g.t,1j.j.6.l.l.13.1.1.z.2.y.7.l.w.l.9.3.4.t,1j.b.3.1.1.5.1.r.j.11.21.5.b.3.2.3.1.17.1.8.5.2.2.5.10,1i.m.1.c.1.g.h.z.21.6.b.5.1.1k.9.b.u,0.3.j.4.s.6.1.f.3.9.1.l.e.z.c.2.v.5.m.6.9.2f.1.5.j.2,0.2.f.l.a.6.1.1.5.j.3.6.1.n.c.y.b.2.q.d.m.8.5.2n.7.1.1.2.6.2,f.s.1.1y.b.x.11.m.b.3.3.1.3.3e,0.4.9.2e.1.g.a.t.11.t.2.4.1.3o,0.8.6.2d.3.h.7.m.18.u.1.3t,0.b.2.2e.6.e.7.l.9.a.q.4o,0.2p.4.h.8.i.b.c.o.r.1.3x,4.4.5.2f.1.g.a.d.f.c.m.d.1.4d,8.4.3.2d.1.3.3.9.c.c.h.7.n.4t,a.1.3.24.6.k.d.a.x.2.b.e.2.4f,d.23.b.c.2.3.e.8.z.1.a.e.3.4b.4,6.2.4.22.f.c.1.2.f.7.14.2.4.49.2.e.7,c.l.2.1.2.1c.d.c.3.3.i.2.13.3.6.e.3.3q.3.8.3.1.9,h.c.c.1b.d.h.1i.6.7.d.3.3e.8.2.4.8.f,9.1.b.7.f.1c.9.1.1.h.1h.7.9.c.1.3c.f.8.g,a.1.7.6.1.2.h.1d.6.3.1.h.1g.6.a.9.1.1.2.3a.g.9.g,g.6.2.1.l.1g.1.n.1d.8.9.8.4.3b.g.8.2.2.d,d.5.1.2.p.1g.2.n.1a.b.8.3p.1.1.c.8.3.3.b,b.3.w.27.18.5.1.6.3.3w.b.6.b.1.7,3.5.1.3.z.2.1.23.18.d.2.3w.c.3.d.2.3.1.1.1,1.4.17.1.2.22.18.4.1.46.c.3.i.3,1f.22.1d.43.1.2.b.2.n,1g.1v.2.6.1e.44.9.1.p,1i.1q.4.8.1b.44.1.1.8.2.p,1j.21.1b.41.1.3.8.2.q,1j.1u.2.5.1d.3y.2.3.5.4.r,1j.1u.1l.x.1.h.1.2g.2.3.4.4.t,1j.1r.2.1.1l.w.3.3.1.b.1.2g.4.7.w,1j.1k.2.3.3.2.1d.o.1.e.a.9.2.2e.4.7.x,1j.1j.1o.e.4.7.1.c.5.3.4.9.2.2c.4.6.z,1j.1k.1o.d.4.2.1.7.1.v.2.27.8.3.12,1j.1h.1r.a.2.2.3.2.3.12.1.26.9.3.12,1j.1f.16.1.l.f.3.2.5.9.1.p.2.1w.1.7.b.3.12,1k.1e.19.2.h.c.6.1.3.6.2.t.4.1u.2.1.2.5.9.4.12,1l.1c.1d.1.g.9.6.b.3.v.2.1y.1.7.5.6.12,1l.1c.1d.1.i.6.1.d.1.2.5.2u.3.4.3.1.2.5.13,1m.1b.1w.j.2.1.8.5.4.2h.5.4.2.9.13,1n.19.1x.j.c.2.6.2h.5.f.13,1n.18.1w.l.n.2e.5.1.2.8.2.1.14,1p.14.e.1.1a.2.6.q.3.6.9.2g.6.6.1a,1r.11.1y.s.1.2v.7.3.1c,1r.10.1z.3p.7.2.1c,1p.1.2.s.2.6.1u.1.2.1o.1.21.1l,1p.1.2.l.5.1.6.3.1q.1v.1.20.7.1.1e,1s.k.d.3.1p.2.1.1.1.1s.1.1y.7.2.1e,1t.4.1.d.e.3.1.2.1q.1v.1.1w.6.2.d.1.11,1v.g.f.2.1.3.1p.1e.1.g.3.1t.1.1.1m,1v.g.f.2.1.5.1m.1g.1.l.8.1h.1.2.1.3.1i,1x.2.1.b.d.4.2.4.1l.1h.2.m.7.1f.2.2.1m,j.2.1c.2.2.a.c.8.2.3.1j.1i.1.m.8.1d.3.2.1m,j.5.1d.a.6.5.1.3.1.6.1.3.1h.26.9.18.7.1.1n,m.3.1d.a.5.5.7.7.1i.1k.1.k.b.h.5.g.1.2.a.2.1l,n.3.1c.b.3.5.5.1.3.a.1f.1j.2.i.e.f.5.f.1.4.9.1.1m,o.1.17.2.5.i.8.3.1.d.19.1k.2.h.e.d.8.e.1.3.9.3.m.1.y,25.g.9.2.4.1.3.4.1.2.z.2.7.1l.1.g.g.b.a.e.c.3.1l,27.d.1.2.m.2.z.2.1.1.5.20.i.a.b.f.a.4.m.1.y,2a.3.1.b.l.1.10.3.4.1n.1.b.k.9.c.2.1.c.a.4.m.1.y,2f.a.l.2.z.2.5.1x.n.7.g.d.a.5.k.1.y,2g.9.l.3.16.1u.p.7.b.2.4.c.a.5.j.1.z,2k.5.a.5.6.1.18.1r.7.2.j.7.b.2.3.d.9.7.1i,2l.4.8.7.3.2.2.1.17.1p.3.5.k.1.2.5.c.2.4.2.2.8.9.7.14.1.d,2m.3.7.g.18.1w.n.5.c.1.5.2.3.6.9.9.1h,2m.q.1a.1t.p.5.b.1.5.3.3.3.a.2.3.5.b.1.15,2o.p.19.1t.m.1.2.6.b.1.4.3.3.3.9.3.3.5.1h,2q.2.1.l.19.1r.t.3.b.1.4.3.f.2.3.6.7.1.g.1.g.1.2.1.8,2u.l.19.1q.t.3.b.1.5.4.d.3.1.7.v.1.a.1.1.1.8,2u.q.15.d.2.19.v.1.e.3.2.4.a.8.2.2.10.1.6.1.a,2u.r.15.5.2.2.6.18.o.1.l.4.1.4.4.1.4.6.7.1.1h,k.1.29.s.1m.14.p.1.m.8.1.2.1.1.3.6.7.2.4.1.14.1.7,m.1.26.t.1n.12.1c.b.2.2.1.8.6.1.1.2.1f,m.1.25.v.1k.1.1.11.1f.8.3.b.1.3.1.2.1.2.17.2.6,2g.1.a.w.1j.1.2.z.1h.8.3.h.2.3.16.2.6,2g.3.8.z.1i.z.1j.8.3.9.1.5.3.a.t.1.2.1.4.1.5,2g.2.9.11.1g.y.1k.9.1.a.1.l.6.2.1.1.o.1.5,8.1.2i.16.1c.x.1l.a.1.7.1.5.1.j.3.2.1.4.r,8.1.2h.18.1c.v.1n.9.1.7.1.6.2.5.1.d.6.2.r,5.1.1.2.f.2.20.1a.1b.t.f.1.1a.4.8.3.2.5.8.f.4.3.q,o.1.21.1b.1b.s.1q.6.4.1.6.6.7.3.2.g.1.2.o,2q.1c.1a.s.1t.b.4.1.3.1.9.1.3.e.2.4.m,2s.1a.j.1.q.s.w.1.x.9.5.1.4.5.1.1.5.b.7.5.i.1.1,7.1.v.2.1n.1a.1b.r.1y.m.5.7.1.4.2.2.3.6.g.2,8.1.u.3.1n.18.1c.r.24.5.2.4.d.4.2.7.6.3.i,14.2.1n.17.1d.s.1s.1.d.6.7.1.9.1.4.5.9.2.2.2.d,s.1.21.15.1e.s.2.1.2e.7.4.3.9.2.4.2.5.1.d,2u.15.1d.t.2.3.2.2.28.7.4.3.x.1.2,3.1.3.2.2m.13.1e.t.6.4.23.2.1.8.4.3.n.1.c,1.1.6.2.2l.13.1e.t.6.4.22.c.4.5.k.3.b,y.1.1x.12.w.1.g.u.4.6.21.e.3.5.k.3.b,0.1.r.1.5.1.1.2.1v.11.w.1.g.u.3.7.1z.o.l.2.9.2,0.2.s.1.8.1.1v.y.1e.s.4.7.20.p.l.1.8.3,0.2.3.2.3.1.s.1.2.2.1t.w.1e.q.7.6.1z.q.l.2.7.3,0.2.8.1.2q.w.1f.o.8.6.7.1.1p.u.a.1.9.1.7.2.1,1.1.13.1.1v.v.1h.n.7.6.6.1.1.1.1l.z.e.4.1.1.a,4.2.e.1.2g.v.1h.n.7.6.6.1.1l.11.e.5.5.1.5,31.u.1j.m.7.6.1s.12.f.2.c,31.s.1l.m.7.5.1t.13.s,1f.1.1l.p.1o.m.7.5.1t.15.q,31.o.1p.l.9.4.1s.16.q,31.n.1q.j.28.15.q,1y.1.11.o.1r.i.28.15.q,30.o.1r.i.29.14.q,30.n.1t.g.2a.14.q,30.m.1v.e.2b.14.q,30.m.1v.e.2c.13.q,30.l.1w.d.2d.e.3.l.r,2t.1.6.k.1x.b.2e.b.9.i.s,2z.k.1z.8.2g.6.f.h.k.2.6,2z.g.4t.3.h.f.m.2.5,2y.i.5c.2.1.c.m.3.4,2y.i.5f.b.o.5.1,2y.h.5h.8.q.5.1,2y.d.5o.2.1.3.o.5.2,2y.c.5p.6.n.5.3,2x.d.5q.5.m.6.3,2x.c.5s.4.l.5.5,3.1.2t.b.5t.3.k.6.6,3.1.2s.b.6g.5.8,2w.b.6f.6.8,2w.a.2v.1.d.1.36.5.9,2w.b.6g.2.b,2w.b.3p.2.32,2w.9.3r.3.31,2w.9.6g.2.d,2w.8.6.5.6l,2w.8.7.3.3n.1.2n.1.a,2x.8.t.1.32.1.2y,2y.b.o.4.5d.1.l,31.5.6u,a0,a0,49.1.5q,a0,3q.1.69,3d.2.1.2.6i,39.7.6k,39.8.6j,37.9.6k,35.7.34.4.10.1.7.5.6.3.1u,33.9.30.a.r.v.3.9.1.f.i.2.g,32.6.2z.r.a.1v.h.1.f,2z.3.2.8.2k.3.4.v.7.27.o,2w.2.1.c.24.2.f.12.3.2g.j,2v.4.1.c.1d.2.1.3.1.2.2.1y.1.2p.c,25.7.j.h.1b.54.9,22.d.1.4.7.1.4.h.16.1.1.56.9,1g.a.1.1.1.2.7.1b.11.2.3.57.a,17.r.8.16.11.3.1.55.e,x.2c.10.5a.h,t.2d.y.5f.h,l.2f.n.5.8.5l.1.4.a,f.4.2.2e.1.6.f.8.6.5p.c,f.6.3.28.4.7.3.3.7.a.5.5j.i,p.2.1.2c.1.8.4.c.3.5l.j,g.4.1.2p.b.5.2.5s.g,5.5.6.3.2.2.1.2o.2.6b.b,6.9r.3,0.a0,0.a0,0.a0,0.a0,0.a0,0.a0';
+      var NEAR = '0.a4.2.h.1v,0.a4.2.h.1v,0.a2.5.g.1v,0.a1.6.h.1u,0.a0.9.g.1t,0.9z.b.f.1t,0.9z.c.e.1t,0.9y.d.f.1s,0.9x.f.e.1s,0.9x.f.f.1r,0.9x.e.g.1r,0.9w.f.g.1r,0.9w.e.h.1r,0.9w.e.i.1q,0.9v.f.i.1q,0.9v.f.i.1q,0.9w.f.i.1p,0.9w.f.i.1p,0.9w.f.j.1o,0.9x.e.j.1o,0.9w.f.k.1n,0.9v.g.k.1n,0.9w.f.l.1m,0.9w.f.l.1m,0.9w.f.m.1l,0.9v.f.n.1l,0.9v.f.n.1l,0.9v.f.g.2.6.1k,0.9u.g.c.9.3.1k,0.9u.f.c.b.4.1i,0.9u.f.b.d.4.1h,0.9u.e.c.f.3.1g,0.9t.f.c.g.2.1g,0.9t.f.b.h.2.1g,0.9s.h.a.1z,0.9s.i.8.20,0.9r.j.8.20,0.9q.l.6.21,0.9o.n.6.21,0.9n.o.5.22,0.9m.p.5.22,0.9k.q.6.22,0.9k.q.6.22,0.9j.q.8.21,0.9i.r.9.20,0.9h.s.a.1z,0.9h.s.b.1y,0.9f.u.c.1x,0.9e.w.b.1x,0.9d.w.c.1x,0.9c.x.d.1w,0.9c.x.g.1t,0.9b.x.i.1s,0.9a.y.8.1.9.1s,0.9a.y.7.4.7.1s,0.99.z.6.9.3.1s,0.98.10.6.9.3.1s,0.98.10.5.a.3.1s,0.97.12.4.b.1.1t,0.96.13.4.b.1.1s.1,0.95.14.3.24.2,0.94.3a.4,0.93.3a.5,0.92.3a.4.2,0.90.19.1.1u.3.5.2.4,0.8z.10.2.5.5.1r.5.b,0.8y.11.2.5.7.1j.3.2.6.b,0.8x.13.3.2.9.1i.8.e,0.8v.16.3.1.a.1f.7.h,0.8u.1c.a.1c.7.j,0.8t.1d.b.1a.7.k,0.8s.1f.b.17.6.n,0.8r.1g.c.16.5.o,0.8p.1i.d.14.4.q,0.8p.1i.f.t.1.7.4.r,0.8o.1j.g.r.6.3.2.t,0.8m.1k.j.h.2.5.7.y,0.8l.1l.l.e.3.4.6.10,0.8k.1m.q.8.4.3.4.13,0.8j.1n.s.4.5.3.4.14,0.8i.1n.12.2.4.15,0.8h.1n.12.2.3.9.3.v,0.8h.1n.12.2.2.a.3.v,0.8f.1o.13.2.2.6.2.10,0.8e.1p.14.1b,0.8d.1r.13.5.4.12,0.8b.1i.4.6.15.1.4.15,0.8a.1j.7.2.19.17,0.7k.1.m.1m.1h.18,0.7f.1.2.3.k.1p.1c.1c,0.7e.7.i.1q.1b.1e,0.7d.8.g.1r.13.1n,0.7c.e.1.1.5.1t.13.1p,0.7b.i.1.1u.14.1q,0.77.2h.12.1s,0.77.2h.7.2.7.6.f.1t,0.76.2i.6.5.3.a.d.1t,0.75.2f.2.2.7.j.a.1u,0.71.2j.2.2.a.i.8.1u,0.70.2k.2.4.9.k.5.1u,0.6z.2r.b.2h,0.6y.2s.c.2g,0.6x.2t.c.2g,0.6w.2u.6.2m,0.6v.2u.6.4.1.2i,0.6w.2u.4.4.4.2.1.2d,0.6w.32.7.2d,0.6w.2x.4.1.7.2d,0.6w.2x.4.1.3.1.3.2d,0.6w.2x.4.5.3.2d,0.6w.2x.4.1.7.2d,0.6w.2w.d.2d,0.4h.8.25.2v.g.2d,0.4g.b.21.2x.g.2d,0.4e.d.1z.2z.h.2c,0.4d.f.1y.2z.j.2a,0.4d.e.1x.31.j.2a,0.4c.e.1v.34.k.29,0.4a.f.1w.34.k.29,0.48.g.1v.35.m.28,0.45.h.1s.39.n.28,0.42.i.1t.3a.n.28,0.41.j.m.9.w.3f.k.28,0.40.j.k.d.u.3g.k.28,0.3z.j.h.j.s.3g.k.28,0.3z.j.f.q.n.3g.k.28,0.3z.j.d.s.n.3f.l.28,0.3y.o.7.u.m.3g.l.28,0.3m.1.a.p.6.u.q.3c.m.28,0.3k.4.3.s.8.v.r.3b.l.29,0.3k.x.8.w.t.3a.k.2a,0.3j.y.6.y.v.37.k.2b,0.3i.z.3.11.x.34.k.2c,0.3i.23.x.33.l.2c,0.3j.20.10.32.l.2c,0.3j.20.10.31.m.2c,0.3k.1y.12.2q.2.8.l.2d,0.3m.1w.13.2o.3.8.h.2h,0.3v.1l.15.2n.3.8.h.2i,0.3w.1n.13.2m.4.6.i.2i,0.3x.1j.2.1.14.2l.4.4.k.2i,0.3x.f.3.15.7.2.v.2k.3.3.m.2i,0.3x.c.8.16.3.4.2.1.s.2o.o.2h,0.3x.b.b.1e.t.2n.o.2h,0.3w.b.f.4.2.18.q.g.2.1q.2.c.p.2h,0.3w.9.s.13.r.f.2.1n.5.b.q.2h,0.3w.8.t.14.r.21.6.b.r.2h,0.3y.6.s.15.r.21.5.a.t.2h,0.4w.15.s.20.3.9.w.2h,0.4w.12.v.20.4.5.y.2i,0.4w.10.x.20.4.3.10.2i,0.4p.3.3.10.y.20.4.2.10.2j,0.4m.19.y.1z.16.2k,0.4j.1c.y.1y.17.2k,0.4g.1h.w.1x.17.2l,0.4g.1h.w.1w.18.2l,0.4e.1l.u.11.2.s.19.2l,0.4d.1m.t.11.3.r.19.2m,0.48.1.4.1m.u.11.2.q.1b.2l,0.4b.1p.u.1s.1b.2l,0.49.1r.u.1s.1c.2k,0.48.1t.t.1s.1c.2k,0.47.1s.v.1i.3.7.1d.2j,0.46.1s.v.1c.a.5.1e.2k,0.44.1u.v.x.6.1.3.1.1n.2.6.2m,0.43.1v.v.v.20.1.6.2n,0.42.1v.v.w.1z.1.7.2n,0.41.1w.v.u.29.2n,0.40.1w.v.u.1x.3.9.2o,0.40.1x.r.w.1t.1.4.6.4.2q,0.3z.1v.1.2.p.w.1u.2.4.5.4.2r,0.3y.1w.2.2.h.2.5.v.1c.1.h.2.5.7.1.2s,0.41.1t.l.4.3.u.1c.2.g.3.4.2.2.2x,0.42.1u.d.1.2.f.2.k.s.5.j.3.d.4.3.3.2.2x,0.44.1r.e.2.1.f.2.j.u.4.3.2.f.2.2.9.1.3a,0.47.1o.9.2.2.i.3.f.t.2.3.3.3.2.h.3n,0.49.1m.2.2.3.o.2.f.p.4.5.3.4.1.i.3n,0.4a.1r.1.n.3.e.f.2.5.6.e.1.h.3o,0.4a.2f.3.e.f.1.2.a.b.4.d.3s,0.4a.2g.1.g.e.1.2.1.4.4.c.4.c.3t,0.4b.2t.4.1.3.4.7.2.k.4.c.3t,0.4b.2j.2.6.6.a.5.2.l.3.b.3u,0.4c.2i.2.6.7.f.l.5.9.3v,0.4c.2o.a.2.3.7.m.7.8.3v,0.4d.1l.6.t.j.5.l.a.6.3w,0.4d.1j.8.s.k.3.g.1.5.d.2.3y,0.4e.1h.9.o.n.3.3.1.a.6.3.4d,0.4e.1h.7.p.q.5.9.8.1.4e,0.4f.29.2.1.2.1.n.5.9.1s.2.2t,0.4f.29.2.4.6.1.h.4.8.1t.2.2t,0.4f.28.3.4.6.2.h.3.7.4p,0.4f.29.1.5.p.5.4.4q,0.4f.25.3.8.7.1.f.6.4.4q,0.4g.24.3.8.3.2.h.51,0.4i.23.1.9.2.1.2.1.f.52,0.4k.2d.i.53,0.4l.2c.3.2.d.53,0.4l.2c.3.1.d.54,0.4m.2c.1.1.e.54,0.4o.2b.f.54,0.4p.2a.f.54,0.4p.2a.e.55,0.4h.1.7.26.1.3.e.55,0.4o.26.2.4.d.55,0.4p.2c.3.1.8.55,0.4p.2a.5.1.7.56,0.4n.2c.a.59,0.4o.2b.a.59,0.4p.2e.6.59,0.4p.2f.3.5b,0.4p.7t,0.4p.2j.1.59,0.4l.2m.2.59,0.4k.2n.2.59,0.4h.2q.2.59,0.4g.2m.3.1.2.5a,0.4g.1.2.2i.4.1.2.5a,0.4c.3.6.2h.3.5d,0.4m.3.4.7p,0.4n.2.5.7o,0.4q.1.4.7n,0.4r.2.2.7n,0.4s.7q,0.4q.1.1.7q,0.4q.7s,0.4q.7s,0.4q.7s,0.4q.7s,0.4m.2.2.7s,0.4n.7v,0.4n.7v,0.4n.7v,0.4n.7v,0.4m.7w,0.4m.28.1.5n,0.4m.27.3.5m,0.4n.23.5.5n,0.4n.22.5.5o,0.4j.26.4.5p,0.4g.1.2.27.2.5q,0.4f.28.1.5u,0.4f.27.2.5u,0.4e.28.3.5t,0.4d.85,0.4d.85,0.4d.85,0.4c.86,0.4c.86,0.4b.87,0.49.89,0.49.89,0.48.28.2.60,0.48.27.3.3t.1.26,0.47.25.5.3u.2.25,0.46.26.4.62,0.45.26.3.64,0.45.26.3.64,0.44.26.3.65,0.43.27.3.65,0.43.27.2.66,0.43.8f,0.43.8f,0.43.8f,0.42.1.2.8d,0.45.8d,0.45.8d,0.3z.2.2.8f,0.3z.l.3.7v,0.3w.l.8.7t,0.3w.k.a.7s,0.3w.j.b.7s,0.3v.j.b.x.2.6u,0.3u.k.b.x.3.6t,0.3t.k.c.7t,0.3t.j.d.n.2.74,0.3r.k.e.i.2.1.3.75,0.3n.o.d.i.4.1.2.75,0.3n.n.e.i.4.78,0.3n.m.e.7v,0.3l.o.e.7v,0.3k.o.f.7v,0.3j.p.e.7w,0.3h.q.f.7w,0.3h.q.f.7w,0.3b.1.2.1.1.r.f.7w,0.3b.w.e.7x,0.3a.x.e.7x,0.39.x.f.7x,0.38.y.f.7x,0.38.y.e.7y,0.38.z.d.7y,0.34.13.c.7z,0.2y.1a.a.80,0.2e.1.9.1.3.1g.9.81,0.2e.2.8.1k.8.82,0.2e.2.6.1n.7.82,0.2e.3.5.1p.5.82,0.2e.2.5.1r.3.83,0.2d.7.1.1r.3.83,0.2b.21.3.83';
+      function decode(code, w) {
+        var rows = code.split(','), out = new Uint8Array(w * rows.length);
+        rows.forEach(function (row, r) {
+          var c = 0, v = 0;
+          row.split('.').forEach(function (n) {
+            n = parseInt(n, 36);
+            if (v) out.fill(1, r * w + c, r * w + c + n);
+            c += n; v ^= 1;
+          });
+        });
+        return out;
+      }
+      var world = decode(WORLD, 360), near = decode(NEAR, 450);
+      function isLand(lat, lon) {
+        if (lon >= 105 && lon < 150 && lat > 22 && lat <= 52) return near[Math.floor((52 - lat) * 10) * 450 + Math.floor((lon - 105) * 10)];
+        var r = Math.min(179, Math.max(0, Math.floor(90 - lat)));
+        return world[r * 360 + Math.min(359, Math.max(0, Math.floor(lon + 180)))];
+      }
+      // The Korean peninsula: north of it, the border along the Yalu and
+      // Tumen rivers; Tsushima, Iki and Kyushu (Japan) cut out.
+      var BORDER = [[124.2, 40.0], [126.3, 41.15], [128.1, 42.0], [129.7, 42.95], [130.75, 42.4]];
+      function inKorea(lat, lon) {
+        if (lon < 124 || lon > 130.75 || lat < 33 || lat > 43) return false;
+        if (lon > 129.1 && lon < 129.6 && lat > 34 && lat < 34.8) return false;
+        // Kyushu and Iki (Japan) sit south-east of Busan.
+        if (lat < 34.25 && lon > 128.8) return false;
+        for (var b = 1; b < BORDER.length; b++) {
+          if (lon <= BORDER[b][0] || b === BORDER.length - 1) {
+            var p = BORDER[b - 1], q = BORDER[b];
+            return lat < p[1] + (q[1] - p[1]) * Math.max(0, Math.min(1, (lon - p[0]) / (q[0] - p[0])));
+          }
+        }
+        return false;
+      }
+
+      // Every land is drawn in the same characters; Korea glows bright white
+      // while the rest of the world is a dimmer cream.
+      var LETTERS = ['X', 'x', '@', '#', '*', '+'], NL = LETTERS.length;
+      var CREAM = '#f4f1e8', WHITE = '#ffffff';
+      var atlas = document.createElement('canvas'), actx = atlas.getContext('2d');
+
+      var W, H, dpr, CELL, cols, rows, n, glyph, nextFlip, born, gone;
+      function layout() {
+        W = window.innerWidth; H = window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        CELL = W < 700 ? 11 : 14;
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        cols = Math.ceil(W / CELL); rows = Math.ceil(H / CELL); n = cols * rows;
+        glyph = new Uint8Array(n); nextFlip = new Float32Array(n);
+        born = new Float32Array(n); gone = new Float32Array(n);
+        for (var k = 0; k < n; k++) {
+          glyph[k] = Math.floor(Math.random() * NL);
+          born[k] = 80 + Math.random() * 520;
+          gone[k] = Math.random() * 620;
+        }
+        // Glyph atlas: a cream row, and a white row with its glow baked in.
+        var A = Math.ceil(CELL * dpr);
+        atlas.width = A * NL; atlas.height = A * 2;
+        actx.clearRect(0, 0, atlas.width, atlas.height);
+        actx.textAlign = 'center'; actx.textBaseline = 'middle';
+        actx.font = '600 ' + Math.round(A * 0.82) + 'px "SF Mono", ui-monospace, Menlo, Consolas, monospace';
+        [CREAM, WHITE].forEach(function (col, row) {
+          actx.fillStyle = col;
+          actx.shadowColor = row ? 'rgba(255, 255, 255, 0.85)' : 'transparent';
+          actx.shadowBlur = row ? A * 0.32 : 0;
+          LETTERS.forEach(function (g, i) {
+            actx.fillText(g, i * A + A / 2, row * A + A / 2 + A * 0.04);
+          });
+        });
+        actx.shadowBlur = 0;
+      }
+      layout();
+      window.addEventListener('resize', layout);
+
+      // View: orthographic globe centred on (lam0, phi0), radius R pixels.
+      var lam0 = 127.6 * D2R, phi0 = 36.2 * D2R, vlam = 0, vphi = 0, spin = 0;
+      function radius(z) {
+        var R0 = Math.max(W, H) * 0.8 / (11 * D2R), R1 = Math.min(W, H) * (W < 700 ? 0.42 : 0.36);
+        return R0 * Math.pow(R1 / R0, z);
+      }
+      function smooth(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+      function inout(t) { t = Math.max(0, Math.min(1, t)); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+
+      // Pointer: hover scramble, drag to spin, click ripple.
+      var px = -1e4, py = -1e4, lastMove = -1e4, drag = null, played = false, ripples = [];
+      function play() { played = true; }
+      loader.addEventListener('pointermove', function (e) {
+        var now = performance.now();
+        if (drag) {
+          var R = radius(zoomAt(now - start));
+          var dl = (e.clientX - px) / R, dp = (e.clientY - py) / R;
+          lam0 -= dl; phi0 = Math.max(-1.2, Math.min(1.2, phi0 + dp));
+          var dt = Math.max(8, now - drag.t) / 1000;
+          vlam = -dl / dt; vphi = dp / dt;
+          drag.t = now;
+          if (Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 6) { drag.moved = true; play(); }
+        }
+        px = e.clientX; py = e.clientY; lastMove = now;
+      });
+      loader.addEventListener('pointerdown', function (e) {
+        px = e.clientX; py = e.clientY; lastMove = performance.now();
+        drag = { x: px, y: py, t: lastMove, moved: false };
+        vlam = vphi = 0;
+        loader.classList.add('is-dragging');
+        if (loader.setPointerCapture) try { loader.setPointerCapture(e.pointerId); } catch (err) {}
+      });
+      function release() {
+        if (!drag) return;
+        if (!drag.moved) { ripples.push({ x: px, y: py, t: performance.now() }); if (ripples.length > 5) ripples.shift(); play(); }
+        drag = null;
+        loader.classList.remove('is-dragging');
+      }
+      loader.addEventListener('pointerup', release);
+      loader.addEventListener('pointercancel', release);
+
+      // Real progress: images in the document, web fonts, then window load.
+      var fontsDone = false, loaded = false;
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { fontsDone = true; });
+      else fontsDone = true;
+      window.addEventListener('load', function () { loaded = true; });
+      function target() {
+        if (loaded) return 1;
+        var imgs = document.images, done = 0;
+        for (var i = 0; i < imgs.length; i++) if (imgs[i].complete) done++;
+        return (done + (fontsDone ? 1 : 0)) / (imgs.length + 2);
+      }
+
+      // Pixel digits for the percentage (5 x 7 bitmaps, 3 digits and %).
+      var DIGITS = {
+        '0': ['01110', '10001', '10011', '10101', '11001', '10001', '01110'],
+        '1': ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+        '2': ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+        '3': ['11110', '00001', '00001', '01110', '00001', '00001', '11110'],
+        '4': ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+        '5': ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+        '6': ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+        '7': ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+        '8': ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+        '9': ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+        '%': ['11000', '11001', '00010', '00100', '01000', '10011', '00011']
+      };
+      var PCOLS = 23, PROWS = 7, pctx = pct.getContext('2d');
+      var lit = new Float32Array(PCOLS * PROWS), want = new Uint8Array(PCOLS * PROWS), pace = new Float32Array(PCOLS * PROWS);
+      for (var q = 0; q < pace.length; q++) pace[q] = 0.04 + Math.random() * 0.1;
+      var pp = 4, shownPct = -1;
+      function sizePct() {
+        var d = Math.min(window.devicePixelRatio || 1, 2);
+        pp = Math.max(3, Math.min(5, Math.round(window.innerWidth * 0.003)));
+        pct.width = Math.round(PCOLS * pp * d); pct.height = Math.round(PROWS * pp * d);
+        pct.style.width = PCOLS * pp + 'px'; pct.style.height = PROWS * pp + 'px';
+        pctx.setTransform(d, 0, 0, d, 0, 0);
+      }
+      sizePct();
+      window.addEventListener('resize', sizePct);
+      function setPct(v) {
+        if (v === shownPct) return;
+        shownPct = v;
+        var str = String(v);
+        while (str.length < 3) str = ' ' + str;
+        str += '%';
+        want.fill(0);
+        for (var g = 0; g < 4; g++) {
+          var bm = DIGITS[str[g]];
+          if (!bm) continue;
+          for (var r = 0; r < PROWS; r++) for (var c = 0; c < 5; c++) if (bm[r][c] === '1') want[r * PCOLS + g * 6 + c] = 1;
+        }
+      }
+      function drawPct(dt) {
+        pctx.clearRect(0, 0, PCOLS * pp, PROWS * pp);
+        pctx.fillStyle = CREAM;
+        for (var i = 0; i < lit.length; i++) {
+          lit[i] += (want[i] - lit[i]) * (1 - Math.exp(-dt / pace[i]));
+          if (lit[i] < 0.02) continue;
+          var sz = (pp - 1) * (0.5 + 0.5 * lit[i]);
+          pctx.globalAlpha = lit[i];
+          pctx.fillRect((i % PCOLS) * pp + (pp - sz) / 2, Math.floor(i / PCOLS) * pp + (pp - sz) / 2, sz, sz);
+        }
+        pctx.globalAlpha = 1;
+      }
+
+      // Arcs from Seoul to the hubs AttentionX founders build toward.
+      var SEOUL = [126.98, 37.57];
+      var HUBS = [[-122.42, 37.77], [-74.0, 40.71], [-0.13, 51.51], [103.82, 1.35], [139.69, 35.69]];
+      function vec(lon, lat) { lon *= D2R; lat *= D2R; return [Math.cos(lat) * Math.cos(lon), Math.cos(lat) * Math.sin(lon), Math.sin(lat)]; }
+      var seoulV = vec(SEOUL[0], SEOUL[1]), koreaV = vec(127.6, 36.4);
+      var arcs = HUBS.map(function (h) {
+        var b = vec(h[0], h[1]);
+        var om = Math.acos(seoulV[0] * b[0] + seoulV[1] * b[1] + seoulV[2] * b[2]);
+        return { b: b, om: om };
+      });
+      function slerp(a, b, om, t) {
+        var s = Math.sin(om), ka = Math.sin((1 - t) * om) / s, kb = Math.sin(t * om) / s;
+        return [a[0] * ka + b[0] * kb, a[1] * ka + b[1] * kb, a[2] * ka + b[2] * kb];
+      }
+      // Project a unit vector (lifted by h) to screen; z > 0 faces us.
+      var sp0, cp0;
+      function project(v, h, R, out) {
+        var lat = Math.asin(Math.max(-1, Math.min(1, v[2]))), lon = Math.atan2(v[1], v[0]);
+        var cl = Math.cos(lat), dl = lon - lam0;
+        out[0] = W / 2 + R * h * cl * Math.sin(dl);
+        out[1] = H / 2 - R * h * (cp0 * Math.sin(lat) - sp0 * cl * Math.cos(dl));
+        out[2] = sp0 * Math.sin(lat) + cp0 * cl * Math.cos(dl);
+        return out;
+      }
+
+      function zoomAt(el) { return inout((el - 450) / 2300); }
+
+      var shown = 0, phase = 'run', outAt = 0;
+      var pt = [0, 0, 0];
+      function frame(now) {
+        // The safety timer in <head> may have removed the loader already.
+        if (!loader.isConnected) return;
+        var el = now - start, dt = Math.min(now - last, 40) / 1000;
+        last = now;
+
+        var goal = el > MAX_MS ? 1 : Math.min(target(), el / MIN_MS);
+        shown += (goal - shown) * (1 - Math.exp(-dt / 0.16));
+        if (goal === 1 && shown > 0.996) shown = 1;
+        setPct(Math.max(1, Math.round(shown * 100)));
+        drawPct(dt);
+
+        // Zoom out from Korea, tilting south a little, then keep turning east
+        // (unless someone has the globe in hand).
+        var z = zoomAt(el);
+        var R = radius(z);
+        if (!drag) {
+          spin += (smooth((el - 2300) / 900) * 0.16 - spin) * Math.min(1, dt * 3);
+          lam0 += (spin + vlam) * dt;
+          phi0 += vphi * dt;
+          vlam *= Math.exp(-dt * 2.2); vphi *= Math.exp(-dt * 2.2);
+          if (z < 1 && !played) phi0 += ((36.2 - 14 * z) * D2R - phi0) * Math.min(1, dt * 4);
+        }
+        phi0 = Math.max(-1.2, Math.min(1.2, phi0));
+        lam0 = ((lam0 + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+        sp0 = Math.sin(phi0); cp0 = Math.cos(phi0);
+
+        ctx.clearRect(0, 0, W, H);
+        // Atmosphere once the planet has an edge.
+        if (R < Math.max(W, H)) {
+          var halo = ctx.createRadialGradient(W / 2, H / 2, R * 0.9, W / 2, H / 2, R * 1.22);
+          halo.addColorStop(0, 'rgba(159, 180, 230, 0)');
+          halo.addColorStop(0.31, 'rgba(159, 180, 230, 0.14)');
+          halo.addColorStop(1, 'rgba(159, 180, 230, 0)');
+          ctx.fillStyle = halo;
+          ctx.beginPath(); ctx.arc(W / 2, H / 2, R * 1.22, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // A soft white glow under Korea, so it still reads when it is small.
+        project(koreaV, 1, R, pt);
+        if (pt[2] > 0) {
+          var kr = Math.max(40, R * 0.16);
+          var kg = ctx.createRadialGradient(pt[0], pt[1], 0, pt[0], pt[1], kr);
+          kg.addColorStop(0, 'rgba(255, 255, 255, ' + (0.08 + 0.12 * z) * pt[2] + ')');
+          kg.addColorStop(1, 'rgba(255, 255, 255, 0)');
+          ctx.fillStyle = kg;
+          ctx.beginPath(); ctx.arc(pt[0], pt[1], kr, 0, Math.PI * 2); ctx.fill();
+        }
+
+        var A = Math.ceil(CELL * dpr), hoverR = drag ? 150 : 110;
+        var leaving = phase === 'out', tOut = now - outAt;
+        for (var j = 0; j < rows; j++) {
+          var y = j * CELL + CELL / 2 - H / 2;
+          for (var i = 0; i < cols; i++) {
+            var k = j * cols + i;
+            if (el < born[k]) continue;
+            if (leaving && tOut > gone[k]) continue;
+            var x = i * CELL + CELL / 2 - W / 2;
+            var rho = Math.sqrt(x * x + y * y);
+            if (rho >= R) continue;
+            var sc = rho / R, cc = Math.sqrt(1 - sc * sc), lat, lon;
+            if (rho < 1e-6) { lat = phi0; lon = lam0; }
+            else {
+              lat = Math.asin(cc * sp0 - y * sc * cp0 / rho);
+              lon = lam0 + Math.atan2(x * sc, rho * cc * cp0 + y * sc * sp0);
+            }
+            var latd = lat / D2R, lond = ((lon / D2R + 540) % 360) - 180;
+            var shade = 0.28 + 0.72 * cc;
+            // Pointer and ripples stir the characters.
+            var boost = 0;
+            var hx = x + W / 2 - px, hy = y + H / 2 - py, hd = Math.sqrt(hx * hx + hy * hy);
+            if (hd < hoverR) boost = 1 - hd / hoverR;
+            for (var r = 0; r < ripples.length; r++) {
+              var rp = ripples[r], age = (now - rp.t) / 1000;
+              if (age > 1.4) continue;
+              var rx = x + W / 2 - rp.x, ry = y + H / 2 - rp.y;
+              var band = (Math.sqrt(rx * rx + ry * ry) - age * 700) / 40;
+              boost = Math.max(boost, Math.exp(-band * band) * (1 - age / 1.4));
+            }
+            var fresh = el - born[k] < 220 || (leaving && gone[k] - tOut < 160);
+            if (isLand(latd, lond)) {
+              var korea = inKorea(latd, lond);
+              if (now > nextFlip[k] || fresh) {
+                glyph[k] = Math.floor(Math.random() * NL);
+                nextFlip[k] = now + (boost > 0.05 || fresh ? 40 + Math.random() * 60 : 500 + Math.random() * 2200);
+              }
+              var a = shade * (korea ? 1 : 0.45) + boost * 0.45;
+              ctx.globalAlpha = Math.min(1, fresh ? a * 1.3 : a);
+              ctx.drawImage(atlas, glyph[k] * A, korea ? A : 0, A, A, i * CELL, j * CELL, CELL, CELL);
+            } else {
+              ctx.globalAlpha = Math.min(1, 0.07 * shade + boost * 0.35);
+              ctx.fillStyle = boost > 0.2 ? WHITE : CREAM;
+              var d = boost > 0.2 ? 3 : 2;
+              ctx.fillRect(i * CELL + (CELL - d) / 2, j * CELL + (CELL - d) / 2, d, d);
+            }
+          }
+        }
+
+        // Arcs leave Seoul once the planet is in view, then signals travel
+        // out and back along them.
+        var arcT = (el - 2500) / 1000;
+        if (arcT > 0 && !(leaving && tOut > 300)) {
+          ctx.lineWidth = 1.4;
+          ctx.strokeStyle = WHITE;
+          arcs.forEach(function (arc, ai) {
+            var f = smooth(arcT - ai * 0.12);
+            if (f <= 0) return;
+            ctx.globalAlpha = 0.75 * (leaving ? Math.max(0, 1 - tOut / 300) : 1);
+            ctx.beginPath();
+            var steps = 40, pen = false;
+            for (var s2 = 0; s2 <= steps * f; s2++) {
+              var tt = s2 / steps;
+              project(slerp(seoulV, arc.b, arc.om, tt), 1 + 0.12 * Math.sin(Math.PI * tt) * Math.min(1, arc.om), R, pt);
+              if (pt[2] > 0.02) { if (pen) ctx.lineTo(pt[0], pt[1]); else ctx.moveTo(pt[0], pt[1]); pen = true; }
+              else pen = false;
+            }
+            ctx.stroke();
+            if (f >= 1) {
+              var ph = ((el / 1000) * 0.45 + ai * 0.21) % 1, tt2 = ph < 0.5 ? ph * 2 : 2 - ph * 2;
+              project(slerp(seoulV, arc.b, arc.om, tt2), 1 + 0.12 * Math.sin(Math.PI * tt2) * Math.min(1, arc.om), R, pt);
+              if (pt[2] > 0.02) { ctx.globalAlpha = 0.95; ctx.fillStyle = CREAM; ctx.fillRect(pt[0] - 2, pt[1] - 2, 4, 4); }
+            }
+          });
+          // Seoul, pulsing.
+          project(seoulV, 1, R, pt);
+          if (pt[2] > 0) {
+            var pulse = (el / 1000) % 1.4 / 1.4;
+            ctx.globalAlpha = 0.8 * (1 - pulse);
+            ctx.beginPath(); ctx.arc(pt[0], pt[1], 3 + pulse * 18, 0, Math.PI * 2); ctx.stroke();
+            ctx.globalAlpha = 1; ctx.fillStyle = WHITE; ctx.fillRect(pt[0] - 3, pt[1] - 3, 6, 6);
+          }
+        }
+        ctx.globalAlpha = 1;
+
+        // Done: everyone has seen the planet and the page is ready. Someone
+        // spinning it keeps it up a little longer (to a hard cap).
+        var holding = drag || (played && now - lastMove < 650 && el < MAX_MS + 2500);
+        if (phase === 'run' && shown === 1 && el > MIN_MS && !holding) { phase = 'out'; outAt = now; leave(); }
+        if (phase !== 'out' || now - outAt < OUT_MS) requestAnimationFrame(frame);
+        else finish();
+      }
+
+      function leave() {
+        loader.classList.add('is-leaving');
+        root.classList.add('ax-grain-top');
+        root.classList.remove('ax-loading');
+        if (window.__axOpen) window.__axOpen();
+        if (curtain.animate) {
+          curtain.animate([{ opacity: 1 }, { opacity: 0 }], { duration: OUT_MS - 150, delay: 150, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' });
+          cv.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: OUT_MS - 400, fill: 'forwards' });
+        }
+      }
+
+      function finish() {
+        root.classList.remove('ax-grain-top');
+        window.removeEventListener('resize', layout);
+        window.removeEventListener('resize', sizePct);
+        loader.remove();
+      }
+
+      requestAnimationFrame(frame);
+    })();
+  </script>
+  <div class="ambient" aria-hidden="true"><span class="a"></span><span class="b"></span><span class="c"></span></div>
+
+  <header class="nav">
+    <a class="nav-logo" href="#top" aria-label="AttentionX, back to top" data-cursor-off>
+      <svg class="nav-mark" viewBox="0 0 100 100" aria-hidden="true">
+        <polygon class="d1" points="25,0 50,25 25,50 0,25" />
+        <polygon class="d2" points="75,0 100,25 75,50 50,25" />
+        <polygon class="d3" points="25,50 50,75 25,100 0,75" />
+        <polygon class="d4" points="75,50 100,75 75,100 50,75" />
+      </svg>
+    </a>
+
+    <nav class="nav-links" aria-label="Main">
+      <span class="nav-pill" aria-hidden="true"></span>
+      <a class="nav-link" href="#fellowship" style="--n: 0" data-cursor-off><span class="nav-num">01</span><span class="nav-roll">Fellowship</span></a>
+      <a class="nav-link" href="#companies" style="--n: 1" data-cursor-off><span class="nav-num">02</span><span class="nav-roll">Companies</span></a>
+      <a class="nav-link" href="#events" style="--n: 2" data-cursor-off><span class="nav-num">03</span><span class="nav-roll">Events</span></a>
+      <a class="nav-link" href="#news" style="--n: 3" data-cursor-off><span class="nav-num">04</span><span class="nav-roll">News</span></a>
+    </nav>
+
+    <div class="nav-clock"><span class="nav-dot" aria-hidden="true"></span>Seoul <time>--:--:--</time></div>
+
+    <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="nav-sheet" data-cursor-off><span></span><span></span></button>
+
+    <span class="nav-progress" aria-hidden="true"></span>
+
+    <a class="nav-contact" href="mailto:attentionx.ai@gmail.com" data-cursor-off>Contact</a>
+  </header>
+
+  <div class="nav-sheet" id="nav-sheet">
+    <a href="#fellowship" style="--n: 0"><span>01</span>Fellowship</a>
+    <a href="#companies" style="--n: 1"><span>02</span>Companies</a>
+    <a href="#events" style="--n: 2"><span>03</span>Events</a>
+    <a href="#news" style="--n: 3"><span>04</span>News</a>
+    <div class="nav-clock"><span class="nav-dot" aria-hidden="true"></span>Seoul <time>--:--:--</time></div>
+  </div>
+
+  <main class="bento">
+    <section class="tile hero">
+      <div class="hero-copy">
+        <h1 class="hero-sub" data-rise>We are Korea’s AI ecosystem.</h1>
+        <p class="hero-lede">Startups founded by our fellows are backed by <mark style="--i: 0">A16Z</mark>, <mark style="--i: 1">Arielle Zuckerberg</mark>, <mark style="--i: 2">Y Combinator</mark>, <mark style="--i: 3">Samsung Ventures</mark>, and <mark style="--i: 4">SoftBank</mark>.</p>
+      </div>
+      <img class="hero-fade" src="images/attentionx-logo.png" alt="AttentionX" />
+    </section>
+
+    <section class="tile manifesto" id="fellowship">
+      <div>
+        <p class="mf-label">Fellowship</p>
+        <p class="mf-lead" data-scrub>We are an AI researchers &amp; founders fellowship based in Seoul from academia and industry. We work on research, open-source projects, and real-world applications to build the next leading AI startups.</p>
+      </div>
+
+      <div class="mf-grid">
+        <div class="mf-col mf-col-raised">
+          <p class="mf-label">Raised by our fellows</p>
+          <div class="mf-stat" aria-label="$70,000,000"><span data-count-to="70000000">$70,000,000</span></div>
+          <p class="mf-body">Our fellows have raised over $70M in funding from leading venture funds and institutional investors.</p>
+          <ul class="mf-slots">
+            <li><a data-cursor-label="a16z"><img src="assets/coinvestors/ax-a16z.png" alt="a16z" /></a></li>
+            <li><a data-cursor-label="Long Journey Ventures"><img src="assets/coinvestors/ax-long-journey.jpg" alt="Long Journey Ventures" /></a></li>
+            <li><a data-cursor-label="Y Combinator"><img src="assets/coinvestors/ax-y-combinator.jpg" alt="Y Combinator" /></a></li>
+            <li><a data-cursor-label="South Park Commons"><img src="assets/coinvestors/ax-south-park-commons.jpg" alt="South Park Commons" /></a></li>
+            <li><a data-cursor-label="Samsung Ventures"><img src="assets/coinvestors/ax-samsung-ventures.png" alt="Samsung Ventures" /></a></li>
+            <li><a data-cursor-label="SoftBank"><img src="assets/coinvestors/ax-softbank.png" alt="SoftBank" /></a></li>
+          </ul>
+        </div>
+        <div class="mf-col mf-col-ms">
+          <p class="mf-label">Milestones</p>
+          <div class="mf-body mf-points" data-points>
+            <p>We’re the <em>launchpad</em> for</p>
+            <ol>
+              <li class="go-out" style="--i: 0"><span class="mf-arrow" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span><span>Korean founders going global.</span></li>
+              <li class="go-in" style="--i: 1"><span class="mf-arrow" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span><span>Global AI companies entering Korea.</span></li>
+            </ol>
+          </div>
+
+          <div class="ms" data-ms>
+            <span class="ms-rail" aria-hidden="true"></span>
+            <span class="ms-fill" aria-hidden="true"></span>
+            <ol class="ms-list">
+              <li class="ms-item" style="--i: 0"><span class="ms-title"><span class="brand"><img class="brand-tile" src="assets/portfolio/dentronic.jpg" alt="" />Dentronic</span> secures $1M, joins <span class="brand"><img class="brand-tile" src="assets/coinvestors/ax-south-park-commons.jpg" alt="" />SPC</span> fellowship to scale dental AI robots</span><time class="ms-date" datetime="2026-03-19">Mar 19, 2026</time></li>
+              <li class="ms-item" style="--i: 1"><span class="ms-title"><span class="brand"><img src="assets/brands/google-deepmind.svg" alt="" />Google DeepMind</span> Gemini 3 Hackathon Seoul</span><time class="ms-date" datetime="2026-02-28">Feb 28, 2026</time></li>
+              <li class="ms-item" style="--i: 2"><span class="ms-title"><span class="brand brand-wordmark"><img src="assets/investors/samsung-ventures-line-white.png" alt="Samsung Ventures" /></span> leads <span class="brand"><img class="brand-tile" src="assets/portfolio/aim-intelligence.jpg" alt="" />AIM Intelligence</span>’s Series‑A to scale AI security in Korea</span><time class="ms-date" datetime="2026-04-10">Apr 10, 2026</time></li>
+              <li class="ms-item" style="--i: 3"><span class="ms-title"><span class="brand"><img src="assets/brands/openai.svg" alt="" />OpenAI</span> Startup Meetup Seoul</span><time class="ms-date" datetime="2026-04-22">Apr 22, 2026</time></li>
+              <li class="ms-item" style="--i: 4"><span class="ms-title">Korea Launch for <span class="brand"><img class="brand-tile" src="assets/brands/manus.jpg" alt="" />Manus AI</span>, <span class="brand"><img class="brand-tile" src="assets/brands/genspark.webp" alt="" />Genspark</span>, <span class="brand"><img src="assets/brands/replit.png" alt="" />Replit</span>, and <span class="brand"><img class="brand-tile" src="assets/brands/anthropic.png" alt="" />Claude Code</span></span><time class="ms-date" datetime="2025">2025~2026</time></li>
+              <li class="ms-item" style="--i: 5"><span class="ms-title"><span class="brand"><img src="assets/brands/google-deepmind.svg" alt="" />Google DeepMind</span> Gemini 4 Hackathon Seoul</span><time class="ms-date" datetime="2026-10-16">Oct 16, 2026</time></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="row row-2">
+      <section class="tile tile-quote" id="companies" data-quote>
+        <div class="tq">
+          <div class="tq-photo"><img src="assets/team/dan-han-white.jpg" alt="Dan Han" /></div>
+          <figure class="tq-body">
+            <p class="mf-label">AttentionX Fellow</p>
+            <blockquote class="tq-quote">
+              <p>“If you’re building AI in Korea, <mark class="tq-hl">you’ll end up at AttentionX eventually.</mark> Might as well go early.”</p>
+            </blockquote>
+            <figcaption class="tq-person">
+              <span class="tq-name">Dan Han</span>
+              <span class="tq-role">CEO &amp; Cofounder</span>
+              <span class="tq-org"><span class="brand"><img class="brand-tile" src="assets/portfolio/aleph-lab.jpg" alt="" />Aleph Lab</span></span>
+              <span class="tq-org"><span class="brand"><img class="brand-tile" src="assets/brands/y-combinator.png" alt="" />YC F25</span></span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+      <section class="tile tile-text tile-case">
+        <div class="case-top">
+          <div class="case-logo">
+            <img class="case-lockup" src="assets/dentronic-logo-dark.svg" alt="Dentronic" />
+          </div>
+          <span class="case-label case-label--names"><a class="case-person-link" href="https://www.linkedin.com/in/soy-choi/" target="_blank" rel="noopener noreferrer">Soy&nbsp;Choi</a> &amp;&nbsp;<a class="case-person-link" href="https://www.linkedin.com/in/kenneth-choi-661077122/" target="_blank" rel="noopener noreferrer">Ken&nbsp;Choi</a></span>
+        </div>
+        <div class="case-hero">
+          <h2 class="case-stat"><span class="case-from">raises</span> Seed</h2>
+          <p class="case-sub">Led by <span class="mark-band">Long Journey Ventures</span></p>
+        </div>
+        <div class="case-bottom">
+          <a class="tile-button" href="https://dentronic.ai/" target="_blank" rel="noopener noreferrer" data-cursor-label="dentronic">
+            Read more
+            <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+          </a>
+          <div class="case-investors">
+            <span class="investor investor-ljv"><img src="assets/investors/long-journey-white.png" alt="Long Journey Ventures" /></span>
+            <i aria-hidden="true"></i>
+            <span class="investor investor-spc"><img src="assets/investors/spc-white.svg" alt="South Park Commons" /></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="row row-palette">
+      <section class="tile tile-text tile-case">
+        <div class="case-top">
+          <div class="case-logo">
+            <img class="case-lockup case-lockup--caps" src="assets/aim-logo-white.svg" alt="AIM Intelligence" />
+          </div>
+          <span class="case-label case-label--names"><a class="case-person-link" href="https://www.linkedin.com/in/haonpark/" target="_blank" rel="noopener noreferrer">Haon&nbsp;Park</a> &amp;&nbsp;<a class="case-person-link" href="https://www.linkedin.com/in/sangyoon-david-yu-391501225/" target="_blank" rel="noopener noreferrer">Sangyoon&nbsp;Yu</a></span>
+        </div>
+        <div class="case-hero">
+          <h2 class="case-stat"><span class="case-from">raises</span> <span class="case-count" data-from="1" data-to="10" data-prefix="₩" data-suffix="B">₩10B</span></h2>
+          <p class="case-sub">Series&#8209;A led by <span class="mark-band">Samsung Ventures</span></p>
+        </div>
+        <div class="case-bottom">
+          <a class="tile-button" href="https://www.aim-intelligence.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="aim intelligence">
+            Read more
+            <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+          </a>
+          <div class="case-investors">
+            <span class="investor investor-ssv"><img src="assets/investors/samsung-ventures-line-white.png" alt="Samsung Ventures" /></span>
+            <i aria-hidden="true"></i>
+            <span class="investor investor-mirae"><img src="assets/investors/mirae-asset-white.png" alt="Mirae Asset" /></span>
+          </div>
+        </div>
+      </section>
+      <section class="tile tile-quote" data-quote>
+        <div class="tq">
+          <div class="tq-photo"><img src="assets/team/haon-park.jpg" alt="Haon Park" /></div>
+          <figure class="tq-body">
+            <p class="mf-label">AttentionX Fellow</p>
+            <blockquote class="tq-quote tq-quote--long">
+              <p>“Sukone and AttentionX were instrumental in helping AIM Intelligence recruit top AI researchers from the AttentionX builder community. They truly <mark class="tq-hl">bring together the best AI talent in Korea and beyond.</mark>”</p>
+            </blockquote>
+            <figcaption class="tq-person">
+              <span class="tq-name">Haon Park</span>
+              <span class="tq-role">CTO &amp; Cofounder</span>
+              <span class="tq-org"><span class="brand"><img class="brand-tile" src="assets/portfolio/aim-intelligence.jpg" alt="" />AIM Intelligence</span></span>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 5: events list beside the Philyron raise. -->
+    <div class="row row-palette">
+      <section class="tile tile-text tile-events" id="events" aria-labelledby="events-title">
+        <div class="ev-head">
+          <h2 class="mf-label" id="events-title">Events</h2>
+          <span class="ev-count">(10)</span>
+        </div>
+        <ol class="ev-list">
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Replit x OpenAI x AWS x GHV Founders Hackathon</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="OpenAI"><img src="assets/brands/openai.svg" alt="OpenAI" /></span><span class="ev-host cursor-link" data-cursor-label="Replit"><img src="assets/brands/replit.png" alt="Replit" /></span><span class="ev-host cursor-link ev-host--wide" data-cursor-label="AWS"><img src="assets/brands/aws.png" alt="AWS" /></span><span class="ev-host cursor-link" data-cursor-label="Gold House Ventures"><img src="assets/brands/gold-house.png" alt="Gold House Ventures" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google DeepMind Gemini 4 Argon Hackathon</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google DeepMind"><img src="assets/brands/google-deepmind.svg" alt="Google DeepMind" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">OpenAI Startup Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="OpenAI"><img src="assets/brands/openai.svg" alt="OpenAI" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google DeepMind Gemini 3 Hackathon Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google DeepMind"><img src="assets/brands/google-deepmind.svg" alt="Google DeepMind" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Anthropic Claude Code Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Anthropic"><img src="assets/brands/anthropic.png" alt="Anthropic" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Manus Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Manus AI"><img src="assets/brands/manus.jpg" alt="Manus AI" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Genspark Meetup Seoul</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Genspark"><img src="assets/brands/genspark.webp" alt="Genspark" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google DeepMind Gemini 3 Hackathon Singapore</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google DeepMind"><img src="assets/brands/google-deepmind.svg" alt="Google DeepMind" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Google Cloud Hackathon</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link" data-cursor-label="Google Cloud"><img src="assets/brands/google-cloud.png" alt="Google Cloud" /></span></span>
+          </li>
+          <li class="ev-row">
+            <span class="ev-num"><img class="ev-mark" src="images/attentionx-mark.png" alt="" /></span>
+            <span class="ev-name">Anthropic Claude Code Meetup Pangyo</span>
+            <span class="ev-hosts"><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Anthropic"><img src="assets/brands/anthropic.png" alt="Anthropic" /></span><span class="ev-host cursor-link ev-host--tile" data-cursor-label="Yanolja"><img src="assets/brands/yanolja.png" alt="Yanolja" /></span></span>
+          </li>
+        </ol>
+      </section>
+      <section class="tile tile-text tile-case">
+        <div class="case-top">
+          <div class="case-logo">
+            <img class="case-lockup case-lockup--tall" src="assets/philyron-logo-white.png" alt="Philyron" />
+          </div>
+          <span class="case-label case-label--names"><a class="case-person-link" href="https://www.linkedin.com/in/heon-lee/" target="_blank" rel="noopener noreferrer">Heon&nbsp;Lee</a></span>
+        </div>
+        <div class="case-hero">
+          <h2 class="case-mark"><img src="assets/investors/a16z-speedrun-white.png" alt="a16z speedrun" /></h2>
+          <p class="case-sub case-sub--long"><span class="mark-band mark-band--wrap">The first maritime startup to join a16z speedrun.</span></p>
+        </div>
+        <div class="case-bottom">
+          <a class="tile-button" href="https://philyron.com/" target="_blank" rel="noopener noreferrer" data-cursor-label="philyron">
+            Read more
+            <svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6" aria-hidden="true"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg>
+          </a>
+          <div class="case-investors">
+            <span class="investor investor-a16z"><img src="assets/investors/a16z-white.png" alt="Andreessen Horowitz" /></span>
+            <i aria-hidden="true"></i>
+            <span class="investor investor-residency"><img src="assets/investors/the-residency-white.png" alt="The Residency" /></span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="star-dock">
+      <section class="news" id="news" aria-labelledby="news-title">
+        <h2 class="news-head" id="news-title" aria-label="News (03)"><span class="news-label">News</span> <span class="news-count">(03)</span></h2>
+        <ol class="news-list">
+          <li class="news-item">
+            <a class="news-link" href="https://arxiv.org/abs/2610.26903" target="_blank" rel="noopener noreferrer" data-cursor-label="arxiv">
+              <time class="news-date" datetime="2026-10-16">Oct 16, 2026</time>
+              <p class="news-text"><b class="news-tag">Alumni News:</b> <strong>Adam Lee</strong> publishes <em>“Beckmann World Models: Direct Terminal-Map Learning for One-Step Action-Conditioned Prediction”</em>.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+          <li class="news-item">
+            <a class="news-link" href="https://frontierlist.com/sf-event-hosts" target="_blank" rel="noopener noreferrer" data-cursor-label="frontier list">
+              <time class="news-date" datetime="2026-10-08">Oct 8, 2026</time>
+              <p class="news-text"><b class="news-tag">Alumni News:</b> <strong>Sukone Hong</strong>, featured in Frontier List’s <em>“Great SF event hosts”</em>, alongside Dave Fontenot <span class="news-aside">(HF0)</span>, Ben Lang <span class="news-aside">(Cursor)</span>, and Vivian Shen <span class="news-aside">(Y Combinator)</span>.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+          <li class="news-item">
+            <a class="news-link" href="https://www.kakao.vc/posts/ai-eijeonteue-janggi-gieog-buyeohaneun-ariseuto-kakaobenceoseuseo-peuri-sideu-tuja-yuci" target="_blank" rel="noopener noreferrer" data-cursor-label="kakao ventures">
+              <time class="news-date" datetime="2026-06-24">Jun 24, 2026</time>
+              <p class="news-text"><b class="news-tag">Alumni News:</b> <strong>Aristo</strong> raises Pre-Seed funding from Kakao Ventures, building synced memory layer for AI agents.</p>
+              <span class="news-go" aria-hidden="true"><svg viewBox="0 0 46 32" fill="none" stroke="currentColor" stroke-width="3.6"><path d="M0 16H44"></path><path d="M30 0C30 9 36 16 44 16C36 16 30 23 30 32"></path></svg></span>
+            </a>
+          </li>
+        </ol>
+        <p class="news-legal">© 2026 AttentionX. All rights reserved.<br />AttentionX™ is a trademark of its respective owner.</p>
+      </section>
+      <div class="star-dock-square" aria-hidden="true"></div>
+      <figure class="dock-stamp">
+        <img class="ds-a" src="assets/stamps-events-1.webp" alt="AttentionX events as stamps: a DJ set at OpenAI, a talk on stage, and a hackathon" />
+        <img class="ds-b" src="assets/stamps-events-2.webp" alt="AttentionX events as stamps: a packed room under OpenAI banners, and a guest asking a question" />
+        <img class="ds-c" src="assets/stamps-events-3.webp" alt="Stamp of the Google DeepMind AI Hackathon with Google Cloud and AttentionX, Seoul" />
+      </figure>
+    </div>
+
+    <div class="star-track" aria-hidden="true">
+      <div class="star-clip"><div class="star-line-row"><span class="star-line"></span></div></div>
+      <div class="star-row"><img class="star-marker" src="images/attentionx-mark.png" alt="" /></div>
+      <div class="star-sparkles"></div>
+    </div>
+  </main>
+
+  <footer class="outro">
+    <img src="images/attentionx-logo.png" alt="AttentionX" />
+  </footer>
+
+  <canvas class="grain" aria-hidden="true"></canvas>
+
+  <script>
+    // Live film grain: a few pre-rendered noise tiles, shown at a random
+    // offset ~14 times a second so the grain flickers like film.
+    (function () {
+      var canvas = document.querySelector('.grain');
+      var ctx = canvas.getContext('2d');
+      var TILE = 180;
+      var tiles = [];
+
+      for (var t = 0; t < 6; t++) {
+        var c = document.createElement('canvas');
+        c.width = c.height = TILE;
+        var cx = c.getContext('2d');
+        var img = cx.createImageData(TILE, TILE);
+        for (var i = 0; i < img.data.length; i += 4) {
+          var v = (Math.random() * 255) | 0;
+          img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+          img.data[i + 3] = 255;
+        }
+        cx.putImageData(img, 0, 0);
+        tiles.push(ctx.createPattern(c, 'repeat'));
+      }
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        draw();
+      }
+
+      function draw() {
+        var p = tiles[(Math.random() * tiles.length) | 0];
+        var ox = (Math.random() * TILE) | 0, oy = (Math.random() * TILE) | 0;
+        ctx.setTransform(1, 0, 0, 1, -ox, -oy);
+        ctx.fillStyle = p;
+        ctx.fillRect(ox, oy, canvas.width, canvas.height);
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      setInterval(draw, 70);
+    })();
+
+    // Star mark spins with scroll: clockwise going down, back the other way
+    // going up. Eased so it carries a little momentum.
+    (function () {
+      var star = document.querySelector('.logo-star');
+      if (!star) return;
+      var DEG_PER_PX = 0.35;
+      var angle = window.scrollY * DEG_PER_PX;
+      (function tick() {
+        var target = window.scrollY * DEG_PER_PX;
+        angle += (target - angle) * 0.12;
+        star.style.transform = 'rotate(' + angle.toFixed(2) + 'deg)';
+        requestAnimationFrame(tick);
+      })();
+    })();
+
+    // Case tiles: on reveal, count the headline figure up (e.g. $1M -> $33M).
+    document.querySelectorAll('.tile-case').forEach(function (tile) {
+      var count = tile.querySelector('.case-count');
+      if (!count) return;
+      var from = parseInt(count.dataset.from || '1', 10);
+      var to = parseInt(count.dataset.to, 10);
+      var pre = count.dataset.prefix || '$';
+      var unit = count.dataset.suffix || 'M';
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        tile.classList.add('is-in');
+        return;
+      }
+      count.textContent = pre + from + unit;
+
+      function run() {
+        var start = null, duration = 2400;
+        requestAnimationFrame(function step(now) {
+          if (start === null) start = now;
+          var t = Math.min((now - start) / duration, 1);
+          var eased = 1 - Math.pow(1 - t, 3);
+          count.textContent = pre + Math.round(from + (to - from) * eased) + unit;
+          if (t < 1) requestAnimationFrame(step);
+        });
+      }
+
+      function reveal() {
+        if (tile.classList.contains('is-in')) return;
+        var r = tile.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.8 || r.bottom < window.innerHeight * 0.2) return;
+        tile.classList.add('is-in');
+        setTimeout(run, 250);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.35 }).observe(tile);
+      }
+      reveal();
+    });
+
+    // Scramble an element's text and settle it letter by letter.
+    var GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#%&*+=/<>';
+
+    function decode(el, delay, duration) {
+      var final = el.dataset.text || (el.dataset.text = el.textContent);
+      clearTimeout(el._decodeTimer);
+      el._decodeTimer = setTimeout(function () {
+        var start = null;
+        var run = (el._decodeRun || 0) + 1;
+        el._decodeRun = run;
+        requestAnimationFrame(function step(now) {
+          if (el._decodeRun !== run) return;
+          if (start === null) start = now;
+          var t = Math.min((now - start) / duration, 1);
+          var shown = Math.floor(t * final.length);
+          var out = '';
+          for (var i = 0; i < final.length; i++) {
+            out += i < shown ? final[i] : GLYPHS[(Math.random() * GLYPHS.length) | 0];
+          }
+          el.textContent = out;
+          if (t < 1) requestAnimationFrame(step);
+          else el.textContent = final;
+        });
+      }, delay);
+    }
+
+    // Scout tile: reveal rows when scrolled into view and decode each verb
+    // from scrambled glyphs; hovering a row decodes its verb again.
+    (function () {
+      var tile = document.querySelector('.tile-scout');
+      if (!tile) return;
+      var verbs = tile.querySelectorAll('[data-decode]');
+
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        tile.classList.add('is-in', 'is-settled');
+        return;
+      }
+
+      function reveal() {
+        if (tile.classList.contains('is-in')) return;
+        var r = tile.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.8 || r.bottom < window.innerHeight * 0.2) return;
+        tile.classList.add('is-in');
+        verbs.forEach(function (v, i) { decode(v, 200 + i * 160, 850); });
+        setTimeout(function () { tile.classList.add('is-settled'); }, 1700);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.35 }).observe(tile);
+      }
+      reveal();
+
+      verbs.forEach(function (v) {
+        v.closest('li').addEventListener('mouseenter', function () { decode(v, 0, 420); });
+      });
+    })();
+
+    // Stamps: as tall as the news, from its label to its last rule.
+    (function () {
+      var stamp = document.querySelector('.dock-stamp');
+      var head = document.querySelector('.news-head');
+      var list = document.querySelector('.news-list');
+      if (!stamp || !head || !list) return;
+      function fit() {
+        if (window.matchMedia('(max-width: 900px)').matches) { stamp.style.removeProperty('--h'); return; }
+        // Up to 1.35x the feed's height, as large as the column allows
+        // (the pinned pair is about 1.17x as wide as it is tall).
+        var feed = list.getBoundingClientRect().bottom - head.getBoundingClientRect().top;
+        var dock = document.querySelector('.star-dock-square').getBoundingClientRect();
+        var room = stamp.parentNode.getBoundingClientRect().right - dock.right - 48;
+        stamp.style.setProperty('--h', Math.min(feed * 1.35, room / 1.17) + 'px');
+      }
+      window.addEventListener('resize', fit);
+      window.addEventListener('load', fit);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+      fit();
+    })();
+
+    // News: split the label into letters and the dates, headlines and
+    // fine print into words (see "Split-text rise"), stagger each block,
+    // then reveal the feed when it scrolls into view.
+    (function () {
+      var news = document.querySelector('.news');
+      if (!news) return;
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        news.classList.add('is-in', 'is-settled');
+        return;
+      }
+
+      // Wrap each word (or letter) of el's text in a clipped slot, keeping
+      // inline markup such as <strong> and <em>; returns the next index.
+      function split(el, i, letters) {
+        (function walk(node) {
+          Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+            if (child.nodeType === 3) {
+              var frag = document.createDocumentFragment();
+              child.textContent.split(/(\s+)/).forEach(function (part) {
+                if (!part) return;
+                if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); return; }
+                (letters ? part.split('') : [part]).forEach(function (bit) {
+                  var slot = document.createElement('span');
+                  slot.className = letters ? 'sw sl' : 'sw';
+                  if (letters) slot.setAttribute('aria-hidden', 'true');
+                  var inner = document.createElement('span');
+                  inner.textContent = bit;
+                  inner.style.setProperty('--i', i++);
+                  slot.appendChild(inner);
+                  frag.appendChild(slot);
+                });
+              });
+              node.replaceChild(frag, child);
+            } else if (child.nodeType === 1 && child.tagName !== 'BR') {
+              walk(child);
+            }
+          });
+        })(el);
+        return i;
+      }
+
+      var head = news.querySelector('.news-head');
+      head.style.setProperty('--d', '0.1s');
+      split(head, 0, true);
+      var items = news.querySelectorAll('.news-item');
+      items.forEach(function (item, k) {
+        var d = 0.25 + k * 0.22;
+        item.style.setProperty('--d', d + 's');
+        var n = split(item.querySelector('.news-date'), 0, false);
+        n = split(item.querySelector('.news-text'), n, false);
+        item.style.setProperty('--ad', (d + n * 0.022) + 's');
+      });
+      var legal = news.querySelector('.news-legal');
+      if (legal) {
+        legal.style.setProperty('--d', (0.25 + items.length * 0.22 + 0.15) + 's');
+        split(legal, 0, false);
+      }
+
+      function reveal() {
+        if (news.classList.contains('is-in')) return;
+        var r = news.getBoundingClientRect();
+        if (r.top > window.innerHeight * 0.85 || r.bottom < 0) return;
+        news.classList.add('is-in');
+        setTimeout(function () { news.classList.add('is-settled'); }, 2500);
+        window.removeEventListener('scroll', reveal);
+      }
+      window.addEventListener('scroll', reveal, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries.some(function (e) { return e.isIntersecting; })) reveal();
+        }, { threshold: 0.2 }).observe(news);
+      }
+      reveal();
+    })();
+
+    // Events: rows rise in once the tile scrolls into view.
+    (function () {
+      var tile = document.querySelector('.tile-events');
+      if (!tile) return;
+      tile.querySelectorAll('.ev-row').forEach(function (row, i) { row.style.setProperty('--i', i); });
+      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+        tile.classList.add('is-in', 'is-settled');
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        if (!entries[0].isIntersecting) return;
+        io.disconnect();
+        tile.classList.add('is-in');
+        setTimeout(function () { tile.classList.add('is-settled'); }, 1600);
+      }, { threshold: 0.25 });
+      io.observe(tile);
+    })();
+
+    // Falling star (after the AGI House story star): lay the track from
+    // the gap under the three-tile row down to the landing square. The
+    // star spins the whole time, one turn every 4s, clockwise while
+    // scrolling down and the other way scrolling up. The line shows once
+    // the star is moving, a small star twinkles somewhere on the track
+    // every 600ms, and when the star lands the square lights and the
+    // star eases square to sit flush in it.
+    (function () {
+      var track = document.querySelector('.star-track');
+      var dock = document.querySelector('.star-dock-square');
+      var bento = document.querySelector('.bento');
+      if (!track || !dock || !bento) return;
+      var marker = track.querySelector('.star-marker');
+      var row = track.querySelector('.star-row');
+      var sparkles = track.querySelector('.star-sparkles');
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var SPIN = 90; // degrees per second
+      var active = false, docked = false, dir = 1, lastY = window.scrollY;
+      var angle = 0, vel = 0, target = 0;
+
+      function layout() {
+        active = getComputedStyle(track).display !== 'none';
+        if (!active) return;
+        var b = bento.getBoundingClientRect();
+        // Starts in the gap above the portfolio row, whatever sits above it.
+        var row2El = document.querySelector('.row-2');
+        var row3 = row2El.previousElementSibling.getBoundingClientRect();
+        var row2 = row2El.getBoundingClientRect();
+        var d = dock.getBoundingClientRect();
+        var size = marker.offsetWidth || 48;
+        var start = (row3.bottom + row2.top) / 2;
+        var end = d.top + d.height / 2;
+        track.style.setProperty('--x', (d.left + d.width / 2 - b.left) + 'px');
+        track.style.top = (start - size / 2 - b.top) + 'px';
+        track.style.setProperty('--line-top', (row2.top - (start - size / 2)) + 'px');
+        track.style.height = (end - start + size) + 'px';
+        update();
+      }
+
+      // Next upright angle ahead of the spin, far enough that the spring
+      // eases into it without overshooting.
+      function settleAngle() {
+        if (Math.abs(vel) < 1) return Math.round(angle / 90) * 90;
+        return vel > 0 ? Math.ceil((angle + 14) / 90) * 90 : Math.floor((angle - 14) / 90) * 90;
+      }
+
+      function update() {
+        if (!active) return;
+        var y = window.scrollY;
+        if (y !== lastY) { dir = y > lastY ? 1 : -1; lastY = y; }
+        var mid = window.innerHeight / 2;
+        var line = mid - marker.offsetHeight / 2;
+        var r = row.getBoundingClientRect();
+        var t = track.getBoundingClientRect();
+        track.dataset.trailActive = String(r.top <= line + 1 && t.bottom > line);
+        var d = dock.getBoundingClientRect();
+        var landed = d.top + d.height / 2 <= mid + 0.5;
+        dock.classList.toggle('is-lit', landed);
+        if (landed && !docked) target = settleAngle();
+        docked = landed;
+      }
+
+      function sparkle() {
+        if (!active || reduced || document.hidden) return;
+        var t = track.getBoundingClientRect();
+        if (t.bottom < 0 || t.top > window.innerHeight) return;
+        var img = document.createElement('img');
+        img.className = 'star-sparkle';
+        img.src = marker.src;
+        img.alt = '';
+        img.style.left = (Math.random() * 100) + '%';
+        img.style.top = (Math.random() * 100) + '%';
+        sparkles.appendChild(img);
+        setTimeout(function () { img.remove(); }, 2000);
+      }
+
+      var last = performance.now();
+      function tick(now) {
+        var dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        if (active && !reduced) {
+          if (docked) {
+            // Critically damped spring into the upright angle.
+            var w = 7;
+            vel += (w * w * (target - angle) - 2 * w * vel) * dt;
+          } else {
+            vel += (dir * SPIN - vel) * Math.min(1, dt * 5);
+          }
+          angle += vel * dt;
+          marker.style.rotate = angle.toFixed(2) + 'deg';
+        }
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+      setInterval(sparkle, 600);
+
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', layout);
+      window.addEventListener('load', layout);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+      layout();
+    })();
+
+    // Back button: return to the previous page when there is one.
+    (function () {
+      var back = document.querySelector('.back-button');
+      if (!back) return;
+      back.addEventListener('click', function (e) {
+        if (document.referrer && window.history.length > 1) {
+          e.preventDefault();
+          window.history.back();
+        }
+      });
+    })();
+
+    // Pointer-following highlight on each glass tile.
+    document.querySelectorAll('.tile').forEach(function (tile) {
+      tile.addEventListener('mousemove', function (e) {
+        var r = tile.getBoundingClientRect();
+        tile.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        tile.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+
+    // Manifesto: light the lead's words in reading order as it scrolls
+    // through the screen, count the stat up, and reveal the milestones.
+    (function () {
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      var lead = document.querySelector('[data-scrub]');
+      if (lead && !reduced) {
+        var words = lead.textContent.trim().split(/\s+/);
+        lead.textContent = '';
+        var spans = words.map(function (w, i) {
+          if (i) lead.appendChild(document.createTextNode(' '));
+          var s = document.createElement('span');
+          s.className = 'w';
+          s.textContent = w;
+          lead.appendChild(s);
+          return s;
+        });
+        var ticking = false;
+        var light = function () {
+          ticking = false;
+          var r = lead.getBoundingClientRect();
+          var vh = window.innerHeight;
+          // 0 when the lead's top reaches 85% down the screen, 1 when its
+          // bottom passes 45%.
+          var p = (vh * 0.85 - r.top) / (r.height + vh * 0.4);
+          var lit = Math.max(0, Math.min(1, p)) * spans.length;
+          spans.forEach(function (s, i) {
+            s.style.setProperty('--lit', (0.16 + 0.84 * Math.max(0, Math.min(1, lit - i))).toFixed(3));
+          });
+        };
+        var onScroll = function () {
+          if (!ticking) { ticking = true; requestAnimationFrame(light); }
+        };
+        light();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+      }
+
+      var once = function (el, fn) {
+        if (!el) return;
+        if (reduced || !('IntersectionObserver' in window)) { fn(true); return; }
+        var io = new IntersectionObserver(function (entries) {
+          if (!entries[0].isIntersecting) return;
+          io.disconnect();
+          fn(false);
+        }, { threshold: 0.4 });
+        io.observe(el);
+      };
+
+      var count = document.querySelector('[data-count-to]');
+      var money = function (n) { return '$' + n.toLocaleString('en-US'); };
+      if (count && !reduced && 'IntersectionObserver' in window) count.textContent = money(0);
+      once(count, function (instant) {
+        var to = parseInt(count.dataset.countTo, 10);
+        count.classList.add('is-drawn');
+        if (instant) return;
+        var start = performance.now(), dur = 1600;
+        (function step(now) {
+          var t = Math.min(1, (now - start) / dur);
+          var eased = 1 - Math.pow(1 - t, 3);
+          count.textContent = money(Math.round(to * eased));
+          if (t < 1) requestAnimationFrame(step);
+        })(start);
+      });
+
+      // Testimonials: sweep each highlight in once its tile is in view.
+      // Marker bands (same as the $70,000,000 one) sweep in once in view.
+      document.querySelectorAll('.mark-band').forEach(function (el) {
+        once(el, function () { el.classList.add('is-drawn'); });
+      });
+
+      document.querySelectorAll('[data-quote]').forEach(function (tq) {
+        once(tq, function () { tq.classList.add('is-in'); });
+      });
+
+      // Launchpad lines rise in once; afterwards hover reacts without delay.
+      var pts = document.querySelector('[data-points]');
+      if (pts) {
+        once(pts, function (instant) {
+          pts.classList.add('is-shown');
+          setTimeout(function () { pts.classList.add('is-settled'); }, instant ? 0 : 1700);
+        });
+      }
+
+      // Milestones: reveal the rows, then fill the side line with the
+      // scroll; it is full once the list's end passes ~60% down the screen.
+      var ms = document.querySelector('[data-ms]');
+      if (ms) {
+        once(ms, function (instant) {
+          ms.classList.add('is-in');
+          setTimeout(function () { ms.classList.add('is-settled'); }, instant ? 0 : 1300);
+        });
+        // Own names: the lead's scroll code above shares this function.
+        var msTicking = false;
+        var msFill = function () {
+          msTicking = false;
+          var r = ms.getBoundingClientRect();
+          var p = r.height ? (window.innerHeight * 0.6 - r.top) / r.height : 0;
+          ms.style.setProperty('--fill', Math.max(0, Math.min(1, p)).toFixed(4));
+        };
+        var msOnScroll = function () {
+          if (!msTicking) { msTicking = true; requestAnimationFrame(msFill); }
+        };
+        msFill();
+        window.addEventListener('scroll', msOnScroll, { passive: true });
+        window.addEventListener('resize', msOnScroll);
+      }
+    })();
+
+    // Rising headline: split into words and letters, then lift the letters
+    // in with a stagger. The whole line takes about 0.3–1.2s to start
+    // every letter, depending on its length.
+    (function () {
+      document.querySelectorAll('[data-rise]').forEach(function (el) {
+        var text = el.textContent.trim();
+        el.setAttribute('aria-label', text);
+        el.textContent = '';
+        var count = text.replace(/\s/g, '').length;
+        var step = Math.min(1.2, Math.max(0.3, count * 0.029)) / count;
+        var n = 0;
+        text.split(' ').forEach(function (w, wi) {
+          if (wi) el.appendChild(document.createTextNode(' '));
+          var word = document.createElement('span');
+          word.className = 'rise-word';
+          word.setAttribute('aria-hidden', 'true');
+          w.split('').forEach(function (ch) {
+            var letter = document.createElement('span');
+            letter.className = 'rise-letter';
+            var glyph = document.createElement('span');
+            glyph.className = 'rise-glyph';
+            glyph.textContent = ch;
+            glyph.style.setProperty('--d', (0.2 + n++ * step).toFixed(3) + 's');
+            letter.appendChild(glyph);
+            word.appendChild(letter);
+          });
+          el.appendChild(word);
+        });
+
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        el.classList.add('is-rising');
+        // Two frames so the start pose is painted before rising, and not
+        // before the loader has started to open.
+        (window.axReady || Promise.resolve()).then(function () {
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () { el.classList.add('is-up'); });
+          });
+        });
+        // Drop the clip once the last letter has landed.
+        var last = el.querySelectorAll('.rise-glyph');
+        last = last[last.length - 1];
+        last.addEventListener('transitionend', function () { el.classList.remove('is-rising'); }, { once: true });
+      });
+    })();
+
+    // Marker highlights sweep in once they are well inside the viewport.
+    (function () {
+      var marks = document.querySelectorAll('mark.hl');
+      if (!('IntersectionObserver' in window)) {
+        marks.forEach(function (m) { m.classList.add('is-in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-in');
+          io.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -20% 0px' });
+      (window.axReady || Promise.resolve()).then(function () {
+        marks.forEach(function (m) { io.observe(m); });
+      });
+    })();
+
+    // Navigation: condense on scroll, sliding hover pill, letter-roll
+    // labels, scroll-linked logo spin, Seoul clock and the mobile sheet.
+    (function () {
+      var nav = document.querySelector('.nav');
+      if (!nav) return;
+      var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Split each label into two rows of letters for the roll effect.
+      nav.querySelectorAll('.nav-roll').forEach(function (roll) {
+        var text = roll.textContent;
+        var row = function (hidden) {
+          var s = document.createElement('span');
+          if (hidden) s.setAttribute('aria-hidden', 'true');
+          text.split('').forEach(function (ch, i) {
+            var l = document.createElement('i');
+            l.textContent = ch;
+            l.style.setProperty('--i', i);
+            s.appendChild(l);
+          });
+          return s;
+        };
+        roll.textContent = '';
+        roll.closest('a').setAttribute('aria-label', text);
+        roll.appendChild(row(true));
+        roll.appendChild(row(true));
+      });
+
+      // Hover pill glides to whichever link is under the pointer.
+      var list = nav.querySelector('.nav-links');
+      var pill = nav.querySelector('.nav-pill');
+      function movePill(link) {
+        pill.style.setProperty('--pill-x', link.offsetLeft + 'px');
+        pill.style.setProperty('--pill-w', link.offsetWidth + 'px');
+      }
+      list.querySelectorAll('.nav-link').forEach(function (link) {
+        link.addEventListener('mouseenter', function () {
+          if (!list.classList.contains('has-pill')) {
+            // First entry: place the pill without sliding in from the side.
+            pill.style.transition = 'none';
+            movePill(link);
+            pill.offsetWidth;
+            pill.style.transition = '';
+          }
+          movePill(link);
+          list.classList.add('has-pill');
+        });
+        link.addEventListener('focus', function () {
+          movePill(link);
+          list.classList.add('has-pill');
+        });
+      });
+      list.addEventListener('mouseleave', function () { list.classList.remove('has-pill'); });
+      list.addEventListener('focusout', function (e) {
+        if (!list.contains(e.relatedTarget)) list.classList.remove('has-pill');
+      });
+
+      // Logo returns to the top.
+      nav.querySelector('.nav-logo').addEventListener('click', function (e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+      });
+
+      // Condense into the glass pill after a little scroll, track progress,
+      // and spin the mark with scroll (eased, like the Stealth Fund star).
+      // Once scrolling stops it settles on the nearest quarter turn, so the
+      // mark always rests upright.
+      var mark = nav.querySelector('.nav-mark');
+      var spin = 0;
+      var lastScroll = 0;
+      function onScroll() {
+        var y = window.scrollY;
+        lastScroll = performance.now();
+        nav.classList.toggle('is-compact', y > 40);
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        nav.style.setProperty('--progress', max > 0 ? Math.min(y / max, 1) : 0);
+      }
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      if (!reduced) {
+        (function tick(now) {
+          var target = window.scrollY * 0.25;
+          if (now - lastScroll > 160) target = Math.round(target / 90) * 90;
+          spin += (target - spin) * 0.12;
+          mark.style.setProperty('--spin', spin.toFixed(2) + 'deg');
+          requestAnimationFrame(tick);
+        })(performance.now());
+      }
+
+      // Live Seoul time.
+      var clocks = document.querySelectorAll('.nav-clock time');
+      var fmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+      function tickClock() {
+        var t = fmt.format(new Date());
+        clocks.forEach(function (c) { c.textContent = t; });
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      // Mobile menu sheet.
+      var toggle = nav.querySelector('.nav-toggle');
+      var sheet = document.getElementById('nav-sheet');
+      function setOpen(open) {
+        nav.classList.toggle('is-open', open);
+        sheet.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        document.documentElement.style.overflow = open ? 'hidden' : '';
+      }
+      toggle.addEventListener('click', function () { setOpen(!sheet.classList.contains('is-open')); });
+      sheet.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { setOpen(false); });
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && sheet.classList.contains('is-open')) setOpen(false);
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 820 && sheet.classList.contains('is-open')) setOpen(false);
+      });
+    })();
+  </script>
+  <script src="cursor.js"></script>
+</body>
+</html>

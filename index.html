@@ -1094,20 +1094,10 @@
       margin: calc(var(--h) * 0.05) 0;
     }
 
-    /* Name set in type (Philyron, no wordmark file): capitals span 70% of
-       the icon, centered on it (Newsreader caps are 0.715em). */
-    .case-logo--text {
-      align-items: center;
-    }
-
-    .case-name {
-      font-family: 'Newsreader', 'Times New Roman', serif;
-      position: relative;
-      top: calc(var(--h) * 0.08);
-      font-size: calc(var(--h) * 0.98);
-      line-height: 1;
-      letter-spacing: -0.02em;
-      color: rgba(244, 241, 232, 0.95);
+    /* Lockup whose mark is as tall as the image (Philyron). */
+    .case-lockup--tall {
+      height: calc(var(--h) * 1.1);
+      margin: calc(var(--h) * -0.05) 0;
     }
 
     /* A logo in place of the headline figure (Philyron: a16z speedrun). */
@@ -3151,9 +3141,8 @@
       </section>
       <section class="tile tile-text tile-case">
         <div class="case-top">
-          <div class="case-logo case-logo--text">
-            <img class="case-icon" src="assets/portfolio/philyron.jpg" alt="" />
-            <span class="case-name">Philyron</span>
+          <div class="case-logo">
+            <img class="case-lockup case-lockup--tall" src="assets/philyron-logo-white.png" alt="Philyron" />
           </div>
           <span class="case-label">a16z SR007</span>
         </div>

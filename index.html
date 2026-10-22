@@ -2938,6 +2938,15 @@
       background: radial-gradient(circle, rgba(159, 180, 230, 0.15), transparent 62%);
     }
 
+    /* One full-screen layer holds the word and the pixel X, so the finale
+       can glide them together. */
+    .ax-l-group {
+      position: absolute;
+      inset: 0;
+      transform-origin: 0 0;
+      will-change: transform, opacity;
+    }
+
     /* The word: real letters in the flow, moved only by transforms. */
     .ax-l-word {
       position: absolute;
@@ -2990,23 +2999,12 @@
       pointer-events: none;
     }
 
-    /* Finale: a flash, then the real logo takes over for the glide. */
+    /* Finale: a soft glow before the word glides into the hero. */
     .ax-l-word.is-flash .ax-l-letter {
-      text-shadow: 0 0 0.5em rgba(244, 241, 232, 0.7), 0 0 1.4em rgba(232, 162, 124, 0.35);
+      text-shadow: 0 0 0.45em rgba(244, 241, 232, 0.55), 0 0 1.3em rgba(232, 162, 124, 0.3);
+      transition: text-shadow 0.6s ease;
     }
 
-    .ax-l-logo {
-      position: absolute;
-      left: 0;
-      top: 0;
-      height: auto;
-      opacity: 0;
-      transform-origin: 0 0;
-      pointer-events: none;
-      -webkit-user-drag: none;
-    }
-
-    .ax-loader-tag,
     .ax-loader-count,
     .ax-loader-hint {
       position: absolute;
@@ -3017,11 +3015,6 @@
       color: rgba(244, 241, 232, 0.5);
       transition: opacity 0.4s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
       pointer-events: none;
-    }
-
-    .ax-loader-tag {
-      left: max(24px, 3.5vw);
-      font-style: italic;
     }
 
     .ax-loader-count {
@@ -3042,16 +3035,9 @@
       opacity: 0;
     }
 
-    .ax-loader.is-leaving .ax-loader-tag,
     .ax-loader.is-leaving .ax-loader-count,
     .ax-loader.is-leaving .ax-loader-hint {
       opacity: 0;
-    }
-
-    @media (max-width: 700px) {
-      .ax-loader-hint {
-        bottom: calc(max(26px, 4.5vh) + 34px);
-      }
     }
 
   </style>
@@ -3062,9 +3048,9 @@
       <span class="ax-loader-glow is-cool"></span>
       <span class="ax-loader-glow is-warm"></span>
     </div>
+    <div class="ax-l-group">
     <div class="ax-l-word"><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">A</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">e</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">n</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">t</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">i</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">o</span><span class="ax-l-letter cursor-link" data-cursor-label="Drag me">n</span><span class="ax-l-xslot"></span></div>
-    <img class="ax-l-logo" src="images/attentionx-logo.png" alt="" />
-    <p class="ax-loader-tag">Korea’s AI ecosystem</p>
+    </div>
     <p class="ax-loader-hint">Toss the letters</p>
     <p class="ax-loader-count">(000)</p>
   </div>
@@ -3080,13 +3066,13 @@
       var cool = loader.querySelector('.is-cool');
       var wordEl = loader.querySelector('.ax-l-word');
       var slot = loader.querySelector('.ax-l-xslot');
-      var logo = loader.querySelector('.ax-l-logo');
+      var group = loader.querySelector('.ax-l-group');
       var count = loader.querySelector('.ax-loader-count');
       var hint = loader.querySelector('.ax-loader-hint');
       var coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
       if (coarse) hint.textContent = 'Swipe the letters';
 
-      var MIN_MS = 2600, MAX_MS = 7500, LEAVE_MS = 1300;
+      var MIN_MS = 2600, MAX_MS = 7500, LEAVE_MS = 1500;
       var start = performance.now(), last = start;
       var W = window.innerWidth, H = window.innerHeight;
       window.addEventListener('resize', function () { W = window.innerWidth; H = window.innerHeight; });
@@ -3105,7 +3091,7 @@
           if (row[c] !== '1') continue;
           var el = document.createElement('span');
           el.className = 'ax-l-px';
-          loader.insertBefore(el, logo);
+          group.appendChild(el);
           pixels.push({ el: el, r: r, c: c, x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0,
             bx: Math.random(), by: Math.random(), ph: Math.random() * 6.28, spin: Math.random() * 360, home: false, hx: 0, hy: 0 });
         }
@@ -3197,7 +3183,6 @@
       }
 
       var shown = 0, assembled = 0, phase = 'build', phaseAt = 0, gx = W / 2, gy = H / 2, cgx = W / 2, cgy = H / 2;
-      function ease(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
       function pad(n) { return n < 10 ? '00' + n : n < 100 ? '0' + n : '' + n; }
 
       function frame(now) {
@@ -3310,62 +3295,33 @@
           p.el.style.transform = 'translate(' + (p.x - sz / 2).toFixed(1) + 'px,' + (p.y - sz / 2).toFixed(1) + 'px) rotate(' + p.spin.toFixed(1) + 'deg)';
         });
 
-        // When everything has landed: flash, swap to the logo, glide.
+        // When everything has landed: a soft glow, then one glide.
         var settled = letters.every(function (b) { return b.state === 'live'; }) && assembled && now - assembled > pixels.length * 28 + 700;
         // Someone playing keeps the toy up (until a hard cap); it leaves
         // shortly after they stop.
         var playing = held || (played && now - lastMove < 650 && el < MAX_MS + 2500);
         if (phase === 'build' && shown === 1 && el > MIN_MS && settled && !playing) { phase = 'settle'; phaseAt = now; }
-        if (phase === 'settle' && now - phaseAt > 260) { phase = 'flash'; phaseAt = now; flash(); }
-        if (phase === 'flash' && now - phaseAt > 300) { phase = 'leave'; phaseAt = now; leave(); }
-        if (phase === 'leave') {
-          var lp = ease(Math.min(1, (now - phaseAt - 150) / (LEAVE_MS - 150)));
-          if (lp > 0) {
-            var y = lp * (H + 160);
-            var cm = 'linear-gradient(to bottom, transparent ' + (y - 160).toFixed(0) + 'px, #000 ' + y.toFixed(0) + 'px)';
-            curtain.style.webkitMaskImage = cm;
-            curtain.style.maskImage = cm;
-          }
-        }
-        if (phase !== 'leave' || now - phaseAt < LEAVE_MS + 160) requestAnimationFrame(frame);
+        if (phase === 'settle' && now - phaseAt > 260) { phase = 'flash'; phaseAt = now; wordEl.classList.add('is-flash'); }
+        if (phase === 'flash' && now - phaseAt > 450) { phase = 'leave'; phaseAt = now; leave(); }
+        if (phase !== 'leave' || now - phaseAt < LEAVE_MS + 120) requestAnimationFrame(frame);
         else finish();
       }
 
-      // Lay the logo over the word: same width as the word, its baseline on
-      // the word's baseline, so the swap hides inside the flash.
-      var LOGO_W = 1620, LOGO_H = 244, INK_BASE = 239;
-      function placeLogo() {
-        var wr = wordEl.getBoundingClientRect();
-        var left = wr.left + letters[0].el.offsetLeft;
-        var w = wr.left + slot.offsetLeft + slot.offsetWidth - left;
-        var h = w * LOGO_H / LOGO_W;
-        var top = wr.top + slot.offsetTop + slot.offsetHeight - INK_BASE * (h / LOGO_H);
-        logo.style.width = w.toFixed(1) + 'px';
-        logo.style.transform = 'translate(' + left.toFixed(1) + 'px,' + top.toFixed(1) + 'px)';
-        return { left: left, top: top, width: w, height: h };
-      }
-
-      var logoBox = null;
-      function flash() {
-        wordEl.classList.add('is-flash');
-        logoBox = placeLogo();
-        if (logo.animate) logo.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 120, easing: 'ease-out', fill: 'forwards' });
-        else logo.style.opacity = 1;
-        var parts = letters.map(function (b) { return b.el; }).concat(pixels.map(function (p) { return p.el; }));
-        parts.forEach(function (n) {
-          if (n.animate) n.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, delay: 200, fill: 'forwards' });
-          else n.style.opacity = 0;
-        });
-      }
-
+      // The finale moves the whole word layer (letters and pixel X) in one
+      // compositor animation: it glides onto the faded wordmark at the foot
+      // of the hero and dissolves into it, while the curtain fades away.
+      var LOGO_H = 244, INK_BASE = 239;
+      var EASE = 'cubic-bezier(0.65, 0, 0.35, 1)';
       function leave() {
         loader.classList.add('is-leaving');
         root.classList.add('ax-grain-top');
         root.classList.remove('ax-loading');
         if (window.__axOpen) window.__axOpen();
-        if (!logo.animate || !logoBox) return;
-        // Glide into the faded wordmark at the foot of the hero, landing on
-        // its image (inside its padding) and fading out as it arrives.
+        if (!group.animate) return;
+        curtain.animate([{ opacity: 1 }, { opacity: 0 }],
+          { duration: LEAVE_MS - 350, delay: 250, easing: EASE, fill: 'forwards' });
+        // Map the word onto the hero wordmark's image (inside its padding):
+        // same width, baselines matched.
         var hero = document.querySelector('.hero-fade');
         var to = null;
         if (hero) {
@@ -3375,16 +3331,22 @@
           to = { left: hr.left + pl, top: hr.top + pt2, width: hr.width - pl - pr, height: hr.height - pt2 - pb };
           if (to.top > H || to.top + to.height < 0) to = null;
         }
-        var fromT = getComputedStyle(logo).transform;
         if (to) {
-          var s2 = to.width / logoBox.width;
-          logo.animate([
-            { transform: fromT, opacity: 1 },
-            { opacity: 0.32, offset: 0.82 },
-            { transform: 'translate(' + to.left.toFixed(1) + 'px,' + to.top.toFixed(1) + 'px) scale(' + s2.toFixed(4) + ')', opacity: 0 }
-          ], { duration: LEAVE_MS, easing: 'cubic-bezier(0.76, 0, 0.24, 1)', fill: 'forwards' });
+          var wr = wordEl.getBoundingClientRect();
+          var left = wr.left + letters[0].el.offsetLeft;
+          var right = wr.left + slot.offsetLeft + slot.offsetWidth;
+          var base = wr.top + slot.offsetTop + slot.offsetHeight;
+          var sc = to.width / (right - left);
+          var tx = to.left - left * sc;
+          var ty = to.top + to.height * INK_BASE / LOGO_H - base * sc;
+          group.animate([
+            { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+            { opacity: 1, offset: 0.35 },
+            { transform: 'translate(' + tx.toFixed(1) + 'px, ' + ty.toFixed(1) + 'px) scale(' + sc.toFixed(4) + ')', opacity: 0 }
+          ], { duration: LEAVE_MS, easing: EASE, fill: 'forwards' });
         } else {
-          logo.animate([{ opacity: 1 }, { opacity: 0 }], { duration: LEAVE_MS * 0.6, fill: 'forwards' });
+          group.animate([{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(1.04)', opacity: 0 }],
+            { duration: LEAVE_MS * 0.7, easing: EASE, fill: 'forwards' });
         }
       }
 
